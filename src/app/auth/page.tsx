@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Landmark, Eye, EyeOff } from "lucide-react";
+import { Landmark, Eye, EyeOff, MailCheck } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -129,7 +129,7 @@ function LoginForm() {
   );
 }
 
-function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
+function RegisterForm({ onSuccess }: { onSuccess: (email: string) => void }) {
   const [showPwd, setShowPwd] = useState(false);
   const form = useForm<RegisterInput, any, RegisterInput>({
     resolver: zodResolver(registerSchema) as any,
@@ -149,8 +149,7 @@ function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
       return;
     }
 
-    toast.success("Conta criada! Faça login.");
-    onSuccess();
+    onSuccess(data.email);
   }
 
   return (
@@ -237,8 +236,45 @@ function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
   );
 }
 
+function VerifyEmailCard({ email }: { email?: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="text-center space-y-4 py-4"
+    >
+      <div className="flex justify-center">
+        <div className="bg-primary/10 rounded-full p-4">
+          <MailCheck className="w-10 h-10 text-primary" />
+        </div>
+      </div>
+      <div>
+        <h3 className="font-semibold text-lg">Verifique seu e-mail</h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          Enviamos um link de confirmação para{" "}
+          {email ? <span className="font-medium text-foreground">{email}</span> : "seu e-mail"}.
+        </p>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        O link expira em 24 horas. Verifique também a pasta de spam.
+      </p>
+    </motion.div>
+  );
+}
+
 export default function AuthPage() {
   const [tab, setTab] = useState("login");
+  const [verifyEmail, setVerifyEmail] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("verified") === "1") {
+      toast.success("E-mail confirmado! Faça login.");
+    }
+    const error = searchParams.get("error");
+    if (error === "expired-token") toast.error("Link expirado. Crie a conta novamente.");
+    if (error === "invalid-token") toast.error("Link inválido.");
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -257,17 +293,29 @@ export default function AuthPage() {
         </div>
 
         <Card>
-          <CardHeader className="pb-4">
-            <Tabs value={tab} onValueChange={setTab}>
-              <TabsList className="w-full">
-                <TabsTrigger value="login" className="flex-1">Entrar</TabsTrigger>
-                <TabsTrigger value="register" className="flex-1">Criar conta</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </CardHeader>
-          <CardContent>
+          {!verifyEmail && (
+            <CardHeader className="pb-4">
+              <Tabs value={tab} onValueChange={setTab}>
+                <TabsList className="w-full">
+                  <TabsTrigger value="login" className="flex-1">Entrar</TabsTrigger>
+                  <TabsTrigger value="register" className="flex-1">Criar conta</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </CardHeader>
+          )}
+          <CardContent className={verifyEmail ? "pt-6" : undefined}>
             <AnimatePresence mode="wait">
-              {tab === "login" ? (
+              {verifyEmail ? (
+                <motion.div key="verify">
+                  <VerifyEmailCard email={verifyEmail} />
+                  <button
+                    className="mt-4 w-full text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
+                    onClick={() => { setVerifyEmail(null); setTab("login"); }}
+                  >
+                    Voltar para o login
+                  </button>
+                </motion.div>
+              ) : tab === "login" ? (
                 <motion.div
                   key="login"
                   initial={{ opacity: 0, x: -20 }}
@@ -285,7 +333,7 @@ export default function AuthPage() {
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <RegisterForm onSuccess={() => setTab("login")} />
+                  <RegisterForm onSuccess={(email) => setVerifyEmail(email)} />
                 </motion.div>
               )}
             </AnimatePresence>
