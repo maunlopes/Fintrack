@@ -388,28 +388,26 @@ export default function CategoriasPage() {
                 <AlertTriangle className="w-5 h-5 text-warning" />
                 Categoria em uso
               </AlertDialogTitle>
-              <AlertDialogDescription asChild>
-                <div className="space-y-3 text-sm text-muted-foreground">
-                  <p>
-                    Esta categoria está vinculada a{" "}
-                    <span className="font-semibold text-foreground">{linkedInfo?.total} registro{linkedInfo?.total !== 1 ? "s" : ""}</span>:
-                  </p>
-                  <ul className="space-y-1 pl-4 list-disc text-foreground">
-                    {(linkedInfo?.expenses ?? 0) > 0 && (
-                      <li>{linkedInfo!.expenses} despesa{linkedInfo!.expenses !== 1 ? "s" : ""}</li>
-                    )}
-                    {(linkedInfo?.incomes ?? 0) > 0 && (
-                      <li>{linkedInfo!.incomes} receita{linkedInfo!.incomes !== 1 ? "s" : ""}</li>
-                    )}
-                    {(linkedInfo?.cardTransactions ?? 0) > 0 && (
-                      <li>{linkedInfo!.cardTransactions} transação{linkedInfo!.cardTransactions !== 1 ? "ões" : ""} de cartão</li>
-                    )}
-                  </ul>
-                  <p>
-                    Se continuar, esses registros serão movidos para{" "}
-                    <span className="font-semibold text-foreground">"Sem Categoria"</span> automaticamente.
-                  </p>
-                </div>
+              <AlertDialogDescription className="space-y-3">
+                <span className="block">
+                  Esta categoria está vinculada a{" "}
+                  <span className="font-semibold text-foreground">{linkedInfo?.total} registro{linkedInfo?.total !== 1 ? "s" : ""}</span>:
+                </span>
+                <ul className="space-y-1 pl-4 list-disc text-foreground">
+                  {(linkedInfo?.expenses ?? 0) > 0 && (
+                    <li>{linkedInfo!.expenses} despesa{linkedInfo!.expenses !== 1 ? "s" : ""}</li>
+                  )}
+                  {(linkedInfo?.incomes ?? 0) > 0 && (
+                    <li>{linkedInfo!.incomes} receita{linkedInfo!.incomes !== 1 ? "s" : ""}</li>
+                  )}
+                  {(linkedInfo?.cardTransactions ?? 0) > 0 && (
+                    <li>{linkedInfo!.cardTransactions} transação{linkedInfo!.cardTransactions !== 1 ? "ões" : ""} de cartão</li>
+                  )}
+                </ul>
+                <span className="block">
+                  Se continuar, esses registros serão movidos para{" "}
+                  <span className="font-semibold text-foreground">"Sem Categoria"</span> automaticamente.
+                </span>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
