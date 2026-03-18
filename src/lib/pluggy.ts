@@ -1,16 +1,19 @@
 import { PluggyClient } from "pluggy-sdk";
 
-const globalForPluggy = globalThis as unknown as {
-  pluggy: PluggyClient | undefined;
-};
+let _client: PluggyClient | undefined;
 
-function createPluggyClient() {
-  return new PluggyClient({
-    clientId: process.env.PLUGGY_CLIENT_ID!,
-    clientSecret: process.env.PLUGGY_CLIENT_SECRET!,
-  });
+function getPluggyClient(): PluggyClient {
+  if (!_client) {
+    _client = new PluggyClient({
+      clientId: process.env.PLUGGY_CLIENT_ID!,
+      clientSecret: process.env.PLUGGY_CLIENT_SECRET!,
+    });
+  }
+  return _client;
 }
 
-export const pluggy = globalForPluggy.pluggy ?? createPluggyClient();
-
-if (process.env.NODE_ENV !== "production") globalForPluggy.pluggy = pluggy;
+export const pluggy = new Proxy({} as PluggyClient, {
+  get(_, prop: string) {
+    return (getPluggyClient() as unknown as Record<string, unknown>)[prop];
+  },
+});
