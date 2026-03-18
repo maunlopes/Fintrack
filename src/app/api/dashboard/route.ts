@@ -16,7 +16,7 @@ export async function GET(req: Request) {
 
   const userId = session.user.id;
   const { searchParams } = new URL(req.url);
-  const forecastMonths = parseInt(searchParams.get("forecast") || "6");
+  const forecastMonths = Math.min(Math.max(parseInt(searchParams.get("forecast") || "6") || 6, 1), 24);
 
   const monthParam = searchParams.get("month");
   const yearParam = searchParams.get("year");

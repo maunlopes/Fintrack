@@ -2,8 +2,8 @@ import { z } from "zod";
 import { BankAccountType } from "@prisma/client";
 
 export const bankAccountSchema = z.object({
-  name: z.string().min(1, "Nome do banco obrigatório"),
-  nickname: z.string().min(1, "Apelido obrigatório"),
+  name: z.string().min(1, "Nome do banco obrigatório").max(100),
+  nickname: z.string().min(1, "Apelido obrigatório").max(100),
   type: z.nativeEnum(BankAccountType),
   balance: z.coerce.number(),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional().default("#075056"),

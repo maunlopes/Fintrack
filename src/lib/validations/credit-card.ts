@@ -17,14 +17,14 @@ export const creditCardSchema = z.object({
 });
 
 export const cardTransactionSchema = z.object({
-  description: z.string().min(1, "Descrição obrigatória"),
+  description: z.string().min(1, "Descrição obrigatória").max(255),
   totalAmount: z.coerce.number().positive("Valor deve ser maior que 0"),
   purchaseDate: z.coerce.date(),
   categoryId: z.string().min(1, "Categoria obrigatória"),
   isInstallment: z.boolean().default(false),
   totalInstallments: z.coerce.number().int().min(2).max(48).optional(),
   isRecurring: z.boolean().default(false),
-  notes: z.string().optional(),
+  notes: z.string().max(500).optional(),
 });
 
 export type CreditCardInput = z.infer<typeof creditCardSchema>;

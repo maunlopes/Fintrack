@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 export const profileSchema = z.object({
-  name: z.string().min(2, "Nome deve ter ao menos 2 caracteres"),
-  email: z.string().email("E-mail inválido"),
-  image: z.string().url("URL inválida").optional().or(z.literal("")),
+  name: z.string().min(2, "Nome deve ter ao menos 2 caracteres").max(100),
+  email: z.string().email("E-mail inválido").max(255),
+  image: z.string().url("URL inválida").max(500).optional().or(z.literal("")),
 });
 
 const passwordRule = z

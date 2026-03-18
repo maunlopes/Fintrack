@@ -2,7 +2,7 @@ import { z } from "zod";
 import { ExpenseType, PaymentStatus } from "@prisma/client";
 
 export const expenseSchema = z.object({
-  description: z.string().min(1, "Descrição obrigatória"),
+  description: z.string().min(1, "Descrição obrigatória").max(255),
   amount: z.coerce.number().positive("Valor deve ser maior que 0"),
   dueDate: z.coerce.date(),
   categoryId: z.string().min(1, "Categoria obrigatória"),
@@ -13,7 +13,7 @@ export const expenseSchema = z.object({
   recurrenceEnd: z.coerce.date().optional(),
   totalInstallments: z.coerce.number().int().min(2).max(60).optional(),
   bankAccountId: z.string().optional().or(z.literal("")),
-  notes: z.string().optional(),
+  notes: z.string().max(500).optional(),
 });
 
 export type ExpenseInput = z.infer<typeof expenseSchema>;

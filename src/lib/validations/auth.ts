@@ -6,11 +6,12 @@ export const loginSchema = z.object({
 });
 
 export const registerSchema = z.object({
-  name: z.string().min(2, "Nome deve ter ao menos 2 caracteres"),
-  email: z.string().email("E-mail inválido"),
+  name: z.string().min(2, "Nome deve ter ao menos 2 caracteres").max(100),
+  email: z.string().email("E-mail inválido").max(255),
   password: z
     .string()
     .min(8, "Senha deve ter ao menos 8 caracteres")
+    .max(128)
     .regex(/[A-Z]/, "Deve ter ao menos 1 letra maiúscula")
     .regex(/[0-9]/, "Deve ter ao menos 1 número")
     .regex(/[^A-Za-z0-9]/, "Deve ter ao menos 1 caractere especial"),

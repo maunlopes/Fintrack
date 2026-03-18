@@ -15,8 +15,8 @@ const categorySchema = z.object({
 
 async function resolveCategory(id: string, userId: string) {
   const cat = await prisma.category.findUnique({ where: { id } });
-  // Allow own categories and global defaults (userId: null)
-  if (!cat || (cat.userId !== null && cat.userId !== userId)) return null;
+  // Only allow editing/deleting the user's own categories (not global defaults)
+  if (!cat || cat.userId === null || cat.userId !== userId) return null;
   return cat;
 }
 

@@ -48,6 +48,19 @@ export async function POST(
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
     const { categoryId, bankAccountId, description } = parsed.data;
+
+    // Validate ownership of bankAccount and category
+    const [bankAccount, category] = await Promise.all([
+      prisma.bankAccount.findFirst({ where: { id: bankAccountId, userId: session.user.id } }),
+      prisma.category.findFirst({
+        where: { id: categoryId, OR: [{ userId: session.user.id }, { userId: null }] },
+      }),
+    ]);
+    if (!bankAccount)
+      return NextResponse.json({ error: "Conta não encontrada" }, { status: 400 });
+    if (!category)
+      return NextResponse.json({ error: "Categoria não encontrada" }, { status: 400 });
+
     const amount = Number(tx.amount);
     const isDebit = tx.type === "DEBIT";
 
