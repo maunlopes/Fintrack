@@ -1,0 +1,397 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String           @id @default(cuid())
+  name            String?
+  email           String           @unique
+  emailVerified   DateTime?
+  image           String?
+  passwordHash    String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  accounts        Account[]
+  bankAccounts    BankAccount[]
+  categories      Category[]
+  categoryBudgets CategoryBudget[]
+  creditCards     CreditCard[]
+  expenses        Expense[]
+  incomes         Income[]
+  investments     Investment[]
+  sessions        Session[]
+  invoicePayments InvoicePayment[]
+  pluggyItems     PluggyItem[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model BankAccount {
+  id                     String                  @id @default(cuid())
+  userId                 String
+  name                   String
+  nickname               String
+  type                   BankAccountType
+  balance                Decimal                 @db.Decimal(12, 2)
+  color                  String                  @default("#075056")
+  isActive               Boolean                 @default(true)
+  isPluggy               Boolean                 @default(false)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creditCards            CreditCard[]
+  expenses               Expense[]
+  incomes                Income[]
+  transfersFrom          Transfer[]              @relation("TransferFrom")
+  transfersTo            Transfer[]              @relation("TransferTo")
+  investmentTransactions InvestmentTransaction[]
+  invoicePayments        InvoicePayment[]
+  pluggyAccount          PluggyAccount?
+}
+
+model CreditCard {
+  id              String            @id @default(cuid())
+  userId          String
+  name            String
+  brand           CardBrand
+  lastFourDigits  String?
+  creditLimit     Decimal           @db.Decimal(12, 2)
+  closingDay      Int
+  dueDay          Int
+  color           String            @default("#FF5B04")
+  isActive        Boolean           @default(true)
+  bankAccountId   String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  transactions    CardTransaction[]
+  invoicePayments InvoicePayment[]
+  bankAccount     BankAccount?      @relation(fields: [bankAccountId], references: [id])
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model InvoicePayment {
+  id            String      @id @default(cuid())
+  userId        String
+  creditCardId  String
+  month         Int
+  year          Int
+  amount        Decimal     @db.Decimal(12, 2)
+  bankAccountId String
+  paidAt        DateTime    @default(now())
+  createdAt     DateTime    @default(now())
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creditCard    CreditCard  @relation(fields: [creditCardId], references: [id], onDelete: Cascade)
+  bankAccount   BankAccount @relation(fields: [bankAccountId], references: [id])
+
+  @@unique([creditCardId, month, year])
+}
+
+model CardTransaction {
+  id                  String            @id @default(cuid())
+  creditCardId        String
+  description         String
+  totalAmount         Decimal           @db.Decimal(12, 2)
+  installmentAmount   Decimal?          @db.Decimal(12, 2)
+  purchaseDate        DateTime
+  categoryId          String
+  isInstallment       Boolean           @default(false)
+  totalInstallments   Int?
+  currentInstallment  Int?
+  isRecurring         Boolean           @default(false)
+  notes               String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  parentTransactionId String?
+  category            Category          @relation(fields: [categoryId], references: [id])
+  creditCard          CreditCard        @relation(fields: [creditCardId], references: [id], onDelete: Cascade)
+  parentTransaction   CardTransaction?  @relation("Installments", fields: [parentTransactionId], references: [id])
+  installments        CardTransaction[] @relation("Installments")
+}
+
+model Expense {
+  id                 String        @id @default(cuid())
+  userId             String
+  description        String
+  amount             Decimal       @db.Decimal(12, 2)
+  dueDate            DateTime
+  categoryId         String
+  type               ExpenseType
+  status             PaymentStatus @default(PENDING)
+  isRecurring        Boolean       @default(false)
+  recurrenceStart    DateTime?
+  recurrenceEnd      DateTime?
+  totalInstallments  Int?
+  currentInstallment Int?
+  bankAccountId      String?
+  notes              String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  parentExpenseId    String?
+  bankAccount        BankAccount?  @relation(fields: [bankAccountId], references: [id])
+  category           Category      @relation(fields: [categoryId], references: [id])
+  parentExpense      Expense?      @relation("ExpenseInstallments", fields: [parentExpenseId], references: [id])
+  installments       Expense[]     @relation("ExpenseInstallments")
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pluggySyncedTx     PluggySyncedTransaction?
+}
+
+model Income {
+  id                  String               @id @default(cuid())
+  userId              String
+  description         String
+  amount              Decimal              @db.Decimal(12, 2)
+  receiveDate         DateTime
+  categoryId          String
+  bankAccountId       String
+  status              PaymentStatus        @default(PENDING)
+  isRecurring         Boolean              @default(false)
+  recurrenceFrequency RecurrenceFrequency?
+  recurrenceStart     DateTime?
+  recurrenceEnd       DateTime?
+  notes               String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  bankAccount         BankAccount          @relation(fields: [bankAccountId], references: [id])
+  category            Category             @relation(fields: [categoryId], references: [id])
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pluggySyncedTx      PluggySyncedTransaction?
+}
+
+model Category {
+  id               String            @id @default(cuid())
+  userId           String?
+  name             String
+  type             CategoryType
+  icon             String            @default("circle")
+  color            String            @default("#075056")
+  isDefault        Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  cardTransactions CardTransaction[]
+  user             User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses         Expense[]
+  incomes          Income[]
+  budgets          CategoryBudget[]
+
+  @@unique([userId, name, type])
+}
+
+model CategoryBudget {
+  id           String   @id @default(cuid())
+  userId       String
+  categoryId   String
+  monthlyLimit Decimal  @db.Decimal(12, 2)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, categoryId])
+}
+
+model Transfer {
+  id            String      @id @default(cuid())
+  fromAccountId String
+  toAccountId   String
+  amount        Decimal     @db.Decimal(12, 2)
+  date          DateTime
+  description   String?
+  createdAt     DateTime    @default(now())
+  fromAccount   BankAccount @relation("TransferFrom", fields: [fromAccountId], references: [id])
+  toAccount     BankAccount @relation("TransferTo", fields: [toAccountId], references: [id])
+}
+
+enum BankAccountType {
+  CHECKING
+  SAVINGS
+  INVESTMENT
+}
+
+enum CardBrand {
+  VISA
+  MASTERCARD
+  ELO
+  AMEX
+  HIPERCARD
+  OTHER
+}
+
+enum ExpenseType {
+  FIXED_RECURRING
+  VARIABLE_RECURRING
+  ONE_TIME
+  INSTALLMENT
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+enum RecurrenceFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+enum CategoryType {
+  EXPENSE
+  INCOME
+}
+
+enum InvestmentType {
+  FIXED_INCOME
+  VARIABLE_INCOME
+  STOCKS
+  FUNDS
+  CRYPTO
+  PENSION
+}
+
+enum InvestmentTransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  YIELD
+  DIVIDEND
+}
+
+model Investment {
+  id           String                  @id @default(cuid())
+  userId       String
+  name         String
+  type         InvestmentType
+  institution  String
+  balance      Decimal                 @db.Decimal(12, 2)
+  color        String                  @default("#2563EB")
+  isActive     Boolean                 @default(true)
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+  user         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions InvestmentTransaction[]
+}
+
+// ─── Open Finance / Pluggy ───────────────────────────────────────────────────
+
+model PluggyItem {
+  id         String          @id @default(cuid())
+  userId     String
+  itemId     String          @unique // Pluggy's item UUID
+  connector  Json            // connector metadata (name, logo, etc.)
+  status     PluggyItemStatus @default(UPDATING)
+  lastSyncAt DateTime?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accounts   PluggyAccount[]
+}
+
+model PluggyAccount {
+  id              String    @id @default(cuid())
+  pluggyItemId    String
+  accountId       String    @unique // Pluggy's account UUID
+  bankAccountId   String?   @unique // maps to our BankAccount (nullable until mapped)
+  type            String    // BANK or CREDIT
+  subtype         String    // CHECKING_ACCOUNT, SAVINGS_ACCOUNT, CREDIT_CARD
+  name            String
+  number          String?
+  balance         Decimal   @db.Decimal(12, 2)
+  currencyCode    String    @default("BRL")
+  lastSyncAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  pluggyItem      PluggyItem  @relation(fields: [pluggyItemId], references: [id], onDelete: Cascade)
+  bankAccount     BankAccount? @relation(fields: [bankAccountId], references: [id])
+  syncedTransactions PluggySyncedTransaction[]
+}
+
+model PluggySyncedTransaction {
+  id              String       @id @default(cuid())
+  pluggyAccountId String
+  externalId      String       // Pluggy's transaction ID
+  type            String       // DEBIT or CREDIT
+  amount          Decimal      @db.Decimal(12, 2)
+  date            DateTime
+  description     String
+  category        String?      // Pluggy-enriched category
+  status          SyncTxStatus @default(PENDING_REVIEW)
+  mappedExpenseId String?      @unique
+  mappedIncomeId  String?      @unique
+  rawPayload      Json         // full Pluggy transaction object
+  createdAt       DateTime     @default(now())
+  pluggyAccount   PluggyAccount  @relation(fields: [pluggyAccountId], references: [id], onDelete: Cascade)
+  mappedExpense   Expense?     @relation(fields: [mappedExpenseId], references: [id])
+  mappedIncome    Income?      @relation(fields: [mappedIncomeId], references: [id])
+
+  @@unique([pluggyAccountId, externalId])
+}
+
+enum PluggyItemStatus {
+  UPDATING
+  UPDATED
+  WAITING_USER_INPUT
+  LOGIN_ERROR
+  OUTDATED
+  ERROR
+}
+
+enum SyncTxStatus {
+  PENDING_REVIEW
+  ACCEPTED
+  IGNORED
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+model InvestmentTransaction {
+  id                  String                  @id @default(cuid())
+  investmentId        String
+  type                InvestmentTransactionType
+  amount              Decimal                 @db.Decimal(12, 2)
+  date                DateTime
+  bankAccountId       String?
+  isRecurring         Boolean                 @default(false)
+  recurrenceFrequency RecurrenceFrequency?
+  recurrenceEnd       DateTime?
+  description         String?
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  investment          Investment              @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+  bankAccount         BankAccount?            @relation(fields: [bankAccountId], references: [id])
+}
