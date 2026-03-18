@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -262,7 +262,7 @@ function VerifyEmailCard({ email }: { email?: string }) {
   );
 }
 
-export default function AuthPage() {
+function AuthPageInner() {
   const [tab, setTab] = useState("login");
   const [verifyEmail, setVerifyEmail] = useState<string | null>(null);
   const searchParams = useSearchParams();
@@ -341,5 +341,13 @@ export default function AuthPage() {
         </Card>
       </motion.div>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense>
+      <AuthPageInner />
+    </Suspense>
   );
 }
