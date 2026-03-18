@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { pluggy } from "@/lib/pluggy";
+import type { PluggyItemStatus } from "@prisma/client";
 
 // POST /api/open-finance/items/connect — called after widget onSuccess with the itemId
 export async function POST(req: Request) {
@@ -24,12 +25,12 @@ export async function POST(req: Request) {
       userId: session.user.id,
       itemId,
       connector: pluggyItem.connector as object,
-      status: pluggyItem.status as string,
+      status: pluggyItem.status as unknown as PluggyItemStatus,
       lastSyncAt: pluggyItem.lastUpdatedAt ? new Date(pluggyItem.lastUpdatedAt) : null,
     },
     update: {
       connector: pluggyItem.connector as object,
-      status: pluggyItem.status as string,
+      status: pluggyItem.status as unknown as PluggyItemStatus,
       lastSyncAt: pluggyItem.lastUpdatedAt ? new Date(pluggyItem.lastUpdatedAt) : null,
     },
   });

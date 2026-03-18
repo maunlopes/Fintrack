@@ -178,7 +178,7 @@ export function PendingTransactionsList({ transactions, categories, bankAccounts
 
                   <div className="space-y-1.5">
                     <Label className="text-xs">Categoria *</Label>
-                    <Select value={form.categoryId} onValueChange={(v) => setForm(tx.id, { categoryId: v })}>
+                    <Select value={form.categoryId || ""} onValueChange={(v) => setForm(tx.id, { categoryId: v ?? "" })}>
                       <SelectTrigger className="h-8 text-sm">
                         <SelectValue placeholder="Selecionar..." />
                       </SelectTrigger>
@@ -192,7 +192,7 @@ export function PendingTransactionsList({ transactions, categories, bankAccounts
 
                   <div className="space-y-1.5">
                     <Label className="text-xs">Conta *</Label>
-                    <Select value={form.bankAccountId} onValueChange={(v) => setForm(tx.id, { bankAccountId: v })}>
+                    <Select value={form.bankAccountId || ""} onValueChange={(v) => setForm(tx.id, { bankAccountId: v ?? "" })}>
                       <SelectTrigger className="h-8 text-sm">
                         <SelectValue placeholder="Selecionar..." />
                       </SelectTrigger>

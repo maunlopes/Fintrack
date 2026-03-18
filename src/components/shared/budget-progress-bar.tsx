@@ -30,7 +30,7 @@ export function BudgetProgressBar({ spent, limit, showValues = false, size = "md
   return (
     <div className="w-full space-y-1">
       <Tooltip>
-        <TooltipTrigger asChild>
+        <TooltipTrigger>
           <div className={`w-full rounded-full bg-muted overflow-hidden cursor-default ${trackH}`}>
             <div
               className={`h-full rounded-full transition-all duration-500 ${barColor}`}
