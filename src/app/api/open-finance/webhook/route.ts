@@ -1,11 +1,29 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { pluggy } from "@/lib/pluggy";
+import crypto from "crypto";
 
 // POST /api/open-finance/webhook — called by Pluggy when transactions are created/updated
 export async function POST(req: Request) {
-  const payload = await req.json();
+  const body = await req.text();
 
+  // Verify Pluggy HMAC signature when secret is configured
+  const secret = process.env.PLUGGY_WEBHOOK_SECRET;
+  if (secret) {
+    const signature = req.headers.get("x-pluggy-signature");
+    if (!signature) {
+      return NextResponse.json({ error: "Missing signature" }, { status: 401 });
+    }
+    const expected = crypto
+      .createHmac("sha256", secret)
+      .update(body)
+      .digest("hex");
+    if (signature !== expected) {
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+  }
+
+  const payload = JSON.parse(body);
   const { event, itemId, accountId, transactionsCreatedAtFrom } = payload;
 
   if (event === "transactions/created" || event === "transactions/updated") {

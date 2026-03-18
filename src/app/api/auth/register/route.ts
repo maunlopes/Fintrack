@@ -1,10 +1,20 @@
 import { NextResponse } from "next/server";
+import { headers } from "next/headers";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/lib/validations/auth";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+    const ip = (await headers()).get("x-forwarded-for") ?? "unknown";
+    if (!rateLimit(ip, 5, 60_000)) {
+      return NextResponse.json(
+        { error: "Muitas tentativas. Tente novamente em 1 minuto." },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const parsed = registerSchema.safeParse(body);
     if (!parsed.success) {
