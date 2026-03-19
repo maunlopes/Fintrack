@@ -15,13 +15,11 @@ import {
   ListOrdered,
   BarChart3,
   BookOpen,
-  Wallet,
   Target,
   Link2,
+  Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const navItems = [
@@ -38,6 +36,11 @@ const navItems = [
   { href: "/resumo-anual", label: "Resumo Anual", icon: TrendingUp },
 ];
 
+const footerItems = [
+  { href: "/ajuda", label: "Ajuda", icon: BookOpen },
+  { href: "/config", label: "Configurações", icon: Settings },
+];
+
 interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
@@ -48,52 +51,104 @@ export function Sidebar({ isOpen = true, onClose, collapsed = false }: SidebarPr
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-col h-full w-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border overflow-hidden">
+    <nav
+      className="flex flex-col h-full w-full overflow-hidden"
+      style={{ background: "var(--brand-900)" }}
+    >
       {/* Logo */}
-      <div className={cn("flex items-center h-14", collapsed ? "justify-center px-2" : "px-4")}>
-        <Link href="/dashboard" title="Dashboard Home" className={cn("flex items-center gap-2.5 cursor-pointer", !collapsed && "flex-1")}>
-          <span className="inline-flex items-center justify-center rounded-md bg-primary/10 p-1 shrink-0">
-            <Wallet className="w-4 h-4 text-primary" />
+      <div
+        className={cn(
+          "flex items-center h-14 shrink-0",
+          collapsed ? "justify-center px-2" : "px-4"
+        )}
+      >
+        <Link
+          href="/dashboard"
+          title="Dashboard"
+          className={cn("flex items-center gap-2.5 cursor-pointer", !collapsed && "flex-1")}
+        >
+          <span
+            className="inline-flex items-center justify-center rounded-lg shrink-0"
+            style={{
+              width: 32,
+              height: 32,
+              background: "var(--accent-dim)",
+            }}
+          >
+            <Wallet className="w-4 h-4" style={{ color: "var(--brand-accent)" }} />
           </span>
           {!collapsed && (
-            <span className="text-xl text-sidebar-foreground">
-              <span className="font-normal tracking-normal mr-[0.3em]">Fin</span>
-              <span className="font-bold tracking-[0.3em]">Track</span>
+            <span
+              className="text-xl"
+              style={{ fontFamily: "var(--font-syne)", color: "white" }}
+            >
+              <span style={{ fontWeight: 400 }}>Fin</span>
+              <span style={{ fontWeight: 800 }}>Track</span>
             </span>
           )}
         </Link>
 
-        {onClose ? (
-          <Tooltip>
-            <TooltipTrigger render={
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onClose}
-                className="h-8 w-8 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent lg:hidden"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            } />
-            <TooltipContent>Fechar menu</TooltipContent>
-          </Tooltip>
-        ) : null}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="lg:hidden h-8 w-8 rounded-lg flex items-center justify-center transition-colors"
+            style={{ color: "rgba(255,255,255,0.5)" }}
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
-      <Separator className="bg-sidebar-border" />
+      {/* Divider */}
+      <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "0 12px" }} />
 
       {/* Nav Items */}
-      <ul data-tour="sidebar-nav" className={cn("flex-1 py-4 space-y-1", collapsed ? "px-1.5" : "px-2")}>
+      <ul
+        data-tour="sidebar-nav"
+        className={cn("flex-1 py-3 space-y-0.5 overflow-y-auto", collapsed ? "px-2" : "px-2")}
+      >
         {navItems.map((item, i) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
 
-          const linkClass = cn(
-            "flex items-center rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer",
-            collapsed ? "justify-center h-10 w-10 mx-auto" : "gap-3 h-10 px-3",
-            isActive
-              ? "bg-primary text-primary-foreground shadow-sm"
-              : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          const itemContent = (
+            <Link
+              href={item.href}
+              title={item.label}
+              onClick={onClose}
+              {...(item.tourId ? { "data-tour": item.tourId } : {})}
+              className={cn(
+                "flex items-center text-sm font-medium transition-all duration-150 cursor-pointer",
+                collapsed
+                  ? "justify-center h-10 w-10 mx-auto rounded-xl"
+                  : "gap-3 h-10 px-3 rounded-xl"
+              )}
+              style={
+                isActive
+                  ? {
+                      background: "var(--accent-dim)",
+                      color: "var(--brand-accent)",
+                    }
+                  : {
+                      color: "rgba(255,255,255,0.55)",
+                    }
+              }
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)";
+                  (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.9)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  (e.currentTarget as HTMLElement).style.background = "transparent";
+                  (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)";
+                }
+              }}
+            >
+              <Icon className="w-4 h-4 flex-shrink-0" />
+              {!collapsed && item.label}
+            </Link>
           );
 
           return (
@@ -101,83 +156,71 @@ export function Sidebar({ isOpen = true, onClose, collapsed = false }: SidebarPr
               key={item.href}
               initial={{ opacity: 0, x: -16 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.05 }}
+              transition={{ delay: i * 0.03, duration: 0.2 }}
             >
               {collapsed ? (
                 <Tooltip>
-                  <TooltipTrigger render={
-                    <Link
-                      href={item.href}
-                      title={item.label}
-                      onClick={onClose}
-                      {...(item.tourId ? { "data-tour": item.tourId } : {})}
-                      className={linkClass}
-                    >
-                      <Icon className="w-4 h-4 flex-shrink-0" />
-                    </Link>
-                  } />
+                  <TooltipTrigger render={itemContent} />
                   <TooltipContent side="right">{item.label}</TooltipContent>
                 </Tooltip>
               ) : (
-                <Link
-                  href={item.href}
-                  title={item.label}
-                  onClick={onClose}
-                  {...(item.tourId ? { "data-tour": item.tourId } : {})}
-                  className={linkClass}
-                >
-                  <Icon className="w-4 h-4 flex-shrink-0" />
-                  {item.label}
-                </Link>
+                itemContent
               )}
             </motion.li>
           );
         })}
       </ul>
 
-      <Separator className="bg-sidebar-border" />
+      {/* Divider */}
+      <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "0 12px" }} />
 
-      {/* Footer — Ajuda + Configurações */}
-      <div className={cn("py-4 pb-20 lg:pb-4 space-y-1", collapsed ? "px-1.5" : "px-2")}>
-        {[
-          { href: "/ajuda", label: "Ajuda", icon: BookOpen },
-          { href: "/config", label: "Configurações", icon: Settings },
-        ].map(({ href, label, icon: Icon }) =>
-          collapsed ? (
-            <Tooltip key={href}>
-              <TooltipTrigger render={
-                <Link
-                  href={href}
-                  title={label}
-                  className={cn(
-                    "flex items-center justify-center h-10 w-10 mx-auto rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer",
-                    pathname === href
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  )}
-                >
-                  <Icon className="w-4 h-4" />
-                </Link>
-              } />
-              <TooltipContent side="right">{label}</TooltipContent>
-            </Tooltip>
-          ) : (
+      {/* Footer */}
+      <div className={cn("py-3 space-y-0.5", collapsed ? "px-2" : "px-2")}>
+        {footerItems.map(({ href, label, icon: Icon }) => {
+          const isActive = pathname === href;
+          const linkEl = (
             <Link
               key={href}
               href={href}
               title={label}
               className={cn(
-                "flex items-center gap-3 h-10 px-3 rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer",
-                pathname === href
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                "flex items-center text-sm font-medium transition-all duration-150 cursor-pointer",
+                collapsed
+                  ? "justify-center h-10 w-10 mx-auto rounded-xl"
+                  : "gap-3 h-10 px-3 rounded-xl"
               )}
+              style={
+                isActive
+                  ? { background: "var(--accent-dim)", color: "var(--brand-accent)" }
+                  : { color: "rgba(255,255,255,0.45)" }
+              }
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)";
+                  (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.9)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  (e.currentTarget as HTMLElement).style.background = "transparent";
+                  (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.45)";
+                }
+              }}
             >
               <Icon className="w-4 h-4" />
-              {label}
+              {!collapsed && label}
             </Link>
-          )
-        )}
+          );
+
+          return collapsed ? (
+            <Tooltip key={href}>
+              <TooltipTrigger render={linkEl} />
+              <TooltipContent side="right">{label}</TooltipContent>
+            </Tooltip>
+          ) : (
+            linkEl
+          );
+        })}
       </div>
     </nav>
   );
@@ -196,11 +239,11 @@ export function MobileSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: (
             onClick={onClose}
           />
           <motion.div
-            initial={{ x: -208 }}
+            initial={{ x: -220 }}
             animate={{ x: 0 }}
-            exit={{ x: -208 }}
+            exit={{ x: -220 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed left-0 top-0 bottom-0 z-50 w-52 lg:hidden"
+            className="fixed left-0 top-0 bottom-0 z-50 w-56 lg:hidden"
           >
             <Sidebar isOpen={isOpen} onClose={onClose} />
           </motion.div>

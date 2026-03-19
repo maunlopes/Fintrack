@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, CreditCard, TrendingDown, BarChart3, Landmark } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -17,7 +16,13 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t z-30 lg:hidden">
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-30 lg:hidden"
+      style={{
+        background: "var(--brand-900)",
+        borderTop: "1px solid rgba(255,255,255,0.08)",
+      }}
+    >
       <ul className="flex">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -27,12 +32,10 @@ export function BottomNav() {
               <Link
                 href={item.href}
                 title={item.label}
-                className={cn(
-                  "flex flex-col items-center gap-1 py-2 text-xs transition-colors cursor-pointer",
-                  isActive
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
+                className="flex flex-col items-center gap-1 py-2 text-xs transition-colors cursor-pointer"
+                style={{
+                  color: isActive ? "var(--brand-accent)" : "rgba(255,255,255,0.45)",
+                }}
               >
                 <Icon className="w-5 h-5" />
                 {item.label}
