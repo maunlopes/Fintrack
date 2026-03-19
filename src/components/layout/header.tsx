@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Menu, Bell } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { Session } from "next-auth";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -27,31 +28,17 @@ export function Header({ session }: HeaderProps) {
     ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "U";
 
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
-  const firstName = user?.name?.split(" ")[0] ?? "";
-
   return (
     <>
-      <header
-        className="h-14 flex items-center px-6 gap-4 sticky top-0 z-30"
-        style={{ background: "var(--bg-base)" }}
-      >
-        {/* Mobile menu button */}
-        <button
-          className="lg:hidden h-9 w-9 rounded-xl flex items-center justify-center transition-colors"
-          style={{ background: "var(--bg-raised)", color: "var(--text-secondary)" }}
-          onClick={() => setSidebarOpen(true)}
-        >
-          <Menu className="w-4 h-4" />
-        </button>
-
-        {/* Greeting */}
-        <div className="hidden sm:flex flex-col">
-          <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>
-            {greeting}{firstName ? `, ${firstName}` : ""}
-          </span>
-        </div>
+      <header className="h-14 border-b bg-card flex items-center px-4 gap-4 sticky top-0 z-30">
+        <Tooltip>
+          <TooltipTrigger render={
+            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
+              <Menu className="w-5 h-5" />
+            </Button>
+          } />
+          <TooltipContent>Abrir menu</TooltipContent>
+        </Tooltip>
 
         <div className="flex-1" />
 
@@ -59,12 +46,9 @@ export function Header({ session }: HeaderProps) {
 
         <Tooltip>
           <TooltipTrigger render={
-            <button
-              className="relative h-9 w-9 rounded-xl flex items-center justify-center transition-colors"
-              style={{ background: "var(--bg-raised)", color: "var(--text-secondary)" }}
-            >
-              <Bell className="w-4 h-4" />
-            </button>
+            <Button variant="ghost" size="icon" className="relative">
+              <Bell className="w-5 h-5" />
+            </Button>
           } />
           <TooltipContent>Notificações</TooltipContent>
         </Tooltip>
@@ -75,10 +59,7 @@ export function Header({ session }: HeaderProps) {
               <DropdownMenuTrigger className="rounded-full w-9 h-9 flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-ring">
                 <Avatar className="w-9 h-9">
                   <AvatarImage src={user?.image ?? undefined} />
-                  <AvatarFallback
-                    className="text-xs font-semibold text-white cursor-pointer"
-                    style={{ background: "var(--brand-900)" }}
-                  >
+                  <AvatarFallback className="bg-secondary text-secondary-foreground text-xs cursor-pointer">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
