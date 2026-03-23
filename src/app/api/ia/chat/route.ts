@@ -69,7 +69,7 @@ ${financialContext}`;
     model: anthropic("claude-3-5-haiku-20241022"),
     system: systemPrompt,
     messages,
-    maxTokens: 1024,
+    maxOutputTokens: 1024,
     temperature: 0.3,
   });
 
