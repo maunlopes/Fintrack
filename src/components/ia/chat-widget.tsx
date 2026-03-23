@@ -47,24 +47,8 @@ export function ChatWidget() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
-
-        for (const line of lines) {
-          // Vercel AI SDK data stream format: `0:"text chunk"`
-          if (line.startsWith("0:")) {
-            try {
-              const jsonStr = line.slice(2);
-              const parsed = JSON.parse(jsonStr);
-              if (typeof parsed === "string") {
-                appendToLast(parsed);
-              }
-            } catch {
-              // ignore parse errors on non-text lines
-            }
-          }
-        }
+        if (chunk) appendToLast(chunk);
       }
     } catch {
       appendToLast("Erro de conexão. Verifique sua internet e tente novamente.");

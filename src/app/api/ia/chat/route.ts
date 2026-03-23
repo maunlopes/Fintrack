@@ -73,5 +73,5 @@ ${financialContext}`;
     temperature: 0.3,
   });
 
-  return result.toDataStreamResponse();
+  return result.toTextStreamResponse();
 }
