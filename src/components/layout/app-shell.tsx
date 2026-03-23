@@ -22,7 +22,7 @@ export function AppShell({ children, session }: AppShellProps) {
       <aside
         className={cn(
           "relative hidden lg:flex flex-shrink-0 transition-[width] duration-300 ease-in-out z-40",
-          collapsed ? "w-14" : "w-[184px]"
+          collapsed ? "w-14" : "w-[240px]"
         )}
       >
         <Sidebar collapsed={collapsed} />

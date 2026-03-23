@@ -1,41 +1,51 @@
 "use client";
 
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts";
 import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { ChartTooltip } from "./chart-tooltip";
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 
-const CHART_COLOR = "#3b82f6";
+const chartConfig = {
+  saldo: { label: "Saldo", color: "var(--chart-1)" },
+} satisfies ChartConfig;
 
 export function BalanceForecastChart({ data }: { data: any[] }) {
   return (
-    <ResponsiveContainer width="100%" height={260}>
+    <ChartContainer config={chartConfig} className="h-[260px] w-full">
       <AreaChart data={data}>
         <defs>
-          <linearGradient id="saldoGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={CHART_COLOR} stopOpacity={0.3} />
-            <stop offset="95%" stopColor={CHART_COLOR} stopOpacity={0} />
+          <linearGradient id="fillSaldo" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%"  stopColor="var(--color-saldo)" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="var(--color-saldo)" stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-        <XAxis dataKey="month" tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-        <Tooltip content={<ChartTooltip />} />
+        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+        <XAxis
+          dataKey="month"
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
+          tick={{ fontSize: 12 }}
+        />
+        <YAxis
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
+          tick={{ fontSize: 12 }}
+          tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+        />
+        <ChartTooltip content={<ChartTooltipContent />} />
         <Area
           type="monotone"
           dataKey="saldo"
-          name="Saldo"
-          stroke={CHART_COLOR}
+          stroke="var(--color-saldo)"
           strokeWidth={2.5}
-          fill="url(#saldoGradient)"
+          fill="url(#fillSaldo)"
         />
       </AreaChart>
-    </ResponsiveContainer>
+    </ChartContainer>
   );
 }

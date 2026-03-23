@@ -8,17 +8,19 @@ import { MonthSelector } from "@/components/shared/month-selector";
 import {
   ArrowDownRight,
   ArrowUpRight,
-  DollarSign,
   Wallet,
   TrendingUp,
+  TrendingDown,
   Tag,
   CreditCard,
   ListOrdered,
 } from "lucide-react";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -171,7 +173,7 @@ function DashboardContent() {
   /* ── Loading skeleton ─────────────────────── */
   if (loading) {
     return (
-      <div className="p-4 lg:p-6 space-y-6">
+      <div className="p-4 pb-24 lg:p-6 lg:pb-6 space-y-6">
         <div className="flex justify-between items-center">
           <div className="space-y-2">
             <Skeleton className="h-7 w-36" />
@@ -186,8 +188,8 @@ function DashboardContent() {
           ))}
         </div>
         {/* KPI cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
-          {[1, 2, 3, 4, 5].map((i) => (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-28 rounded-xl" />
           ))}
         </div>
@@ -223,12 +225,22 @@ function DashboardContent() {
     ? upcomingExpenses.reduce((prev: any, current: any) => (Number(prev.amount) > Number(current.amount)) ? prev : current)
     : null;
 
+  const prevMonth = historicalData?.length >= 2 ? historicalData[historicalData.length - 2] : null;
+
+  function vsLastMonth(current: number, previous: number | undefined) {
+    if (!previous || previous === 0) return null;
+    const pct = ((current - previous) / previous) * 100;
+    return { pct: Math.abs(pct).toFixed(1), up: pct >= 0 };
+  }
+
+  const incomeVsPrev = vsLastMonth(kpis.monthIncome, prevMonth?.income);
+  const expensesVsPrev = vsLastMonth(kpis.monthExpenses, prevMonth?.expenses);
+
   const summaryCards = [
-    { title: "Patrimônio Total", value: formatBRL(kpis.totalBalance + (kpis.totalInvested || 0)), icon: Wallet, trend: "Saldo Contas + Investimentos", trendUp: true, main: true },
-    { title: "Saldo Contas", value: formatBRL(kpis.totalBalance), icon: Wallet, trend: "Liquidez Imediata", trendUp: true },
-    { title: "Total Investido", value: formatBRL(kpis.totalInvested || 0), icon: TrendingUp, trend: "Em Aplicações", trendUp: true },
-    { title: "Receita do Mês", value: formatBRL(kpis.monthIncome), icon: TrendingUp, trend: "Entradas", trendUp: true },
-    { title: "Despesas do Mês", value: formatBRL(kpis.monthExpenses), icon: DollarSign, trend: "Saídas", trendUp: false },
+    { title: "Patrimônio Total", value: formatBRL(kpis.totalBalance + (kpis.totalInvested || 0)), icon: Wallet, trend: "Saldo em contas + investimentos", subtitle: "Patrimônio líquido total", vsMonth: null },
+    { title: "Total Investido", value: formatBRL(kpis.totalInvested || 0), icon: TrendingUp, trend: "Em aplicações financeiras", subtitle: "Portfolio de investimentos", vsMonth: null },
+    { title: "Receita do Mês", value: formatBRL(kpis.monthIncome), icon: ArrowUpRight, trend: incomeVsPrev ? (incomeVsPrev.up ? "Acima do mês anterior" : "Abaixo do mês anterior") : "Entradas no período", subtitle: "Entradas no período", vsMonth: incomeVsPrev },
+    { title: "Despesas do Mês", value: formatBRL(kpis.monthExpenses), icon: ArrowDownRight, trend: expensesVsPrev ? (expensesVsPrev.up ? "Acima do mês anterior" : "Abaixo do mês anterior") : "Saídas no período", subtitle: "Saídas no período", vsMonth: expensesVsPrev },
   ];
 
   /* ── Expense table row ────────────────────── */
@@ -284,7 +296,7 @@ function DashboardContent() {
   /* ── Main render ──────────────────────────── */
   return (
     <motion.div
-      className="p-4 lg:p-6 space-y-6"
+      className="p-4 pb-24 lg:p-6 lg:pb-6 space-y-6"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -306,10 +318,10 @@ function DashboardContent() {
       <motion.div variants={itemVariants}>
         <Tabs value={activeTab} onValueChange={handleTabChange}>
 
-          <TabsList variant="line" className="w-full rounded-none border-b h-auto pb-0 gap-2 justify-start">
-            <TabsTrigger value="resumo" className="px-4 pb-3">Resumo</TabsTrigger>
-            <TabsTrigger value="analise" className="px-4 pb-3">Análise</TabsTrigger>
-            <TabsTrigger value="despesas" className="px-4 pb-3">Próximas Despesas</TabsTrigger>
+          <TabsList>
+            <TabsTrigger value="resumo">Resumo</TabsTrigger>
+            <TabsTrigger value="analise">Análise</TabsTrigger>
+            <TabsTrigger value="despesas">Próximas Despesas</TabsTrigger>
           </TabsList>
 
           {/* ── Tab 1: Resumo ─────────────────────────── */}
@@ -317,24 +329,39 @@ function DashboardContent() {
             <motion.div key="resumo" variants={tabVariants} initial="hidden" animate="show" className="space-y-6 pt-6">
 
               {/* KPI Cards */}
-              <div data-tour="dashboard-kpis" className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
+              <div data-tour="dashboard-kpis" className="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card sm:grid-cols-2 lg:grid-cols-4">
                 {summaryCards.map((card) => {
                   const Icon = card.icon;
                   return (
-                    <motion.div key={card.title} variants={itemVariants} className={card.main ? "sm:col-span-2 lg:col-span-1" : ""}>
-                      <Card className={`h-full p-6 shadow-sm ${card.main ? "border-primary bg-primary/5" : ""}`}>
-                        <CardHeader className="flex flex-row items-center justify-between p-0 pb-3">
-                          <CardTitle className={card.main ? "font-extrabold text-primary" : "text-muted-foreground font-semibold"}>{card.title}</CardTitle>
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                            <Icon className="h-4 w-4 text-primary" />
-                          </div>
+                    <motion.div key={card.title} variants={itemVariants}>
+                      <Card className="@container/card">
+                        <CardHeader>
+                          <CardDescription>{card.title}</CardDescription>
+                          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+                            {card.value}
+                          </CardTitle>
+                          {card.vsMonth && (
+                            <CardAction>
+                              <Badge variant="outline">
+                                {card.vsMonth.up
+                                  ? <TrendingUp className="size-3" />
+                                  : <TrendingDown className="size-3" />}
+                                {card.vsMonth.up ? "+" : "-"}{card.vsMonth.pct}%
+                              </Badge>
+                            </CardAction>
+                          )}
                         </CardHeader>
-                        <CardContent className="p-0">
-                          <div className={`money font-bold ${card.main ? "text-3xl text-primary drop-shadow-sm" : "text-2xl"}`}>{card.value}</div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            <span className={card.trendUp ? "text-success" : "text-destructive"}>{card.trend}</span>
-                          </p>
-                        </CardContent>
+                        <CardFooter className="flex-col items-start gap-1.5 text-sm">
+                          <div className="line-clamp-1 flex gap-2 font-medium">
+                            {card.trend}
+                            {card.vsMonth
+                              ? card.vsMonth.up
+                                ? <TrendingUp className="size-4" />
+                                : <TrendingDown className="size-4" />
+                              : <Icon className="size-4" />}
+                          </div>
+                          <div className="text-muted-foreground">{card.subtitle}</div>
+                        </CardFooter>
                       </Card>
                     </motion.div>
                   );
@@ -451,12 +478,14 @@ function DashboardContent() {
                         );
                       }
                       return (
-                        <Table>
-                          {tableColumns}
-                          <TableBody>
-                            {top3.map((tx: any, i: number) => <ExpenseRow key={tx.id || i} tx={tx} i={i} />)}
-                          </TableBody>
-                        </Table>
+                        <div className="overflow-x-auto">
+                          <Table>
+                            {tableColumns}
+                            <TableBody>
+                              {top3.map((tx: any, i: number) => <ExpenseRow key={tx.id || i} tx={tx} i={i} />)}
+                            </TableBody>
+                          </Table>
+                        </div>
                       );
                     })()}
                   </CardContent>
@@ -515,44 +544,46 @@ function DashboardContent() {
           <TabsContent value="despesas">
             <motion.div key="despesas" variants={tabVariants} initial="hidden" animate="show" className="pt-6">
               <Card className="p-6 shadow-sm">
-                <CardHeader className="p-0 pb-4">
-                  <CardTitle className="text-muted-foreground font-semibold">Próximas Despesas</CardTitle>
-                  <CardDescription>Contas a pagar e despesas futuras</CardDescription>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <Tabs value={filter} onValueChange={(val) => setFilter(val as any)}>
-                    <div className="flex px-6 pt-4 pb-2">
-                      <TabsList className="grid w-full sm:w-[300px] grid-cols-2">
-                        <TabsTrigger value="ALL">Todas</TabsTrigger>
-                        <TabsTrigger value="PENDING">Pendentes</TabsTrigger>
-                      </TabsList>
+                <Tabs value={filter} onValueChange={(val) => setFilter(val as any)}>
+                  <CardHeader className="p-0 pb-4 flex flex-row items-start justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-muted-foreground font-semibold">Próximas Despesas</CardTitle>
+                      <CardDescription>Contas a pagar e despesas futuras</CardDescription>
                     </div>
-                    <Table>
-                      {tableColumns}
-                      <TableBody>
-                        {(() => {
-                          const filtered = upcomingExpenses.filter((t: any) =>
-                            filter === "ALL" ? true : t.status === "PENDING"
-                          );
-                          if (filtered.length === 0) {
-                            return (
-                              <TableRow>
-                                <TableCell colSpan={4} className="h-48">
-                                  <EmptyState
-                                    icon={ListOrdered}
-                                    title="Sem próximas despesas"
-                                    description="Você não tem nenhuma despesa agendada ou pendente para exibir."
-                                  />
-                                </TableCell>
-                              </TableRow>
+                    <TabsList className="grid w-[220px] grid-cols-2 shrink-0">
+                      <TabsTrigger value="ALL">Todas</TabsTrigger>
+                      <TabsTrigger value="PENDING">Pendentes</TabsTrigger>
+                    </TabsList>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        {tableColumns}
+                        <TableBody>
+                          {(() => {
+                            const filtered = upcomingExpenses.filter((t: any) =>
+                              filter === "ALL" ? true : t.status === "PENDING"
                             );
-                          }
-                          return filtered.map((tx: any, i: number) => <ExpenseRow key={tx.id || i} tx={tx} i={i} />);
-                        })()}
-                      </TableBody>
-                    </Table>
-                  </Tabs>
-                </CardContent>
+                            if (filtered.length === 0) {
+                              return (
+                                <TableRow>
+                                  <TableCell colSpan={4} className="h-48">
+                                    <EmptyState
+                                      icon={ListOrdered}
+                                      title="Sem próximas despesas"
+                                      description="Você não tem nenhuma despesa agendada ou pendente para exibir."
+                                    />
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            }
+                            return filtered.map((tx: any, i: number) => <ExpenseRow key={tx.id || i} tx={tx} i={i} />);
+                          })()}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Tabs>
               </Card>
             </motion.div>
           </TabsContent>

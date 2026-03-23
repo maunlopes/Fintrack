@@ -1,34 +1,46 @@
 "use client";
 
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
-import { ChartTooltip } from "./chart-tooltip";
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from "@/components/ui/chart";
 
-const C_INCOME      = "#10b981";
-const C_EXPENSES    = "#ec4564";
-const C_INVESTMENTS = "#3b82f6";
+const chartConfig = {
+  income:      { label: "Receitas",      color: "var(--chart-2)" },
+  investments: { label: "Aportes",       color: "var(--chart-1)" },
+  expenses:    { label: "Despesas",      color: "var(--chart-5)" },
+} satisfies ChartConfig;
 
 export function IncomeExpensesChart({ data }: { data: any[] }) {
   return (
-    <ResponsiveContainer width="100%" height={280}>
+    <ChartContainer config={chartConfig} className="h-[280px] w-full">
       <BarChart data={data} barGap={4}>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-        <XAxis dataKey="month" tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-        <Tooltip content={<ChartTooltip />} cursor={{ fill: "var(--muted)", opacity: 0.5 }} />
-        <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, color: "var(--muted-foreground)", paddingTop: "12px" }} />
-        <Bar dataKey="income" name="Receita" fill={C_INCOME} radius={[6, 6, 0, 0]} />
-        <Bar dataKey="investments" name="Aportes" fill={C_INVESTMENTS} radius={[6, 6, 0, 0]} />
-        <Bar dataKey="expenses" name="Despesas" fill={C_EXPENSES} radius={[6, 6, 0, 0]} />
+        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
+        <XAxis
+          dataKey="month"
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
+          tick={{ fontSize: 12 }}
+        />
+        <YAxis
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
+          tick={{ fontSize: 12 }}
+          tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+        />
+        <ChartTooltip content={<ChartTooltipContent />} cursor={{ fill: "var(--muted)", opacity: 0.5 }} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Bar dataKey="income"      fill="var(--color-income)"      radius={[6, 6, 0, 0]} />
+        <Bar dataKey="investments" fill="var(--color-investments)" radius={[6, 6, 0, 0]} />
+        <Bar dataKey="expenses"    fill="var(--color-expenses)"    radius={[6, 6, 0, 0]} />
       </BarChart>
-    </ResponsiveContainer>
+    </ChartContainer>
   );
 }

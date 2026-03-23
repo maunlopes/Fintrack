@@ -24,18 +24,46 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/extrato", label: "Extrato", icon: ListOrdered },
-  { href: "/cartoes", label: "Cartões", icon: CreditCard },
-  { href: "/despesas", label: "Despesas", icon: TrendingDown, tourId: "nav-despesas" },
-  { href: "/receitas", label: "Receitas", icon: TrendingUp },
-  { href: "/contas", label: "Contas", icon: Landmark, tourId: "nav-contas" },
-  { href: "/open-finance", label: "Open Finance", icon: Link2 },
-  { href: "/investimentos", label: "Investimentos", icon: BarChart3 },
-  { href: "/categorias", label: "Categorias", icon: Tag },
-  { href: "/orcamentos", label: "Orçamentos", icon: Target },
-  { href: "/resumo-anual", label: "Resumo Anual", icon: TrendingUp },
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  tourId?: string;
+}
+
+interface NavGroup {
+  groupLabel?: string;
+  items: NavItem[];
+}
+
+import React from "react";
+
+const navGroups: NavGroup[] = [
+  {
+    items: [
+      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    ],
+  },
+  {
+    groupLabel: "Transações",
+    items: [
+      { href: "/despesas", label: "Despesas", icon: TrendingDown, tourId: "nav-despesas" },
+      { href: "/receitas", label: "Receitas", icon: TrendingUp },
+      { href: "/extrato", label: "Extrato", icon: ListOrdered },
+      { href: "/cartoes", label: "Cartões", icon: CreditCard },
+      { href: "/orcamentos", label: "Orçamentos", icon: Target },
+    ],
+  },
+  {
+    groupLabel: "Patrimônio",
+    items: [
+      { href: "/investimentos", label: "Investimentos", icon: BarChart3 },
+      { href: "/contas", label: "Contas", icon: Landmark, tourId: "nav-contas" },
+      { href: "/categorias", label: "Categorias", icon: Tag },
+      { href: "/open-finance", label: "Open Finance", icon: Link2 },
+      { href: "/resumo-anual", label: "Resumo Anual", icon: TrendingUp },
+    ],
+  },
 ];
 
 interface SidebarProps {
@@ -83,57 +111,77 @@ export function Sidebar({ isOpen = true, onClose, collapsed = false }: SidebarPr
       <Separator className="bg-sidebar-border" />
 
       {/* Nav Items */}
-      <ul data-tour="sidebar-nav" className={cn("flex-1 py-4 space-y-1", collapsed ? "px-1.5" : "px-2")}>
-        {navItems.map((item, i) => {
-          const Icon = item.icon;
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-
-          const linkClass = cn(
-            "flex items-center rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer",
-            collapsed ? "justify-center h-10 w-10 mx-auto" : "gap-3 h-10 px-3",
-            isActive
-              ? "bg-primary text-primary-foreground shadow-sm"
-              : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          );
-
+      <div data-tour="sidebar-nav" className={cn("flex-1 py-4 overflow-y-auto", collapsed ? "px-1.5" : "px-2")}>
+        {navGroups.map((group, gIdx) => {
+          let itemIndex = navGroups.slice(0, gIdx).reduce((s, g) => s + g.items.length, 0);
           return (
-            <motion.li
-              key={item.href}
-              initial={{ opacity: 0, x: -16 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.05 }}
-            >
-              {collapsed ? (
-                <Tooltip>
-                  <TooltipTrigger render={
-                    <Link
-                      href={item.href}
-                      title={item.label}
-                      onClick={onClose}
-                      {...(item.tourId ? { "data-tour": item.tourId } : {})}
-                      className={linkClass}
-                    >
-                      <Icon className="w-4 h-4 flex-shrink-0" />
-                    </Link>
-                  } />
-                  <TooltipContent side="right">{item.label}</TooltipContent>
-                </Tooltip>
-              ) : (
-                <Link
-                  href={item.href}
-                  title={item.label}
-                  onClick={onClose}
-                  {...(item.tourId ? { "data-tour": item.tourId } : {})}
-                  className={linkClass}
-                >
-                  <Icon className="w-4 h-4 flex-shrink-0" />
-                  {item.label}
-                </Link>
+            <div key={gIdx}>
+              {gIdx > 0 && (
+                <>
+                  <Separator className="bg-sidebar-border my-2" />
+                  {!collapsed && group.groupLabel && (
+                    <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40 select-none">
+                      {group.groupLabel}
+                    </p>
+                  )}
+                </>
               )}
-            </motion.li>
+              <ul className="space-y-0.5">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                  const delay = itemIndex++ * 0.04;
+
+                  const linkClass = cn(
+                    "flex items-center rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer",
+                    collapsed ? "justify-center h-10 w-10 mx-auto" : "gap-3 h-10 px-3",
+                    isActive
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  );
+
+                  return (
+                    <motion.li
+                      key={item.href}
+                      initial={{ opacity: 0, x: -16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay }}
+                    >
+                      {collapsed ? (
+                        <Tooltip>
+                          <TooltipTrigger render={
+                            <Link
+                              href={item.href}
+                              title={item.label}
+                              onClick={onClose}
+                              {...(item.tourId ? { "data-tour": item.tourId } : {})}
+                              className={linkClass}
+                            >
+                              <Icon className="w-4 h-4 flex-shrink-0" />
+                            </Link>
+                          } />
+                          <TooltipContent side="right">{item.label}</TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          title={item.label}
+                          onClick={onClose}
+                          {...(item.tourId ? { "data-tour": item.tourId } : {})}
+                          className={linkClass}
+                        >
+                          <Icon className="w-4 h-4 flex-shrink-0" />
+                          {item.label}
+                        </Link>
+                      )}
+                    </motion.li>
+                  );
+                })}
+              </ul>
+            </div>
           );
         })}
-      </ul>
+      </div>
 
       <Separator className="bg-sidebar-border" />
 
@@ -152,7 +200,7 @@ export function Sidebar({ isOpen = true, onClose, collapsed = false }: SidebarPr
                   className={cn(
                     "flex items-center justify-center h-10 w-10 mx-auto rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer",
                     pathname === href
-                      ? "bg-primary text-primary-foreground shadow-sm"
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                       : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   )}
                 >
@@ -198,9 +246,9 @@ export function MobileSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: (
           <motion.div
             initial={{ x: -208 }}
             animate={{ x: 0 }}
-            exit={{ x: -208 }}
+            exit={{ x: -240 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed left-0 top-0 bottom-0 z-50 w-52 lg:hidden"
+            className="fixed left-0 top-0 bottom-0 z-50 w-60 lg:hidden"
           >
             <Sidebar isOpen={isOpen} onClose={onClose} />
           </motion.div>

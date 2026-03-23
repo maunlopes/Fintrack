@@ -1,11 +1,10 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const APP_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 const FROM = process.env.EMAIL_FROM ?? "FinTrack <noreply@fintrack.app>";
 
 export async function sendVerificationEmail(email: string, token: string) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   const url = `${APP_URL}/api/auth/verify-email?token=${token}`;
 
   await resend.emails.send({

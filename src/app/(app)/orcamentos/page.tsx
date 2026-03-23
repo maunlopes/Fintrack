@@ -150,12 +150,12 @@ function OrcamentosContent() {
 
   if (loading) {
     return (
-      <div className="p-4 lg:p-6 space-y-6">
+      <div className="p-4 pb-24 lg:p-6 lg:pb-6 space-y-6">
         <div className="flex justify-between items-center">
           <Skeleton className="h-7 w-40" />
           <Skeleton className="h-10 w-40" />
         </div>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
         </div>
         <div className="space-y-3">
@@ -167,7 +167,7 @@ function OrcamentosContent() {
 
   return (
     <motion.div
-      className="p-4 lg:p-6 space-y-6"
+      className="p-4 pb-24 lg:p-6 lg:pb-6 space-y-6"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -186,7 +186,7 @@ function OrcamentosContent() {
       </motion.div>
 
       {/* KPI Summary */}
-      <motion.div variants={itemVariants} className="grid grid-cols-3 gap-4">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {kpiCards.map((card) => {
           const Icon = card.icon;
           return (
@@ -208,7 +208,7 @@ function OrcamentosContent() {
       {/* Filter Tabs + List */}
       <motion.div variants={itemVariants} className="space-y-4">
         <Tabs value={filter} onValueChange={(v) => setFilter(v as FilterType)}>
-          <TabsList className="w-full sm:w-auto">
+          <TabsList>
             <TabsTrigger value="all">Todas ({data.length})</TabsTrigger>
             <TabsTrigger value="with">Com orçamento ({withBudget.length})</TabsTrigger>
             <TabsTrigger value="alert">Em alerta ({alerts.length})</TabsTrigger>
@@ -299,7 +299,7 @@ function CategoryBudgetRow({
         show: { opacity: 1, y: 0, transition: { delay: index * 0.04, duration: 0.3, ease: "easeOut" } },
       }}
     >
-      <Card className="p-4 shadow-sm hover:shadow-md transition-shadow">
+      <Card className="p-6 shadow-sm">
         <div className="flex items-start gap-4">
           {/* Icon */}
           <div

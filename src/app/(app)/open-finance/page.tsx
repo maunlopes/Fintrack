@@ -116,14 +116,14 @@ export default function OpenFinancePage() {
 
         {/* Tabs */}
         <Tabs defaultValue="contas">
-          <TabsList className="w-full">
-            <TabsTrigger value="contas" className="flex-1 gap-1.5">
+          <TabsList>
+            <TabsTrigger value="contas" className="gap-1.5">
               Contas conectadas
               {items.length > 0 && (
                 <Badge variant="secondary" className="text-xs h-4 px-1.5">{items.length}</Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="pendentes" className="flex-1 gap-1.5">
+            <TabsTrigger value="pendentes" className="gap-1.5">
               Pendentes
               {pending.length > 0 && (
                 <Badge variant="destructive" className="text-xs h-4 px-1.5">{pending.length}</Badge>

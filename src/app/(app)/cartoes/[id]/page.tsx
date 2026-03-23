@@ -7,8 +7,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { format, addMonths, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowLeft, Plus, CreditCard, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, CreditCard, ChevronLeft, ChevronRight } from "lucide-react";
 import { PageTransition } from "@/components/shared/page-transition";
+import { Breadcrumb } from "@/components/shared/breadcrumb";
 import { MoneyValue } from "@/components/shared/money-value";
 import { EmptyState } from "@/components/shared/empty-state";
 import { AnimatedCard, listVariants, listItemVariants } from "@/components/shared/animated-card";
@@ -87,10 +88,10 @@ interface BankAccountOption {
 }
 
 function getLimitColor(pct: number) {
-  if (pct < 50) return "#10B981";
-  if (pct < 80) return "#F59E0B";
-  if (pct < 95) return "#FF5B04";
-  return "#EF4444";
+  if (pct < 50) return "var(--success)";
+  if (pct < 80) return "var(--warning)";
+  if (pct < 95) return "var(--warning)";
+  return "var(--destructive)";
 }
 
 function TransactionForm({ cardId, categories, onSuccess }: {
@@ -320,7 +321,7 @@ function FaturasView({ invoices, limit, navDate, onNav, today, cardId, onRefresh
               <Button
                 variant="outline"
                 size="icon"
-                className="h-8 w-8"
+                className="h-8 w-8 bg-white dark:bg-input/30"
                 onClick={() => onNav(subMonths(navDate, 1))}
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -346,7 +347,7 @@ function FaturasView({ invoices, limit, navDate, onNav, today, cardId, onRefresh
               <Button
                 variant="outline"
                 size="icon"
-                className="h-8 w-8"
+                className="h-8 w-8 bg-white dark:bg-input/30"
                 onClick={() => onNav(addMonths(navDate, 1))}
               >
                 <ChevronRight className="w-4 h-4" />
@@ -632,30 +633,28 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
 
   return (
     <PageTransition>
-      <div className="flex items-center gap-3 mb-6">
-        <Tooltip>
-          <TooltipTrigger>
-            <LinkButton href="/cartoes" variant="ghost" size="icon">
-              <ArrowLeft className="w-4 h-4" />
-            </LinkButton>
-          </TooltipTrigger>
-          <TooltipContent>Voltar para cartões</TooltipContent>
-        </Tooltip>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            {card.name}
-            {card.brand && getCardBrandIcon(card.brand, "w-10 h-6 ml-2")}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Fecha dia {card.closingDay} · Vence dia {card.dueDay}
-          </p>
-        </div>
-        <div className="ml-auto">
-          <motion.div whileTap={{ scale: 0.97 }}>
-            <Button onClick={() => setDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" /> Nova transação
-            </Button>
-          </motion.div>
+      <div className="mb-6">
+        <Breadcrumb items={[
+          { label: "Cartões", href: "/cartoes" },
+          { label: card.name },
+        ]} />
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+              {card.name}
+              {card.brand && getCardBrandIcon(card.brand, "w-10 h-6 ml-2")}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Fecha dia {card.closingDay} · Vence dia {card.dueDay}
+            </p>
+          </div>
+          <div className="ml-auto">
+            <motion.div whileTap={{ scale: 0.97 }}>
+              <Button onClick={() => setDialogOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" /> Nova transação
+              </Button>
+            </motion.div>
+          </div>
         </div>
       </div>
 
@@ -689,6 +688,13 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
                 </p>
               )}
             </div>
+            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/50">
+              <span className="text-[11px] text-muted-foreground">Referência:</span>
+              <span className="flex items-center gap-1 text-[11px] text-success"><span className="inline-block w-2 h-2 rounded-full bg-success" /> &lt;50%</span>
+              <span className="flex items-center gap-1 text-[11px] text-warning"><span className="inline-block w-2 h-2 rounded-full bg-warning" /> &lt;80%</span>
+              <span className="flex items-center gap-1 text-[11px] text-orange-500"><span className="inline-block w-2 h-2 rounded-full bg-orange-500" /> &lt;95%</span>
+              <span className="flex items-center gap-1 text-[11px] text-destructive"><span className="inline-block w-2 h-2 rounded-full bg-destructive" /> &gt;95%</span>
+            </div>
           </CardContent>
         </Card>
       </AnimatedCard>
@@ -696,7 +702,7 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
       {/* Tabs */}
       <div className="mb-4">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-          <TabsList className="grid w-full grid-cols-2 sm:w-[300px]">
+          <TabsList>
             <TabsTrigger value="transacoes">Transações</TabsTrigger>
             <TabsTrigger value="faturas">
               Faturas

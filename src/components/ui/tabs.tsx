@@ -24,11 +24,11 @@ function Tabs({
 }
 
 const tabsListVariants = cva(
-  "group/tabs-list inline-flex w-fit items-center justify-center rounded-lg p-1 text-muted-foreground group-data-horizontal/tabs:h-10 group-data-vertical/tabs:h-fit group-data-vertical/tabs:flex-col data-[variant=line]:rounded-none",
+  "group/tabs-list inline-flex w-fit items-center justify-center rounded-lg p-1 text-muted-foreground group-data-horizontal/tabs:h-9 group-data-vertical/tabs:h-fit group-data-vertical/tabs:flex-col data-[variant=line]:rounded-none",
   {
     variants: {
       variant: {
-        default: "bg-muted",
+        default: "bg-white border border-border dark:bg-muted dark:border-transparent",
         line: "gap-1 bg-transparent",
       },
     },
@@ -58,7 +58,7 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
       className={cn(
-        "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-all outline-none cursor-pointer text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-data-horizontal/tabs:flex-1 data-active:bg-primary data-active:text-primary-foreground data-active:shadow-md data-active:hover:bg-primary/90 data-active:hover:text-primary-foreground group-data-horizontal/tabs-list:data-variant=line:data-active:shadow-none data-variant=line:rounded-none data-variant=line:border-b-2 data-variant=line:border-transparent data-variant=line:bg-transparent data-variant=line:hover:bg-transparent data-variant=line:data-active:border-primary data-active:font-semibold",
+        "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md px-3 py-1 text-sm font-medium whitespace-nowrap transition-all outline-none cursor-pointer text-muted-foreground hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-active:bg-background data-active:text-foreground data-active:shadow-sm data-variant=line:rounded-none data-variant=line:border-b-2 data-variant=line:border-transparent data-variant=line:bg-transparent data-variant=line:hover:bg-transparent data-variant=line:data-active:border-primary data-variant=line:data-active:shadow-none data-variant=line:data-active:text-foreground data-active:font-semibold",
         className
       )}
       {...props}

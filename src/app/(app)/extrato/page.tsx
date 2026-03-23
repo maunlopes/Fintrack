@@ -12,10 +12,12 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { listVariants, listItemVariants } from "@/components/shared/animated-card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/lib/format";
-import { TrendingUp, TrendingDown, ListOrdered, Search, Wallet } from "lucide-react";
+import { TrendingUp, TrendingDown, ListOrdered, Search, Wallet, X } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface Transaction {
   id: string;
@@ -147,6 +149,20 @@ function ExtratoContent() {
 
   const sortedDays = Object.keys(groupedByDay).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
+  const activeFiltersCount = [
+    filter !== "ALL",
+    categoryFilter !== "ALL",
+    periodFilter !== "ALL",
+    search !== "",
+  ].filter(Boolean).length;
+
+  function clearFilters() {
+    setFilter("ALL");
+    setCategoryFilter("ALL");
+    setPeriodFilter("ALL");
+    setSearch("");
+  }
+
   return (
     <PageTransition>
       {/* HEADER */}
@@ -161,7 +177,7 @@ function ExtratoContent() {
       </div>
 
       {/* SUMMARY CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
         <Card className="p-6 border-success/30 bg-success/5 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between p-0 pb-3">
             <CardTitle className="text-success font-semibold">Recebido</CardTitle>
@@ -176,7 +192,7 @@ function ExtratoContent() {
         <Card className="p-6 border-dashed border-success/40 bg-card shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between p-0 pb-3">
             <CardTitle className="text-muted-foreground font-semibold">A Receber</CardTitle>
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-success/10">
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </div>
           </CardHeader>
@@ -236,7 +252,7 @@ function ExtratoContent() {
       {/* FILTERS + SEARCH */}
       <div className="mb-6 flex flex-col sm:flex-row gap-3 flex-wrap">
         <Tabs value={filter} onValueChange={(val) => setFilter(val as any)}>
-          <TabsList className="grid w-full grid-cols-3 sm:w-[320px]">
+          <TabsList>
             <TabsTrigger value="ALL">Tudo</TabsTrigger>
             <TabsTrigger value="PAID">Realizado</TabsTrigger>
             <TabsTrigger value="PENDING">Previsto</TabsTrigger>
@@ -306,6 +322,13 @@ function ExtratoContent() {
             className="pl-9"
           />
         </div>
+
+        {activeFiltersCount > 0 && (
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground hover:text-foreground h-10">
+            <X className="w-3.5 h-3.5 mr-1" /> Limpar filtros
+            <Badge variant="secondary" className="ml-1.5 text-xs px-1.5">{activeFiltersCount}</Badge>
+          </Button>
+        )}
       </div>
 
       {/* TIMELINE LIST */}

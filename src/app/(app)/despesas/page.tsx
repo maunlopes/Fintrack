@@ -543,7 +543,7 @@ function DespesasContent() {
       {/* FILTERS */}
       <div className="mb-4 flex flex-col sm:flex-row gap-3 flex-wrap">
         <Tabs value={filter} onValueChange={(val) => setFilter(val as any)}>
-          <TabsList className="grid w-full grid-cols-3 sm:w-[320px]">
+          <TabsList>
             <TabsTrigger value="ALL">Tudo</TabsTrigger>
             <TabsTrigger value="PAID">Pago</TabsTrigger>
             <TabsTrigger value="PENDING">A Pagar</TabsTrigger>

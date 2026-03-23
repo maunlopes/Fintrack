@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { TrendingUp, Plus, Building2, Landmark, LineChart, Coins, ShieldCheck, Wallet, Search } from "lucide-react";
+import { TrendingUp, TrendingDown, Plus, Building2, Landmark, LineChart, Coins, ShieldCheck, Wallet, Search } from "lucide-react";
 
 import { PageTransition } from "@/components/shared/page-transition";
 import { MoneyValue } from "@/components/shared/money-value";
@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { z } from "zod";
+import { cn } from "@/lib/utils";
 
 const investmentSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -127,16 +128,16 @@ export default function InvestimentosPage() {
     <PageTransition>
       <div className="flex flex-col gap-6 pb-24">
         {/* Header */}
-        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Investimentos</h1>
-            <p className="text-sm text-muted-foreground mt-1">Controle e acompanhe sua carteira</p>
+            <p className="text-sm text-muted-foreground">Controle e acompanhe sua carteira</p>
           </div>
           <Button className="w-full sm:w-auto" onClick={() => setDialogOpen(true)}>
             <Plus className="size-4 mr-2" />
             Novo Investimento
           </Button>
-        </header>
+        </div>
 
         {/* Summary cards */}
         {!loading && investments.length > 0 && (
@@ -270,7 +271,10 @@ export default function InvestimentosPage() {
                         </div>
                         <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-border/60 pt-2">
                           <span>Aportado: <span className="font-medium text-foreground">{deposited.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span></span>
-                          <span className={isPositive ? "text-success font-semibold" : "text-destructive font-semibold"}>
+                          <span className={cn("flex items-center gap-1 font-semibold", isPositive ? "text-success" : "text-destructive")}>
+                            {isPositive
+                              ? <TrendingUp className="size-3.5" />
+                              : <TrendingDown className="size-3.5" />}
                             {isPositive ? "+" : ""}{profit.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} ({pct}%)
                           </span>
                         </div>

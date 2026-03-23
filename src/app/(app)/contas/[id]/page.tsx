@@ -201,7 +201,7 @@ function ContaExtratoContent({ id }: { id: string }) {
       {/* FILTERS */}
       <div className="mb-6">
         <Tabs value={filter} onValueChange={(val) => setFilter(val as any)}>
-          <TabsList className="grid w-full grid-cols-3 sm:w-[320px]">
+          <TabsList>
             <TabsTrigger value="ALL">Tudo</TabsTrigger>
             <TabsTrigger value="PAID">Liquidado</TabsTrigger>
             <TabsTrigger value="PENDING">Previsto</TabsTrigger>
@@ -237,7 +237,7 @@ function ContaExtratoContent({ id }: { id: string }) {
                       />
                       <div
                         className="w-9 h-9 flex items-center justify-center rounded-full text-white text-xs font-bold flex-shrink-0"
-                        style={{ backgroundColor: tx.category?.color || (isIncome ? "#10B981" : "#8A9AA3") }}
+                        style={{ backgroundColor: tx.category?.color || (isIncome ? "var(--success)" : "var(--muted-foreground)") }}
                       >
                         {tx.category?.name?.[0] || "?"}
                       </div>

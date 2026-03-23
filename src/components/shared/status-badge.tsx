@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { PaymentStatus } from "@prisma/client";
 import { cn } from "@/lib/utils";
+import { AlertCircle } from "lucide-react";
 
 const statusConfig: Record<PaymentStatus, { label: string; className: string }> = {
   PENDING: { label: "Pendente", className: "bg-warning/15 text-warning border-warning/30" },
@@ -11,13 +12,14 @@ const statusConfig: Record<PaymentStatus, { label: string; className: string }> 
 export function StatusBadge({ status, type = "expense" }: { status: PaymentStatus, type?: "income" | "expense" }) {
   let label = statusConfig[status].label;
   let className = statusConfig[status].className;
-  
+
   if (type === "income" && status === "PAID") {
     label = "Recebido";
   }
 
   return (
-    <Badge variant="outline" className={cn("text-xs", className)}>
+    <Badge variant="outline" className={cn("text-xs gap-1", className)}>
+      {status === "OVERDUE" && <AlertCircle className="size-3 animate-pulse" />}
       {label}
     </Badge>
   );

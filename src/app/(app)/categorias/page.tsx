@@ -105,7 +105,7 @@ function CategoryForm({
           <FormItem>
             <FormLabel>Ícone</FormLabel>
             <FormControl>
-              <div className="grid grid-cols-8 gap-1.5 max-h-40 overflow-y-auto rounded-lg border border-input p-2">
+              <div className="grid grid-cols-6 sm:grid-cols-8 gap-1.5 max-h-40 overflow-y-auto rounded-lg border border-input p-2">
                 {Object.entries(CATEGORY_ICONS).map(([key, Icon]) => (
                   <Button
                     key={key}

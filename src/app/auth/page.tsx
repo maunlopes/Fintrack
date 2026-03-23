@@ -296,9 +296,9 @@ function AuthPageInner() {
           {!verifyEmail && (
             <CardHeader className="pb-4">
               <Tabs value={tab} onValueChange={setTab}>
-                <TabsList className="w-full">
-                  <TabsTrigger value="login" className="flex-1">Entrar</TabsTrigger>
-                  <TabsTrigger value="register" className="flex-1">Criar conta</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="login">Entrar</TabsTrigger>
+                  <TabsTrigger value="register">Criar conta</TabsTrigger>
                 </TabsList>
               </Tabs>
             </CardHeader>

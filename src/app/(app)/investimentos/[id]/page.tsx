@@ -5,9 +5,9 @@ import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, TrendingUp, HandCoins, ArrowDownCircle, ArrowUpCircle, Pencil, Trash2 } from "lucide-react";
+import { Plus, TrendingUp, HandCoins, ArrowDownCircle, ArrowUpCircle, Pencil, Trash2 } from "lucide-react";
 import { PageTransition } from "@/components/shared/page-transition";
-import { LinkButton } from "@/components/shared/link-button";
+import { Breadcrumb } from "@/components/shared/breadcrumb";
 import { MoneyValue } from "@/components/shared/money-value";
 import { EmptyState } from "@/components/shared/empty-state";
 import { AnimatedCard, listVariants, listItemVariants } from "@/components/shared/animated-card";
@@ -203,19 +203,13 @@ export default function InvestmentDetailPage({ params }: { params: Promise<{ id:
     <PageTransition>
       <div className="flex flex-col gap-6 pb-24">
 
-        <div className="flex items-center gap-3">
-          <Tooltip>
-            <TooltipTrigger>
-              <LinkButton href="/investimentos" variant="ghost" size="icon">
-                <ArrowLeft className="size-4" />
-              </LinkButton>
-            </TooltipTrigger>
-            <TooltipContent>Voltar para investimentos</TooltipContent>
-          </Tooltip>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight line-clamp-1">{investment.name}</h1>
-            <p className="text-sm text-muted-foreground">{investment.institution}</p>
-          </div>
+        <div>
+          <Breadcrumb items={[
+            { label: "Investimentos", href: "/investimentos" },
+            { label: investment.name },
+          ]} />
+          <h1 className="text-2xl font-bold tracking-tight line-clamp-1">{investment.name}</h1>
+          <p className="text-sm text-muted-foreground">{investment.institution}</p>
         </div>
 
         <AnimatedCard className="border border-primary/20 bg-gradient-to-br from-primary/10 to-transparent rounded-xl overflow-hidden p-6 flex flex-col justify-between items-start sm:items-center sm:flex-row gap-6">

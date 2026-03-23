@@ -7,7 +7,7 @@ import { MonthSelector } from "@/components/shared/month-selector";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Plus, TrendingUp, Trash2, Pencil, Search, Tag, Wallet, RotateCcw } from "lucide-react";
+import { Plus, TrendingUp, Trash2, Pencil, Search, Tag, Wallet, RotateCcw, X } from "lucide-react";
 type RecurrenceFrequency = "WEEKLY" | "BIWEEKLY" | "MONTHLY";
 import { PageTransition } from "@/components/shared/page-transition";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/shared/currency-input";
@@ -271,6 +272,18 @@ function ReceitasContent() {
     return statusOk && searchOk && categoryOk;
   });
 
+  const activeFiltersCount = [
+    filter !== "ALL",
+    categoryFilter !== "ALL",
+    search !== "",
+  ].filter(Boolean).length;
+
+  function clearFilters() {
+    setFilter("ALL");
+    setCategoryFilter("ALL");
+    setSearch("");
+  }
+
   return (
     <PageTransition>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
@@ -307,7 +320,7 @@ function ReceitasContent() {
           <Card className="p-6 border-dashed border-success/40 bg-card shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between p-0 pb-3">
               <CardTitle className="text-muted-foreground font-semibold">A Receber</CardTitle>
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-success/5">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-success/10">
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </div>
             </CardHeader>
@@ -328,7 +341,7 @@ function ReceitasContent() {
                 <div className="flex items-center gap-2">
                   <span
                     className="inline-block w-3 h-3 rounded-full shadow-sm"
-                    style={{ backgroundColor: topIncomeCategory.color || "#10B981" }}
+                    style={{ backgroundColor: topIncomeCategory.color || "var(--success)" }}
                   />
                   <span className="font-semibold text-foreground truncate max-w-[120px]">{topIncomeCategory.name}</span>
                 </div>
@@ -342,7 +355,7 @@ function ReceitasContent() {
       {/* FILTERS + SEARCH */}
       <div className="mb-6 flex flex-col sm:flex-row gap-3 flex-wrap">
         <Tabs value={filter} onValueChange={(val) => setFilter(val as any)}>
-          <TabsList className="grid w-full grid-cols-3 sm:w-[320px]">
+          <TabsList>
             <TabsTrigger value="ALL">Tudo</TabsTrigger>
             <TabsTrigger value="PAID">Recebido</TabsTrigger>
             <TabsTrigger value="PENDING">A Receber</TabsTrigger>
@@ -385,6 +398,13 @@ function ReceitasContent() {
             className="pl-9"
           />
         </div>
+
+        {activeFiltersCount > 0 && (
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground hover:text-foreground h-10">
+            <X className="w-3.5 h-3.5 mr-1" /> Limpar filtros
+            <Badge variant="secondary" className="ml-1.5 text-xs px-1.5">{activeFiltersCount}</Badge>
+          </Button>
+        )}
       </div>
 
       {loading ? (
@@ -421,7 +441,7 @@ function ReceitasContent() {
                     {/* Category avatar */}
                     <div
                       className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                      style={{ backgroundColor: income.category?.color || "#10B981" }}
+                      style={{ backgroundColor: income.category?.color || "var(--success)" }}
                     >
                       {income.category?.name?.[0]?.toUpperCase() || "R"}
                     </div>

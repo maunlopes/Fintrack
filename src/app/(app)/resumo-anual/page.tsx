@@ -41,28 +41,52 @@ function YearSelector() {
 
   const currentYearParam = searchParams.get("year");
   const currentYear = currentYearParam ? parseInt(currentYearParam) : new Date().getFullYear();
+  const [inputValue, setInputValue] = useState(currentYear.toString());
+  const maxYear = new Date().getFullYear() + 5;
 
-  const handlePreviousYear = () => {
+  function navigateTo(year: number) {
     const params = new URLSearchParams(searchParams.toString());
-    params.set("year", (currentYear - 1).toString());
+    params.set("year", year.toString());
     router.push(`${pathname}?${params.toString()}`);
-  };
+  }
 
-  const handleNextYear = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("year", (currentYear + 1).toString());
-    router.push(`${pathname}?${params.toString()}`);
-  };
+  const handlePreviousYear = () => navigateTo(currentYear - 1);
+  const handleNextYear = () => navigateTo(currentYear + 1);
+
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setInputValue(e.target.value);
+  }
+
+  function handleInputCommit() {
+    const parsed = parseInt(inputValue);
+    if (!isNaN(parsed) && parsed >= 2000 && parsed <= maxYear) {
+      navigateTo(parsed);
+    } else {
+      setInputValue(currentYear.toString());
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") handleInputCommit();
+    if (e.key === "Escape") setInputValue(currentYear.toString());
+  }
 
   return (
     <div className="flex items-center gap-2">
-      <Button variant="outline" size="icon" className="w-8 h-8" onClick={handlePreviousYear}>
+      <Button variant="outline" size="icon" className="w-8 h-8 bg-white dark:bg-input/30" onClick={handlePreviousYear}>
         <ChevronLeft className="w-4 h-4" />
       </Button>
-      <div className="flex items-center gap-2 justify-center min-w-[80px]">
-        <span className="text-sm font-semibold whitespace-nowrap">{currentYear}</span>
-      </div>
-      <Button variant="outline" size="icon" className="w-8 h-8" onClick={handleNextYear}>
+      <input
+        type="number"
+        value={inputValue}
+        onChange={handleInputChange}
+        onBlur={handleInputCommit}
+        onKeyDown={handleKeyDown}
+        min={2000}
+        max={maxYear}
+        className="w-16 text-center text-sm font-semibold bg-transparent border border-input rounded-md h-8 focus:outline-none focus:ring-2 focus:ring-ring/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+      />
+      <Button variant="outline" size="icon" className="w-8 h-8 bg-white dark:bg-input/30" onClick={handleNextYear}>
         <ChevronRight className="w-4 h-4" />
       </Button>
     </div>

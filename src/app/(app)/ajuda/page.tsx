@@ -493,11 +493,11 @@ export default function AjudaPage() {
 
         {/* Tabs */}
         <Tabs value={tab} onValueChange={(v) => setTab(v as "manual" | "faq")} className="mb-6">
-          <TabsList className="w-full sm:w-auto">
-            <TabsTrigger value="manual" className="flex items-center gap-2 flex-1 sm:flex-none">
+          <TabsList>
+            <TabsTrigger value="manual" className="flex items-center gap-2">
               <BookOpen className="w-3.5 h-3.5" /> Manual de Uso
             </TabsTrigger>
-            <TabsTrigger value="faq" className="flex items-center gap-2 flex-1 sm:flex-none">
+            <TabsTrigger value="faq" className="flex items-center gap-2">
               <HelpCircle className="w-3.5 h-3.5" /> Perguntas Frequentes
             </TabsTrigger>
           </TabsList>

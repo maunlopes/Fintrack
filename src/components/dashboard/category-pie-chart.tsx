@@ -1,20 +1,35 @@
 "use client";
 
+import { PieChart, Pie, Cell } from "recharts";
 import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
-import { ChartTooltip } from "./chart-tooltip";
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from "@/components/ui/chart";
 
-const CHART_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#06b6d4", "#ec4564"];
+const FALLBACK_COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+];
 
 export function CategoryPieChart({ data }: { data: any[] }) {
+  // Build ChartConfig dynamically from category data
+  const chartConfig = data.reduce<ChartConfig>((cfg, entry, i) => {
+    cfg[entry.name] = {
+      label: entry.name,
+      color: entry.color ?? FALLBACK_COLORS[i % FALLBACK_COLORS.length],
+    };
+    return cfg;
+  }, {});
+
   return (
-    <ResponsiveContainer width="100%" height={280}>
+    <ChartContainer config={chartConfig} className="h-[280px] w-full">
       <PieChart>
         <Pie
           data={data}
@@ -24,21 +39,20 @@ export function CategoryPieChart({ data }: { data: any[] }) {
           outerRadius={110}
           paddingAngle={2}
           dataKey="value"
+          nameKey="name"
           strokeWidth={2}
           stroke="var(--card)"
         >
-          {data.map((_entry: any, i: number) => (
-            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+          {data.map((entry: any, i: number) => (
+            <Cell
+              key={i}
+              fill={entry.color ?? FALLBACK_COLORS[i % FALLBACK_COLORS.length]}
+            />
           ))}
         </Pie>
-        <Tooltip content={<ChartTooltip />} />
-        <Legend
-          iconType="circle"
-          iconSize={8}
-          wrapperStyle={{ fontSize: 12, color: "var(--muted-foreground)", paddingTop: "12px" }}
-          formatter={(value: string) => <span className="text-muted-foreground ml-1">{value}</span>}
-        />
+        <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+        <ChartLegend content={<ChartLegendContent nameKey="name" />} />
       </PieChart>
-    </ResponsiveContainer>
+    </ChartContainer>
   );
 }

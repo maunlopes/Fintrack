@@ -151,7 +151,7 @@ export function PendingTransactionsList({ transactions, categories, bankAccounts
               </div>
 
               <div className="flex items-center gap-3 ml-3 shrink-0">
-                <span className={`text-sm font-semibold tabular-nums ${isDebit ? "text-destructive" : "text-green-600 dark:text-green-400"}`}>
+                <span className={`text-sm font-semibold tabular-nums ${isDebit ? "text-destructive" : "text-success"}`}>
                   {isDebit ? "-" : "+"}{formatCurrency(amount)}
                 </span>
                 {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}

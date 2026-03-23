@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { LogOut, User, Settings, PlayCircle, KeyRound, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -31,6 +32,7 @@ export default function ConfigPage() {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
   const profileForm = useForm<ProfileInput>({
     resolver: zodResolver(profileSchema),
@@ -283,7 +285,7 @@ export default function ConfigPage() {
               <div className="mt-auto pt-4">
                 <Separator className="mb-4" />
                 <button
-                  onClick={() => signOut({ callbackUrl: "/auth" })}
+                  onClick={() => setLogoutDialogOpen(true)}
                   className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left w-full text-destructive hover:bg-destructive/10"
                 >
                   <LogOut className="w-4 h-4 shrink-0" />
@@ -311,7 +313,7 @@ export default function ConfigPage() {
                       <Button
                         variant="outline"
                         className="w-full text-destructive border-destructive/30 hover:bg-destructive/10"
-                        onClick={() => signOut({ callbackUrl: "/auth" })}
+                        onClick={() => setLogoutDialogOpen(true)}
                       >
                         <LogOut className="w-4 h-4 mr-2" />
                         Sair da conta
@@ -325,6 +327,25 @@ export default function ConfigPage() {
           </div>
         </motion.div>
       </div>
+      <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sair da conta</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja sair? Você precisará fazer login novamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => signOut({ callbackUrl: "/auth" })}
+            >
+              Sair
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageTransition>
   );
 }

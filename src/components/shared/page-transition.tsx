@@ -8,7 +8,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3 }}
-      className="p-4 md:p-6 lg:p-8"
+      className="p-4 pb-24 md:p-6 lg:p-8 lg:pb-8"
     >
       {children}
     </motion.div>
