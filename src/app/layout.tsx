@@ -17,6 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-9BD1Y1VBW7"
           strategy="afterInteractive"

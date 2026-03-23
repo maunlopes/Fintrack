@@ -251,6 +251,21 @@
 }
 
 /* =============================================
+   SAFE AREA — Notch / Home Indicator Support
+   ============================================= */
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* =============================================
    COMPONENT LAYER — Cards, Interactive States
    ============================================= */
 @layer components {
