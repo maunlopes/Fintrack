@@ -4,25 +4,40 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  LayoutDashboard,
+  SquaresFour,
   CreditCard,
-  TrendingDown,
-  TrendingUp,
-  Landmark,
+  TrendDown,
+  TrendUp,
+  Bank,
   Tag,
-  Settings,
-  X,
-  ListOrdered,
-  BarChart3,
+  GearSix,
+  ListNumbers,
+  ChartBar,
   BookOpen,
   Wallet,
   Target,
-  Link2,
-} from "lucide-react";
+  LinkSimple,
+  CalendarCheck,
+  type Icon as PhosphorIcon,
+} from "@phosphor-icons/react";
+import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import React from "react";
+
+// Helper: wraps a Phosphor icon with a fixed weight, returning a Lucide-compatible component
+function ph(
+  Icon: PhosphorIcon,
+  weight: "duotone" | "fill" | "bold" | "regular" = "duotone"
+): React.ComponentType<{ className?: string }> {
+  const Wrapped = ({ className }: { className?: string }) => (
+    <Icon weight={weight} className={className} />
+  );
+  Wrapped.displayName = (Icon as { displayName?: string }).displayName ?? "PhosphorIcon";
+  return Wrapped;
+}
 
 interface NavItem {
   href: string;
@@ -36,34 +51,37 @@ interface NavGroup {
   items: NavItem[];
 }
 
-import React from "react";
-
 const navGroups: NavGroup[] = [
   {
     items: [
-      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/dashboard", label: "Dashboard", icon: ph(SquaresFour) },
     ],
   },
   {
     groupLabel: "Transações",
     items: [
-      { href: "/despesas", label: "Despesas", icon: TrendingDown, tourId: "nav-despesas" },
-      { href: "/receitas", label: "Receitas", icon: TrendingUp },
-      { href: "/extrato", label: "Extrato", icon: ListOrdered },
-      { href: "/cartoes", label: "Cartões", icon: CreditCard },
-      { href: "/orcamentos", label: "Orçamentos", icon: Target },
+      { href: "/despesas",   label: "Despesas",   icon: ph(TrendDown), tourId: "nav-despesas" },
+      { href: "/receitas",   label: "Receitas",   icon: ph(TrendUp) },
+      { href: "/extrato",    label: "Extrato",    icon: ph(ListNumbers) },
+      { href: "/cartoes",    label: "Cartões",    icon: ph(CreditCard) },
+      { href: "/orcamentos", label: "Orçamentos", icon: ph(Target) },
     ],
   },
   {
     groupLabel: "Patrimônio",
     items: [
-      { href: "/investimentos", label: "Investimentos", icon: BarChart3 },
-      { href: "/contas", label: "Contas", icon: Landmark, tourId: "nav-contas" },
-      { href: "/categorias", label: "Categorias", icon: Tag },
-      { href: "/open-finance", label: "Open Finance", icon: Link2 },
-      { href: "/resumo-anual", label: "Resumo Anual", icon: TrendingUp },
+      { href: "/investimentos", label: "Investimentos", icon: ph(ChartBar) },
+      { href: "/contas",        label: "Contas",        icon: ph(Bank), tourId: "nav-contas" },
+      { href: "/categorias",    label: "Categorias",    icon: ph(Tag) },
+      { href: "/open-finance",  label: "Open Finance",  icon: ph(LinkSimple) },
+      { href: "/resumo-anual",  label: "Resumo Anual",  icon: ph(CalendarCheck) },
     ],
   },
+];
+
+const footerItems = [
+  { href: "/ajuda",  label: "Ajuda",          icon: ph(BookOpen) },
+  { href: "/config", label: "Configurações",  icon: ph(GearSix) },
 ];
 
 interface SidebarProps {
@@ -81,7 +99,7 @@ export function Sidebar({ isOpen = true, onClose, collapsed = false }: SidebarPr
       <div className={cn("flex items-center h-14", collapsed ? "justify-center px-2" : "px-4")}>
         <Link href="/dashboard" title="Dashboard Home" className={cn("flex items-center gap-2.5 cursor-pointer", !collapsed && "flex-1")}>
           <span className="inline-flex items-center justify-center rounded-md bg-primary/10 p-1 shrink-0">
-            <Wallet className="w-4 h-4 text-primary" />
+            <Wallet weight="duotone" className="w-4 h-4 text-primary" />
           </span>
           {!collapsed && (
             <span className="text-xl text-sidebar-foreground">
@@ -157,7 +175,7 @@ export function Sidebar({ isOpen = true, onClose, collapsed = false }: SidebarPr
                               {...(item.tourId ? { "data-tour": item.tourId } : {})}
                               className={linkClass}
                             >
-                              <Icon className="w-4 h-4 flex-shrink-0" />
+                              <Icon className="w-5 h-5 flex-shrink-0" />
                             </Link>
                           } />
                           <TooltipContent side="right">{item.label}</TooltipContent>
@@ -170,7 +188,7 @@ export function Sidebar({ isOpen = true, onClose, collapsed = false }: SidebarPr
                           {...(item.tourId ? { "data-tour": item.tourId } : {})}
                           className={linkClass}
                         >
-                          <Icon className="w-4 h-4 flex-shrink-0" />
+                          <Icon className="w-5 h-5 flex-shrink-0" />
                           {item.label}
                         </Link>
                       )}
@@ -187,10 +205,7 @@ export function Sidebar({ isOpen = true, onClose, collapsed = false }: SidebarPr
 
       {/* Footer — Ajuda + Configurações */}
       <div className={cn("py-4 pb-20 lg:pb-4 space-y-1", collapsed ? "px-1.5" : "px-2")}>
-        {[
-          { href: "/ajuda", label: "Ajuda", icon: BookOpen },
-          { href: "/config", label: "Configurações", icon: Settings },
-        ].map(({ href, label, icon: Icon }) =>
+        {footerItems.map(({ href, label, icon: Icon }) =>
           collapsed ? (
             <Tooltip key={href}>
               <TooltipTrigger render={
@@ -204,7 +219,7 @@ export function Sidebar({ isOpen = true, onClose, collapsed = false }: SidebarPr
                       : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   )}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-5 h-5" />
                 </Link>
               } />
               <TooltipContent side="right">{label}</TooltipContent>
@@ -221,7 +236,7 @@ export function Sidebar({ isOpen = true, onClose, collapsed = false }: SidebarPr
                   : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               )}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-5 h-5" />
               {label}
             </Link>
           )

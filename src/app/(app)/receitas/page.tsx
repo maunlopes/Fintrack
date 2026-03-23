@@ -239,6 +239,14 @@ function ReceitasContent() {
 
   useEffect(() => { fetchData(); }, [searchParams]);
 
+  // Auto-open dialog when navigated with ?new=true (e.g. from QuickAddFAB)
+  useEffect(() => {
+    if (searchParams.get("new") === "true") {
+      setEditIncome(null);
+      setDialogOpen(true);
+    }
+  }, []);
+
   async function handleDelete() {
     if (!deleteId) return;
     const res = await fetch(`/api/receitas/${deleteId}`, { method: "DELETE" });
@@ -291,14 +299,15 @@ function ReceitasContent() {
           <h1 className="text-2xl font-bold tracking-tight">Receitas</h1>
           <p className="text-sm text-muted-foreground">Acompanhe suas entradas do mês.</p>
         </div>
-        <motion.div whileTap={{ scale: 0.97 }}>
-          <Button onClick={() => { setEditIncome(null); setDialogOpen(true); }}>
-            <Plus className="w-4 h-4 mr-2" /> Nova Receita
-          </Button>
-        </motion.div>
-
-        <div className="flex-1 flex justify-end">
-          <MonthSelector />
+        <div className="flex items-center gap-2 flex-wrap">
+          <motion.div whileTap={{ scale: 0.97 }}>
+            <Button onClick={() => { setEditIncome(null); setDialogOpen(true); }}>
+              <Plus className="w-4 h-4 mr-2" /> Nova Receita
+            </Button>
+          </motion.div>
+          <div className="flex-1 flex justify-end">
+            <MonthSelector />
+          </div>
         </div>
       </div>
 
@@ -413,7 +422,7 @@ function ReceitasContent() {
         </div>
       ) : filteredIncomes.length === 0 ? (
         <EmptyState
-          icon={TrendingUp}
+          illustration="transactions"
           title="Nenhuma receita este mês"
           description="Cadastre suas receitas para acompanhar seus ganhos."
           actionLabel="Nova Receita"

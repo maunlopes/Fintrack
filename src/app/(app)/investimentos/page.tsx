@@ -23,6 +23,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
+
+const InvestmentAllocationChart = dynamic(
+  () => import("@/components/dashboard/investment-allocation-chart").then((m) => m.InvestmentAllocationChart),
+  { ssr: false, loading: () => <div className="h-[260px] w-full bg-muted animate-pulse rounded-lg" /> }
+);
 
 const investmentSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -185,6 +191,32 @@ export default function InvestimentosPage() {
           </div>
         )}
 
+        {/* Allocation chart */}
+        {!loading && investments.length > 1 && (() => {
+          const byType = investments.reduce<Record<string, number>>((acc, inv) => {
+            acc[inv.type] = (acc[inv.type] || 0) + Number(inv.balance);
+            return acc;
+          }, {});
+          const chartData = Object.entries(byType)
+            .filter(([, v]) => v > 0)
+            .map(([type, value]) => ({
+              name: INVESTMENT_TYPES[type as keyof typeof INVESTMENT_TYPES]?.label ?? type,
+              value,
+              type,
+            }));
+          if (chartData.length < 2) return null;
+          return (
+            <Card className="p-6 shadow-sm">
+              <CardHeader className="p-0 pb-2">
+                <CardTitle className="text-sm font-semibold text-muted-foreground">Alocação da Carteira</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <InvestmentAllocationChart data={chartData} />
+              </CardContent>
+            </Card>
+          );
+        })()}
+
         {/* Filters */}
         {!loading && investments.length > 0 && (
           <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
@@ -218,13 +250,13 @@ export default function InvestimentosPage() {
           <EmptyState
             title="Nenhum investimento"
             description="Cadastre seus investimentos para acompanhar sua carteira."
-            icon={TrendingUp}
+            illustration="investments"
           />
         ) : filtered.length === 0 ? (
           <EmptyState
             title="Nenhum investimento nesta categoria"
             description="Tente selecionar outro tipo de investimento."
-            icon={TrendingUp}
+            illustration="investments"
           />
         ) : (
           <motion.div

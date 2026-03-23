@@ -266,7 +266,7 @@ export default function CategoriasPage() {
           </div>
         ) : filtered.length === 0 ? (
           <EmptyState
-            icon={Tag}
+            illustration="empty"
             title="Nenhuma categoria"
             description="Crie categorias para organizar suas finanças."
             actionLabel="Nova Categoria"

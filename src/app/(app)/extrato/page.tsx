@@ -340,7 +340,7 @@ function ExtratoContent() {
         </div>
       ) : filteredTransactions.length === 0 ? (
         <EmptyState
-          icon={ListOrdered}
+          illustration="no-results"
           title="Sem movimentações"
           description="Nenhuma transação encontrada para este filtro no mês selecionado."
         />

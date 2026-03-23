@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, Bell } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { Session } from "next-auth";
@@ -23,7 +23,18 @@ interface HeaderProps {
 
 export function Header({ session }: HeaderProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [alertCount, setAlertCount] = useState(0);
   const user = session?.user;
+
+  useEffect(() => {
+    fetch("/api/orcamentos")
+      .then((r) => r.json())
+      .then((data: any[]) => {
+        const count = data.filter((c) => c.status === "warning" || c.status === "danger").length;
+        setAlertCount(count);
+      })
+      .catch(() => {});
+  }, []);
   const initials = user?.name
     ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "U";
@@ -46,11 +57,16 @@ export function Header({ session }: HeaderProps) {
 
         <Tooltip>
           <TooltipTrigger render={
-            <Button variant="ghost" size="icon" className="relative">
+            <Button variant="ghost" size="icon" className="relative" onClick={() => window.location.href = "/orcamentos"}>
               <Bell className="w-5 h-5" />
+              {alertCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-destructive ring-2 ring-card animate-pulse" />
+              )}
             </Button>
           } />
-          <TooltipContent>Notificações</TooltipContent>
+          <TooltipContent>
+            {alertCount > 0 ? `${alertCount} alerta${alertCount > 1 ? "s" : ""} de orçamento` : "Notificações"}
+          </TooltipContent>
         </Tooltip>
 
         <DropdownMenu>

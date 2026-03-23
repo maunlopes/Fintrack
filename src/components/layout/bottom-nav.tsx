@@ -2,16 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, CreditCard, TrendingDown, BarChart3, Landmark } from "lucide-react";
+import {
+  SquaresFour,
+  TrendDown,
+  CreditCard,
+  ChartBar,
+  Bank,
+} from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/despesas", label: "Despesas", icon: TrendingDown },
-  { href: "/cartoes", label: "Cartões", icon: CreditCard },
-  { href: "/investimentos", label: "Investimentos", icon: BarChart3 },
-  { href: "/contas", label: "Contas", icon: Landmark },
+  { href: "/dashboard",    label: "Dashboard", icon: SquaresFour },
+  { href: "/despesas",     label: "Despesas",  icon: TrendDown },
+  { href: "/cartoes",      label: "Cartões",   icon: CreditCard },
+  { href: "/investimentos",label: "Invest.",   icon: ChartBar },
+  { href: "/contas",       label: "Contas",    icon: Bank },
 ];
 
 export function BottomNav() {
@@ -35,7 +41,10 @@ export function BottomNav() {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Icon className="w-5 h-5" />
+                <Icon
+                  weight={isActive ? "fill" : "duotone"}
+                  className="w-5 h-5"
+                />
                 {item.label}
                 {isActive && (
                   <motion.span

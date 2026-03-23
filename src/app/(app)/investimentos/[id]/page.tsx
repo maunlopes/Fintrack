@@ -344,7 +344,7 @@ export default function InvestmentDetailPage({ params }: { params: Promise<{ id:
         <div>
           <h2 className="text-xl font-bold tracking-tight mb-4">Histórico de Transações</h2>
           {investment.transactions.length === 0 ? (
-            <EmptyState title="Nenhuma transação" description="Seu histórico de aportes e resgates aparecerá aqui." icon={TrendingUp} />
+            <EmptyState title="Nenhuma transação" description="Seu histórico de aportes e resgates aparecerá aqui." illustration="investments" />
           ) : (
             <motion.div variants={listVariants} initial="hidden" animate="show" className="space-y-3">
               {investment.transactions.map((t) => {

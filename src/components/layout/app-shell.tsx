@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { BottomNav } from "./bottom-nav";
+import { QuickAddFAB } from "@/components/shared/quick-add-fab";
+import { ChatWidget } from "@/components/ia/chat-widget";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -46,6 +48,8 @@ export function AppShell({ children, session }: AppShellProps) {
         <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">
           {children}
         </main>
+        <QuickAddFAB />
+        <ChatWidget />
         <BottomNav />
       </div>
     </div>

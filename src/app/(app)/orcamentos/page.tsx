@@ -217,7 +217,7 @@ function OrcamentosContent() {
 
         {filtered.length === 0 ? (
           <EmptyState
-            icon={Target}
+            illustration="budget"
             title="Nenhuma categoria aqui"
             description={
               filter === "with"
@@ -299,7 +299,19 @@ function CategoryBudgetRow({
         show: { opacity: 1, y: 0, transition: { delay: index * 0.04, duration: 0.3, ease: "easeOut" } },
       }}
     >
-      <Card className="p-6 shadow-sm">
+      <Card
+        className="p-6 shadow-sm border-l-4"
+        style={{
+          borderLeftColor:
+            cat.status === "danger"
+              ? "var(--destructive)"
+              : cat.status === "warning"
+              ? "var(--warning)"
+              : cat.status === "ok"
+              ? "var(--success)"
+              : "var(--border)",
+        }}
+      >
         <div className="flex items-start gap-4">
           {/* Icon */}
           <div

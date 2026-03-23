@@ -721,7 +721,7 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
         <>
           {card.transactions.length === 0 ? (
             <EmptyState
-              icon={CreditCard}
+              illustration="transactions"
               title="Nenhuma transação"
               description="Adicione uma compra neste cartão."
               actionLabel="Nova transação"

@@ -255,7 +255,7 @@ export default function ContasPage() {
         </div>
       ) : accounts.length === 0 ? (
         <EmptyState
-          icon={Landmark}
+          illustration="accounts"
           title="Nenhuma conta cadastrada"
           description="Adicione uma conta bancária para começar a controlar seu saldo."
           actionLabel="Adicionar Conta"

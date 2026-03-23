@@ -218,7 +218,7 @@ function ContaExtratoContent({ id }: { id: string }) {
         </div>
       ) : filteredTransactions.length === 0 ? (
         <EmptyState
-          icon={Wallet}
+          illustration="transactions"
           title="Nenhuma movimentação"
           description={filter === "ALL" ? "Não há registros para esta conta no mês selecionado." : "Nenhuma movimentação com este status."}
         />

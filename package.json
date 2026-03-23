@@ -15,15 +15,18 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "3.0.63",
     "@auth/prisma-adapter": "^2.11.1",
     "@base-ui/react": "^1.2.0",
     "@hookform/resolvers": "^5.2.2",
+    "@phosphor-icons/react": "^2.1.10",
     "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@tanstack/react-query": "^5.90.21",
     "@types/pg": "^8.18.0",
+    "ai": "^6.0.136",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

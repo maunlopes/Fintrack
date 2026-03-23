@@ -404,6 +404,15 @@ function DespesasContent() {
 
   useEffect(() => { fetchData(); }, [searchParams]);
 
+  // Auto-open dialog when navigated with ?new=true (e.g. from QuickAddFAB)
+  useEffect(() => {
+    if (searchParams.get("new") === "true") {
+      setEditExpense(null);
+      setNewExpenseMode("conta");
+      setDialogOpen(true);
+    }
+  }, []);
+
   async function handleDelete() {
     if (!deleteId) return;
     const res = await fetch(`/api/despesas/${deleteId}`, { method: "DELETE" });
@@ -651,7 +660,7 @@ function DespesasContent() {
         </div>
       ) : filteredExpenses.length === 0 ? (
         <EmptyState
-          icon={TrendingDown}
+          illustration="transactions"
           title="Nenhuma despesa encontrada"
           description={activeFiltersCount > 0 ? "Tente limpar os filtros." : "Cadastre suas despesas para acompanhar seus gastos."}
           actionLabel="Nova Despesa"

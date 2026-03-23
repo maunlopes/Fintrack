@@ -275,7 +275,7 @@ export default function CartoesPage() {
         </div>
       ) : cards.length === 0 ? (
         <EmptyState
-          icon={CreditCard}
+          illustration="cards"
           title="Nenhum cartão cadastrado"
           description="Adicione seus cartões de crédito para controlar seus gastos."
           actionLabel="Adicionar Cartão"
