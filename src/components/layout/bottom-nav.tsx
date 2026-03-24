@@ -6,8 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   SquaresFour,
   TrendDown,
-  CreditCard,
-  ChartBar,
+  TrendUp,
   DotsThreeOutline,
 } from "@phosphor-icons/react";
 import { Sparkles } from "lucide-react";
@@ -16,20 +15,23 @@ import { motion } from "framer-motion";
 import { MoreSheet } from "./more-sheet";
 import { useChatStore } from "@/components/ia/chat-store";
 
+// Routes that live inside the "Mais" sheet
+const MAIS_ROUTES = [
+  "/cartoes", "/investimentos", "/contas",
+  "/orcamentos", "/extrato", "/categorias", "/config",
+];
+
 const LEFT_ITEMS = [
-  { href: "/dashboard", label: "Dashboard", icon: SquaresFour },
-  { href: "/despesas",  label: "Despesas",  icon: TrendDown   },
+  { href: "/dashboard", label: "Início",   icon: SquaresFour },
+  { href: "/despesas",  label: "Despesas", icon: TrendDown   },
 ];
 
 const RIGHT_ITEMS = [
-  { href: "/cartoes",       label: "Cartões",  icon: CreditCard },
-  { href: "/investimentos", label: "Invest.",  icon: ChartBar   },
+  { href: "/receitas", label: "Receitas", icon: TrendUp         },
+  { label: "Mais",     icon: DotsThreeOutline, isSheet: true },
 ];
 
-// Routes that live inside the "Mais" sheet
-const MAIS_ROUTES = ["/receitas", "/contas", "/orcamentos", "/extrato", "/categorias", "/config"];
-
-function NavLink({ href, label, icon: Icon, isActive }: {
+function NavItem({ href, label, icon: Icon, isActive }: {
   href: string; label: string; icon: React.ElementType; isActive: boolean;
 }) {
   return (
@@ -38,7 +40,7 @@ function NavLink({ href, label, icon: Icon, isActive }: {
         href={href}
         title={label}
         className={cn(
-          "relative flex flex-col items-center gap-1 py-2.5 text-xs transition-colors cursor-pointer",
+          "relative flex flex-col items-center gap-1 py-2.5 text-xs transition-colors",
           isActive ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
         )}
       >
@@ -70,31 +72,28 @@ export function BottomNav() {
     <>
       <nav className="fixed bottom-0 left-0 right-0 bg-card border-t z-30 lg:hidden">
         <ul className="flex items-end pb-[env(safe-area-inset-bottom,0px)]">
-          {/* Left items */}
+          {/* Left: Início + Despesas */}
           {LEFT_ITEMS.map((item) => (
-            <NavLink
+            <NavItem
               key={item.href}
-              {...item}
+              href={item.href}
+              label={item.label}
+              icon={item.icon}
               isActive={pathname === item.href || pathname.startsWith(item.href + "/")}
             />
           ))}
 
-          {/* Center — FinBot raised button */}
+          {/* Center: FinBot raised button */}
           <li className="flex-1 flex justify-center">
             <div className="relative -top-4">
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={toggleChat}
-                className={cn(
-                  "w-14 h-14 rounded-full flex items-center justify-center shadow-lg ring-4 transition-all",
-                  chatOpen
-                    ? "bg-primary/90 text-primary-foreground ring-primary/20"
-                    : "bg-primary text-primary-foreground ring-primary/20"
-                )}
+                className="w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg ring-4 ring-primary/20 flex items-center justify-center"
                 aria-label="Abrir FinBot"
               >
                 <motion.div
-                  animate={{ rotate: chatOpen ? 15 : 0, scale: chatOpen ? 0.9 : 1 }}
+                  animate={{ rotate: chatOpen ? 15 : 0, scale: chatOpen ? 0.88 : 1 }}
                   transition={{ duration: 0.2, ease: "easeInOut" }}
                 >
                   <Sparkles className="w-6 h-6" />
@@ -103,38 +102,45 @@ export function BottomNav() {
             </div>
           </li>
 
-          {/* Right items */}
-          {RIGHT_ITEMS.map((item) => (
-            <NavLink
-              key={item.href}
-              {...item}
-              isActive={pathname === item.href || pathname.startsWith(item.href + "/")}
-            />
-          ))}
-
-          {/* Mais */}
-          <li className="flex-1 relative">
-            <button
-              onClick={() => setSheetOpen(true)}
-              className={cn(
-                "relative w-full flex flex-col items-center gap-1 py-2.5 text-xs transition-colors cursor-pointer",
-                maisActive ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {maisActive && (
-                <motion.span
-                  layoutId="tab-pill"
-                  className="absolute inset-x-2 top-1 bottom-1 rounded-2xl bg-primary/10"
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
-              )}
-              <DotsThreeOutline
-                weight={maisActive ? "fill" : "duotone"}
-                className={cn("relative z-10 transition-all duration-150", maisActive ? "w-6 h-6" : "w-5 h-5")}
+          {/* Right: Receitas + Mais */}
+          {RIGHT_ITEMS.map((item) => {
+            if (item.isSheet) {
+              const Icon = item.icon;
+              return (
+                <li key="mais" className="flex-1 relative">
+                  <button
+                    onClick={() => setSheetOpen(true)}
+                    className={cn(
+                      "relative w-full flex flex-col items-center gap-1 py-2.5 text-xs transition-colors",
+                      maisActive ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {maisActive && (
+                      <motion.span
+                        layoutId="tab-pill"
+                        className="absolute inset-x-2 top-1 bottom-1 rounded-2xl bg-primary/10"
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                    <Icon
+                      weight={maisActive ? "fill" : "duotone"}
+                      className={cn("relative z-10 transition-all duration-150", maisActive ? "w-6 h-6" : "w-5 h-5")}
+                    />
+                    <span className="relative z-10">{item.label}</span>
+                  </button>
+                </li>
+              );
+            }
+            return (
+              <NavItem
+                key={item.href}
+                href={item.href!}
+                label={item.label}
+                icon={item.icon}
+                isActive={pathname === item.href || pathname.startsWith(item.href + "/")}
               />
-              <span className="relative z-10">Mais</span>
-            </button>
-          </li>
+            );
+          })}
         </ul>
       </nav>
 

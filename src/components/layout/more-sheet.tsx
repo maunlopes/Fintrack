@@ -10,15 +10,18 @@ import {
   Receipt,
   Tag,
   Gear,
+  CreditCard,
+  ChartBar,
 } from "@phosphor-icons/react";
 
 const sheetItems = [
-  { href: "/receitas",    label: "Receitas",      icon: TrendUp  },
-  { href: "/contas",      label: "Contas",         icon: Bank     },
-  { href: "/orcamentos",  label: "Orçamentos",     icon: Target   },
-  { href: "/extrato",     label: "Extrato",        icon: Receipt  },
-  { href: "/categorias",  label: "Categorias",     icon: Tag      },
-  { href: "/config",      label: "Configurações",  icon: Gear     },
+  { href: "/cartoes",      label: "Cartões",        icon: CreditCard },
+  { href: "/investimentos",label: "Investimentos",  icon: ChartBar   },
+  { href: "/contas",       label: "Contas",         icon: Bank       },
+  { href: "/orcamentos",   label: "Orçamentos",     icon: Target     },
+  { href: "/extrato",      label: "Extrato",        icon: Receipt    },
+  { href: "/categorias",   label: "Categorias",     icon: Tag        },
+  { href: "/config",       label: "Configurações",  icon: Gear       },
 ];
 
 interface MoreSheetProps {
