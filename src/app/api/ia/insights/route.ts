@@ -52,7 +52,7 @@ ${financialContext}`;
     const { text } = await generateText({
       model: anthropic("claude-3-5-haiku-20241022"),
       prompt: systemPrompt,
-      maxTokens: 512,
+      maxOutputTokens: 512,
       temperature: 0.4,
     });
 
