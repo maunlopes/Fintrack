@@ -7,11 +7,13 @@ import { MonthSelector } from "@/components/shared/month-selector";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Plus, TrendingUp, Trash2, Pencil, Search, Tag, Wallet, RotateCcw, X } from "lucide-react";
+import { Plus, TrendingUp, Trash2, Pencil, Search, Tag, Wallet, RotateCcw, X, MoreHorizontal } from "lucide-react";
 type RecurrenceFrequency = "WEEKLY" | "BIWEEKLY" | "MONTHLY";
 import { PageTransition } from "@/components/shared/page-transition";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { ViewToggle } from "@/components/shared/view-toggle";
+import { useViewMode } from "@/hooks/use-view-mode";
 import { listVariants, listItemVariants } from "@/components/shared/animated-card";
 import { MoneyValue } from "@/components/shared/money-value";
 import { Button } from "@/components/ui/button";
@@ -20,6 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/shared/currency-input";
@@ -280,6 +283,8 @@ function ReceitasContent() {
     return statusOk && searchOk && categoryOk;
   });
 
+  const { mode: viewMode, setMode: setViewMode } = useViewMode("receitas");
+
   const activeFiltersCount = [
     filter !== "ALL",
     categoryFilter !== "ALL",
@@ -300,6 +305,7 @@ function ReceitasContent() {
           <p className="text-sm text-muted-foreground">Acompanhe suas entradas do mês.</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <ViewToggle mode={viewMode} onChange={setViewMode} />
           <motion.div whileTap={{ scale: 0.97 }}>
             <Button onClick={() => { setEditIncome(null); setDialogOpen(true); }}>
               <Plus className="w-4 h-4 mr-2" /> Nova Receita
@@ -428,7 +434,59 @@ function ReceitasContent() {
           actionLabel="Nova Receita"
           onAction={() => setDialogOpen(true)}
         />
+      ) : viewMode === "grid" ? (
+        /* ── CARD / GRID VIEW ── */
+        <motion.div variants={listVariants} initial="hidden" animate="show"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {filteredIncomes.map((income) => (
+            <motion.div key={income.id} variants={listItemVariants}>
+              <Card className="hover:shadow-sm transition-shadow h-full">
+                <CardContent className="p-4 flex flex-col gap-3 h-full">
+                  {/* Top: category + status */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold text-white shrink-0"
+                           style={{ backgroundColor: income.category?.color || "var(--success)" }}>
+                        {income.category?.name?.[0]?.toUpperCase() || "R"}
+                      </div>
+                      <span className="text-xs text-muted-foreground truncate">{income.category?.name || "Sem categoria"}</span>
+                    </div>
+                    <StatusBadge status={income.status} type="income" />
+                  </div>
+                  {/* Description + metadata */}
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold leading-tight">{income.description}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formatDate(income.receiveDate)}
+                      {income.bankAccount ? ` · ${income.bankAccount.nickname}` : ""}
+                    </p>
+                  </div>
+                  {/* Footer: amount + actions */}
+                  <div className="flex items-center justify-between pt-2 border-t border-border/40">
+                    <span className="text-base font-bold tabular-nums money text-success">+{formatCurrency(parseFloat(income.amount))}</span>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger render={
+                        <Button variant="ghost" size="icon" className="h-7 w-7">
+                          <MoreHorizontal className="w-3.5 h-3.5" />
+                        </Button>
+                      } />
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => { setEditIncome(income); setDialogOpen(true); }}>
+                          <Pencil className="w-3.5 h-3.5 mr-2" /> Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setDeleteId(income.id)} className="text-destructive">
+                          <Trash2 className="w-3.5 h-3.5 mr-2" /> Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </motion.div>
       ) : (
+        /* ── LIST VIEW (default) ── */
         <motion.div variants={listVariants} initial="hidden" animate="show" className="space-y-2">
           {filteredIncomes.map((income) => {
             const statusColor =

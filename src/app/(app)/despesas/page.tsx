@@ -7,11 +7,13 @@ import { MonthSelector } from "@/components/shared/month-selector";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Plus, TrendingDown, Trash2, Pencil, BadgeCheck, Search, Tag, CreditCard, Wallet, X, RotateCcw } from "lucide-react";
+import { Plus, TrendingDown, Trash2, Pencil, BadgeCheck, Search, Tag, CreditCard, Wallet, X, RotateCcw, MoreHorizontal } from "lucide-react";
 type ExpenseType = "FIXED_RECURRING" | "VARIABLE_RECURRING" | "ONE_TIME" | "INSTALLMENT";
 import { PageTransition } from "@/components/shared/page-transition";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { ViewToggle } from "@/components/shared/view-toggle";
+import { useViewMode } from "@/hooks/use-view-mode";
 import { listVariants, listItemVariants } from "@/components/shared/animated-card";
 import { MoneyValue } from "@/components/shared/money-value";
 import { Button } from "@/components/ui/button";
@@ -26,6 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { expenseSchema, ExpenseInput } from "@/lib/validations/expense";
 import { cardTransactionSchema, CardTransactionInput } from "@/lib/validations/credit-card";
 import { formatDate, formatCurrency } from "@/lib/format";
@@ -467,6 +470,8 @@ function DespesasContent() {
     return statusOk && searchOk && categoryOk && sourceOk;
   });
 
+  const { mode: viewMode, setMode: setViewMode } = useViewMode("despesas");
+
   const activeFiltersCount = [
     filter !== "ALL",
     categoryFilter !== "ALL",
@@ -491,6 +496,7 @@ function DespesasContent() {
           <p className="text-sm text-muted-foreground">Controle seus gastos do mês.</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <ViewToggle mode={viewMode} onChange={setViewMode} />
           <motion.div whileTap={{ scale: 0.97 }}>
             <Button onClick={() => { setEditExpense(null); setNewExpenseMode("conta"); setDialogOpen(true); }}>
               <Plus className="w-4 h-4 mr-2" /> Nova Despesa
@@ -666,7 +672,69 @@ function DespesasContent() {
           actionLabel="Nova Despesa"
           onAction={() => setDialogOpen(true)}
         />
+      ) : viewMode === "grid" ? (
+        /* ── CARD / GRID VIEW ── */
+        <motion.div variants={listVariants} initial="hidden" animate="show"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {filteredExpenses.map((expense) => {
+            const isInvoice = isInvoiceExpense(expense);
+            return (
+              <motion.div key={expense.id} variants={listItemVariants}>
+                <Card className="hover:shadow-sm transition-shadow h-full">
+                  <CardContent className="p-4 flex flex-col gap-3 h-full">
+                    {/* Top: category + status */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold text-white shrink-0"
+                             style={{ backgroundColor: expense.category?.color || "#8A9AA3" }}>
+                          {expense.category?.name?.[0]?.toUpperCase() || "?"}
+                        </div>
+                        <span className="text-xs text-muted-foreground truncate">{expense.category?.name || "Sem categoria"}</span>
+                      </div>
+                      <StatusBadge status={expense.status} />
+                    </div>
+                    {/* Description + metadata */}
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold leading-tight">{expense.description}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatDate(expense.dueDate)}
+                        {isInvoice ? ` · ${expense.cardName}` : expense.bankAccount ? ` · ${expense.bankAccount.nickname}` : ""}
+                      </p>
+                    </div>
+                    {/* Footer: amount + actions */}
+                    <div className="flex items-center justify-between pt-2 border-t border-border/40">
+                      <span className="text-base font-bold tabular-nums money">{formatCurrency(parseFloat(expense.amount))}</span>
+                      {!isInvoice && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger render={
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                              <MoreHorizontal className="w-3.5 h-3.5" />
+                            </Button>
+                          } />
+                          <DropdownMenuContent align="end">
+                            {expense.status !== "PAID" && (
+                              <DropdownMenuItem onClick={() => handlePay(expense.id)}>
+                                <BadgeCheck className="w-3.5 h-3.5 mr-2" /> Marcar como pago
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem onClick={() => { setEditExpense(expense); setDialogOpen(true); }}>
+                              <Pencil className="w-3.5 h-3.5 mr-2" /> Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setDeleteId(expense.id)} className="text-destructive">
+                              <Trash2 className="w-3.5 h-3.5 mr-2" /> Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </motion.div>
       ) : (
+        /* ── LIST VIEW (default) ── */
         <motion.div variants={listVariants} initial="hidden" animate="show" className="space-y-2">
           {filteredExpenses.map((expense) => {
             const isInvoice = isInvoiceExpense(expense);
