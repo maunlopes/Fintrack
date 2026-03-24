@@ -14,14 +14,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { LogOut, User, Settings, PlayCircle, KeyRound, Eye, EyeOff, Loader2 } from "lucide-react";
+import { LogOut, User, Settings, PlayCircle, KeyRound, Eye, EyeOff, Loader2, DatabaseZap, TriangleAlert } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { resetTour } from "@/lib/tour";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { profileSchema, passwordSchema, type ProfileInput, type PasswordInput } from "@/lib/validations/user";
 import { cn } from "@/lib/utils";
 
-type Section = "perfil" | "seguranca" | "preferencias" | "ajuda";
+type Section = "perfil" | "seguranca" | "preferencias" | "dados" | "ajuda";
 
 export default function ConfigPage() {
   const { data: session, update } = useSession();
@@ -33,6 +33,9 @@ export default function ConfigPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [clearConfirmText, setClearConfirmText] = useState("");
+  const [isClearing, setIsClearing] = useState(false);
 
   const profileForm = useForm<ProfileInput>({
     resolver: zodResolver(profileSchema),
@@ -91,10 +94,25 @@ export default function ConfigPage() {
     passwordForm.reset();
   }
 
+  async function onClearData() {
+    setIsClearing(true);
+    const res = await fetch("/api/usuario/limpar-dados", { method: "POST" });
+    setIsClearing(false);
+    if (!res.ok) {
+      toast.error("Erro ao limpar dados. Tente novamente.");
+      return;
+    }
+    toast.success("Dados apagados com sucesso. Bem-vindo de volta!");
+    setClearDialogOpen(false);
+    setClearConfirmText("");
+    router.push("/dashboard");
+  }
+
   const navItems: { id: Section; label: string; icon: React.ElementType; hidden?: boolean }[] = [
     { id: "perfil",        label: "Perfil",        icon: User },
     { id: "seguranca",     label: "Segurança",     icon: KeyRound, hidden: !hasPassword },
     { id: "preferencias",  label: "Preferências",  icon: Settings },
+    { id: "dados",         label: "Dados",         icon: DatabaseZap },
     { id: "ajuda",         label: "Ajuda",         icon: PlayCircle },
   ];
 
@@ -245,10 +263,38 @@ export default function ConfigPage() {
     </Card>
   );
 
+  const DadosSection = (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm flex items-center gap-2">
+          <DatabaseZap className="w-4 h-4" /> Gerenciamento de Dados
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-semibold text-sm">Limpar todos os dados</p>
+            <p className="text-xs text-muted-foreground">Apaga despesas, receitas, contas, cartões e investimentos</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10 shrink-0"
+            onClick={() => setClearDialogOpen(true)}
+          >
+            <TriangleAlert className="w-3.5 h-3.5 mr-1.5" />
+            Limpar dados
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   const sectionContent: Record<Section, React.ReactNode> = {
     perfil: ProfileSection,
     seguranca: SecuritySection,
     preferencias: PreferencesSection,
+    dados: DadosSection,
     ajuda: HelpSection,
   };
 
@@ -306,6 +352,7 @@ export default function ConfigPage() {
                 {ProfileSection}
                 {hasPassword && SecuritySection}
                 {PreferencesSection}
+                {DadosSection}
                 {HelpSection}
                 <Card>
                   <CardContent className="pt-6">
@@ -327,6 +374,42 @@ export default function ConfigPage() {
           </div>
         </motion.div>
       </div>
+      <AlertDialog open={clearDialogOpen} onOpenChange={(open) => { setClearDialogOpen(open); if (!open) setClearConfirmText(""); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <TriangleAlert className="w-4 h-4" /> Limpar todos os dados
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação é <strong>irreversível</strong>. Todas as despesas, receitas, contas bancárias,
+              cartões de crédito, investimentos, categorias e orçamentos serão apagados permanentemente.
+              Sua conta de acesso será mantida.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="px-1 pb-2">
+            <p className="text-sm font-medium mb-2">Digite <span className="font-mono font-bold">CONFIRMAR</span> para prosseguir</p>
+            <input
+              type="text"
+              value={clearConfirmText}
+              onChange={(e) => setClearConfirmText(e.target.value)}
+              placeholder="CONFIRMAR"
+              className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isClearing}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={clearConfirmText !== "CONFIRMAR" || isClearing}
+              onClick={onClearData}
+            >
+              {isClearing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Apagar tudo
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
