@@ -38,6 +38,7 @@ export default function ConfigPage() {
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [clearConfirmText, setClearConfirmText] = useState("");
   const [isClearing, setIsClearing] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
 
   const profileForm = useForm<ProfileInput>({
     resolver: zodResolver(profileSchema),
@@ -122,6 +123,19 @@ export default function ConfigPage() {
     profileForm.setValue("image", url, { shouldDirty: true });
     setAvatarPreview(url);
     URL.revokeObjectURL(objectUrl);
+  }
+
+  async function onSeedDemo() {
+    setIsSeeding(true);
+    const res = await fetch("/api/seed-demo", { method: "POST" });
+    setIsSeeding(false);
+    if (!res.ok) {
+      const err = await res.json();
+      toast.error(err.error ?? "Erro ao popular dados");
+      return;
+    }
+    toast.success("Dados de demonstração criados! Explorando o sistema...");
+    router.push("/dashboard");
   }
 
   async function onClearData() {
@@ -328,8 +342,29 @@ export default function ConfigPage() {
           <DatabaseZap className="w-4 h-4" /> Gerenciamento de Dados
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="flex items-center justify-between">
+      <CardContent className="space-y-3">
+        {/* Seed demo data */}
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="font-semibold text-sm">Dados de demonstração</p>
+            <p className="text-xs text-muted-foreground">Popula contas, cartões, despesas e investimentos fictícios</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 shrink-0"
+            onClick={onSeedDemo}
+            disabled={isSeeding}
+          >
+            {isSeeding ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <DatabaseZap className="w-3.5 h-3.5 mr-1.5" />}
+            {isSeeding ? "Populando..." : "Popular demo"}
+          </Button>
+        </div>
+
+        <Separator />
+
+        {/* Clear data */}
+        <div className="flex items-center justify-between gap-3">
           <div>
             <p className="font-semibold text-sm">Limpar todos os dados</p>
             <p className="text-xs text-muted-foreground">Apaga despesas, receitas, contas, cartões e investimentos</p>
