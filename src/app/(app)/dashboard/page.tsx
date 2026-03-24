@@ -373,12 +373,12 @@ function DashboardContent() {
       animate="show"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <motion.div variants={itemVariants} className="flex flex-row justify-between items-center gap-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{greeting}</h1>
-          <p className="text-muted-foreground text-sm capitalize">{periodLabel}</p>
+          <h1 className="text-lg sm:text-2xl font-bold tracking-tight">{greeting}</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm capitalize">{periodLabel}</p>
         </div>
-        <div data-tour="month-selector">
+        <div data-tour="month-selector" className="shrink-0">
           <Suspense fallback={<div className="h-10 w-40 bg-muted animate-pulse rounded-md" />}>
             <MonthSelector />
           </Suspense>
@@ -389,10 +389,10 @@ function DashboardContent() {
       <motion.div variants={itemVariants}>
         <Tabs value={activeTab} onValueChange={handleTabChange}>
 
-          <TabsList>
-            <TabsTrigger value="resumo">Resumo</TabsTrigger>
-            <TabsTrigger value="analise">Análise</TabsTrigger>
-            <TabsTrigger value="despesas">Próximas Despesas</TabsTrigger>
+          <TabsList className="w-full">
+            <TabsTrigger value="resumo" className="flex-1">Resumo</TabsTrigger>
+            <TabsTrigger value="analise" className="flex-1">Análise</TabsTrigger>
+            <TabsTrigger value="despesas" className="flex-1">Próximas Despesas</TabsTrigger>
           </TabsList>
 
           {/* ── Tab 1: Resumo ─────────────────────────── */}
@@ -436,7 +436,7 @@ function DashboardContent() {
                       <Card className="@container/card">
                         <CardHeader>
                           <CardDescription>{card.title}</CardDescription>
-                          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+                          <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
                             {card.value}
                           </CardTitle>
                           {card.vsMonth && (
