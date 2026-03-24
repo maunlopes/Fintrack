@@ -1,12 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
-import { BudgetProgressBar } from "./budget-progress-bar";
-import { CATEGORY_ICONS } from "@/lib/category-icons";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 interface BudgetItem {
@@ -34,122 +32,68 @@ export function BudgetAlertBanner({ items }: BudgetAlertBannerProps) {
   const dangers = items.filter((i) => i.status === "danger");
   const warnings = items.filter((i) => i.status === "warning");
   const sorted = [...dangers, ...warnings];
-  const hasDanger = dangers.length > 0;
 
   return (
-    <Card
-      className={cn(
-        "gap-0 shadow-sm",
-        hasDanger
-          ? "border-destructive/30 bg-destructive/5"
-          : "border-warning/40 bg-warning/5"
-      )}
-    >
-      <CardContent className="p-4 space-y-3">
+    <Card>
+      <CardContent className="p-4">
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2 flex-wrap">
-            <AlertTriangle
-              className={cn(
-                "w-4 h-4 shrink-0",
-                hasDanger ? "text-destructive" : "text-warning"
-              )}
-            />
-            <span className="text-sm font-semibold text-foreground">
-              Alertas de Orçamento
-            </span>
-            {dangers.length > 0 && (
-              <Badge
-                variant="outline"
-                className="bg-destructive/10 text-destructive border-destructive/30 tabular-nums"
-              >
-                {dangers.length} {dangers.length === 1 ? "estourado" : "estourados"}
-              </Badge>
-            )}
-            {warnings.length > 0 && (
-              <Badge
-                variant="outline"
-                className="bg-warning/15 text-warning border-warning/30 tabular-nums"
-              >
-                {warnings.length} {warnings.length === 1 ? "alerta" : "alertas"}
-              </Badge>
-            )}
-          </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0" />
+          <span className="text-sm font-semibold flex-1">Alertas de Orçamento</span>
+          {dangers.length > 0 && (
+            <Badge variant="destructive">
+              {dangers.length} {dangers.length === 1 ? "estourado" : "estourados"}
+            </Badge>
+          )}
+          {warnings.length > 0 && (
+            <Badge variant="outline" className="text-warning border-warning/40">
+              {warnings.length} {warnings.length === 1 ? "alerta" : "alertas"}
+            </Badge>
+          )}
           <Link
             href="/orcamentos"
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "sm" }),
-              "text-muted-foreground shrink-0 h-7 px-2 text-xs"
-            )}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors ml-1"
           >
-            Ver orçamentos →
+            Ver →
           </Link>
         </div>
 
-        {/* Alert rows */}
-        <div className="space-y-2">
+        <Separator className="my-3" />
+
+        {/* Items — 2 rows each, compact */}
+        <div className="space-y-2.5">
           {sorted.map((item) => {
-            const Icon = CATEGORY_ICONS[item.icon] ?? CATEGORY_ICONS["circle"];
             const isOver = item.status === "danger";
-            const overAmount = item.spent - item.monthlyLimit;
-            const remaining = item.monthlyLimit - item.spent;
+            const pct = Math.min(item.percentage, 100);
+            const barColor = isOver ? "bg-destructive" : "bg-warning";
 
             return (
-              <div
-                key={item.id}
-                className="flex items-center gap-3 rounded-md border-l-2 bg-background/50 px-3 py-2"
-                style={{ borderLeftColor: isOver ? "var(--destructive)" : "var(--warning)" }}
-              >
-                {/* Icon — 30% opacity */}
-                <div
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md"
-                  style={{ backgroundColor: item.color + "4D" }}
-                >
-                  {Icon && <Icon className="w-4 h-4" style={{ color: item.color }} />}
+              <div key={item.id} className="space-y-1">
+                {/* Row 1: dot + name + amounts + percentage */}
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ background: item.color }}
+                  />
+                  <span className="text-xs font-medium flex-1 truncate">{item.name}</span>
+                  <span className="text-xs text-muted-foreground tabular-nums shrink-0">
+                    {formatBRL(item.spent)}&nbsp;/&nbsp;{formatBRL(item.monthlyLimit)}
+                  </span>
+                  <span
+                    className={cn(
+                      "text-xs font-semibold tabular-nums w-7 text-right shrink-0",
+                      isOver ? "text-destructive" : "text-warning"
+                    )}
+                  >
+                    {item.percentage.toFixed(0)}%
+                  </span>
                 </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0 space-y-1">
-                  {/* Name + percentage */}
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium truncate">{item.name}</span>
-                    <span
-                      className={cn(
-                        "shrink-0 text-xs font-semibold tabular-nums",
-                        isOver ? "text-destructive" : "text-warning"
-                      )}
-                    >
-                      {item.percentage.toFixed(0)}%
-                    </span>
-                  </div>
-
-                  {/* Spent / limit + delta — always visible */}
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs text-muted-foreground tabular-nums">
-                      {formatBRL(item.spent)} de {formatBRL(item.monthlyLimit)}
-                    </span>
-                    <span
-                      className={cn(
-                        "shrink-0 text-xs font-medium tabular-nums flex items-center gap-0.5",
-                        isOver ? "text-destructive" : "text-warning"
-                      )}
-                    >
-                      {isOver ? (
-                        <>
-                          <TrendingUp className="w-3 h-3" />
-                          {formatBRL(overAmount)} acima
-                        </>
-                      ) : (
-                        <>
-                          <TrendingDown className="w-3 h-3" />
-                          {formatBRL(remaining)} restantes
-                        </>
-                      )}
-                    </span>
-                  </div>
-
-                  {/* Progress bar — md = 8px */}
-                  <BudgetProgressBar spent={item.spent} limit={item.monthlyLimit} size="md" />
+                {/* Row 2: progress bar */}
+                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                  <div
+                    className={cn("h-full rounded-full transition-all duration-500", barColor)}
+                    style={{ width: `${pct}%` }}
+                  />
                 </div>
               </div>
             );
