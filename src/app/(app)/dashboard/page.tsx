@@ -52,6 +52,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { BudgetAlertBanner } from "@/components/shared/budget-alert-banner";
+import { InsightsCard } from "@/components/ia/insights-card";
 
 /* =============================================
    Dynamic Chart Imports
@@ -470,6 +471,9 @@ function DashboardContent() {
               {budgetAlerts.length > 0 && (
                 <BudgetAlertBanner items={budgetAlerts} />
               )}
+
+              {/* AI Insights */}
+              <InsightsCard />
 
               {/* Balanço do Mês + Mini Upcoming */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

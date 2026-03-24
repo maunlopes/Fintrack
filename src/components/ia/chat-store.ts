@@ -10,9 +10,12 @@ interface ChatState {
   isOpen: boolean;
   messages: ChatMessage[];
   isStreaming: boolean;
+  prefillInput: string | null;
   open: () => void;
   close: () => void;
   toggle: () => void;
+  openWithPrefill: (msg: string) => void;
+  clearPrefill: () => void;
   clearMessages: () => void;
   addMessage: (msg: ChatMessage) => void;
   appendToLast: (chunk: string) => void;
@@ -23,10 +26,13 @@ export const useChatStore = create<ChatState>((set) => ({
   isOpen: false,
   messages: [],
   isStreaming: false,
+  prefillInput: null,
 
   open: () => set({ isOpen: true }),
   close: () => set({ isOpen: false }),
   toggle: () => set((s) => ({ isOpen: !s.isOpen })),
+  openWithPrefill: (msg) => set({ isOpen: true, prefillInput: msg }),
+  clearPrefill: () => set({ prefillInput: null }),
   clearMessages: () => set({ messages: [], isStreaming: false }),
 
   addMessage: (msg) =>

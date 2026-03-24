@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useId } from "react";
+import { useState, useId, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, X, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,16 @@ import { ChatMessages } from "./chat-messages";
 import { ChatInput } from "./chat-input";
 
 export function ChatWidget() {
-  const { isOpen, toggle, close, messages, isStreaming, addMessage, appendToLast, setStreaming, clearMessages } = useChatStore();
+  const { isOpen, toggle, close, messages, isStreaming, addMessage, appendToLast, setStreaming, clearMessages, prefillInput, clearPrefill } = useChatStore();
   const [input, setInput] = useState("");
   const idPrefix = useId();
+
+  useEffect(() => {
+    if (isOpen && prefillInput) {
+      setInput(prefillInput);
+      clearPrefill();
+    }
+  }, [isOpen, prefillInput, clearPrefill]);
 
   const sendMessage = async (text?: string) => {
     const content = (text ?? input).trim();
