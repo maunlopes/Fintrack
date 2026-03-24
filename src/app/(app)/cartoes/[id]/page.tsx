@@ -301,7 +301,7 @@ function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, c
       <div className="flex items-center justify-between gap-2">
         <div className="flex flex-col items-center gap-0.5">
           <Tooltip>
-            <TooltipTrigger asChild>
+            <TooltipTrigger render={
               <Button
                 variant="outline"
                 size="icon"
@@ -310,7 +310,7 @@ function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, c
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-            </TooltipTrigger>
+            } />
             <TooltipContent>Mês anterior</TooltipContent>
           </Tooltip>
           {invoiceKeys.has(prevKey) && (
@@ -339,7 +339,7 @@ function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, c
 
         <div className="flex flex-col items-center gap-0.5">
           <Tooltip>
-            <TooltipTrigger asChild>
+            <TooltipTrigger render={
               <Button
                 variant="outline"
                 size="icon"
@@ -348,7 +348,7 @@ function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, c
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
-            </TooltipTrigger>
+            } />
             <TooltipContent>Próximo mês</TooltipContent>
           </Tooltip>
           {invoiceKeys.has(nextKey) && (
