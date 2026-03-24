@@ -46,7 +46,7 @@ function readCache(): CacheEntry | null {
     const raw = localStorage.getItem(todayKey());
     if (!raw) return null;
     const parsed = JSON.parse(raw) as CacheEntry;
-    if (!Array.isArray(parsed.insights)) return null;
+    if (!Array.isArray(parsed.insights) || parsed.insights.length === 0) return null;
     return parsed;
   } catch {
     return null;
@@ -84,11 +84,12 @@ export function InsightsCard() {
       const res = await fetch("/api/ia/insights", { method: "POST" });
       if (!res.ok) throw new Error("request failed");
       const data = (await res.json()) as { insights: Insight[]; generatedAt: string; error?: string };
+      if (data.error || !data.insights.length) throw new Error("empty response");
       const entry: CacheEntry = { insights: data.insights, generatedAt: data.generatedAt };
       writeCache(entry);
       setInsights(data.insights);
       setGeneratedAt(data.generatedAt);
-      setStatus(data.insights.length > 0 ? "loaded" : "empty");
+      setStatus("loaded");
     } catch {
       setStatus("error");
     }

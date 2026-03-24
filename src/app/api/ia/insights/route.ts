@@ -28,39 +28,41 @@ export async function POST() {
     return new Response(JSON.stringify({ error: "Falha ao carregar dados financeiros." }), { status: 500 });
   }
 
-  const systemPrompt = `Você é um assistente financeiro. Analise os dados do usuário e retorne insights objetivos.
+  const system = `Você é um assistente financeiro pessoal. Analise os dados financeiros fornecidos e gere insights objetivos.
 
-Responda SOMENTE com JSON válido, sem texto adicional, sem markdown, sem blocos de código:
+IMPORTANTE: Responda SOMENTE com JSON válido. Sem texto antes ou depois. Sem markdown. Sem blocos de código.
+
+Formato exato da resposta:
 {"insights":[{"type":"warning|tip|success|info","title":"Título em até 6 palavras","text":"1-2 frases específicas com valores reais."}]}
 
-Tipos:
+Tipos de insight:
 - warning: alerta urgente (orçamento estourado, déficit, despesas atrasadas)
 - tip: sugestão acionável (reduzir gasto específico, oportunidade de poupança)
 - success: conquista positiva (superávit, taxa de poupança boa, meta cumprida)
 - info: dado relevante neutro (tendência mensal, comparação com mês anterior)
 
-Regras:
-- Gere EXATAMENTE 3 ou 4 insights.
-- Priorize warnings e tips quando há problemas.
-- Máximo 1 "success" e 1 "info" no total.
-- Cite valores, categorias e percentuais reais dos dados.
-- Responda em português brasileiro.
-
-${financialContext}`;
+Regras obrigatórias:
+- Gere EXATAMENTE 3 ou 4 insights
+- Priorize warnings e tips quando há problemas
+- Máximo 1 "success" e 1 "info" no total
+- Cite valores, categorias e percentuais reais
+- Responda em português brasileiro`;
 
   try {
     const { text } = await generateText({
       model: anthropic("claude-3-5-haiku-20241022"),
-      prompt: systemPrompt,
-      maxOutputTokens: 512,
-      temperature: 0.4,
+      system,
+      messages: [{ role: "user", content: financialContext }],
+      maxOutputTokens: 768,
+      temperature: 0.3,
     });
 
-    // Strip potential markdown code fences if model adds them
-    const clean = text.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim();
-    const parsed = JSON.parse(clean) as { insights: { type: string; title: string; text: string }[] };
+    // Extract JSON — handles cases where model wraps with markdown or adds preamble
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("no json found");
+    const parsed = JSON.parse(jsonMatch[0]) as { insights: { type: string; title: string; text: string }[] };
 
-    if (!Array.isArray(parsed.insights)) throw new Error("invalid shape");
+    if (!Array.isArray(parsed.insights) || parsed.insights.length === 0) throw new Error("invalid shape");
 
     return new Response(
       JSON.stringify({ insights: parsed.insights, generatedAt: new Date().toISOString() }),
