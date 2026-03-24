@@ -373,13 +373,13 @@ function DashboardContent() {
       animate="show"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-row justify-between items-center gap-2">
-        <div>
+      <motion.div variants={itemVariants} className="space-y-3">
+        <div className="flex items-center justify-between gap-2">
           <h1 className="text-lg sm:text-2xl font-bold tracking-tight">{greeting}</h1>
-          <p className="text-muted-foreground text-xs sm:text-sm capitalize">{periodLabel}</p>
+          <p className="hidden sm:block text-muted-foreground text-sm capitalize">{periodLabel}</p>
         </div>
-        <div data-tour="month-selector" className="shrink-0">
-          <Suspense fallback={<div className="h-10 w-40 bg-muted animate-pulse rounded-md" />}>
+        <div data-tour="month-selector">
+          <Suspense fallback={<div className="h-10 w-full bg-muted animate-pulse rounded-md" />}>
             <MonthSelector />
           </Suspense>
         </div>
