@@ -1,7 +1,7 @@
 import * as React from "react";
 import { CreditCard, Landmark } from "lucide-react";
 
-export type BankName = "Nubank" | "Itaú" | "Inter" | "Bradesco" | "Santander" | "Banco do Brasil" | "Caixa" | "XP" | "C6 Bank" | "BTG Pactual" | "Outro";
+export type BankName = "Nubank" | "Itaú" | "Inter" | "Bradesco" | "Santander" | "Banco do Brasil" | "Caixa Econômica" | "XP" | "C6 Bank" | "BTG Pactual" | "Outro";
 export type CardNetwork = "VISA" | "MASTERCARD" | "ELO" | "AMEX" | "HIPERCARD" | "OTHER";
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
@@ -9,72 +9,25 @@ interface IconProps extends React.SVGProps<SVGSVGElement> {
 }
 
 // ==========================================
-// BANK LOGOS
+// BANK LOGOS — real SVGs from public/logos/banks/
+// All logos verified as square (≈1:1 viewBox) for compact icon use
 // ==========================================
 
-export const BankLogos: Record<BankName | string, React.ReactNode | React.FC<IconProps>> = {
-  Nubank: (props: IconProps) => (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <rect width="24" height="24" rx="6" fill="#8A05BE"/>
-      <path d="M7 14.5V9.5H8.5L11.5 13V9.5H13V14.5H11.5L8.5 11V14.5H7Z" fill="white"/>
-      <path d="M14 14.5V11H15.5V14.5C15.5 15.5 16 15.5 16 15.5C16 15.5 16.5 15.5 16.5 14.5V11H18V14.5C18 16 16 16.5 16 16.5C16 16.5 14 16 14 14.5Z" fill="white"/>
-    </svg>
-  ),
-  Itaú: (props: IconProps) => (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <rect width="24" height="24" rx="6" fill="#EC7000"/>
-      <path d="M7 16V8.5H9V16H7Z" fill="#003399"/>
-      <path d="M10 10.5H9V8.5H13V10.5H12V16H10V10.5Z" fill="#003399"/>
-      <path d="M13.5 16V10.5H15.5V13.5C15.5 14.5 16 14.5 16 14.5C16 14.5 16.5 14.5 16.5 13.5V10.5H18.5V16H16.5V14.5C16 15 15.5 16 15.5 16H13.5Z" fill="#003399"/>
-    </svg>
-  ),
-  Inter: (props: IconProps) => (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <rect width="24" height="24" rx="6" fill="#FF7A00"/>
-      <circle cx="9" cy="12" r="3" fill="white"/>
-      <circle cx="15" cy="12" r="3" fill="white"/>
-      <path d="M12 9L15 12L12 15L9 12L12 9Z" fill="#FF7A00"/>
-    </svg>
-  ),
-  Bradesco: (props: IconProps) => (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <rect width="24" height="24" rx="6" fill="#CC092F"/>
-      <path d="M6 16V8L18 16V8" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  ),
-  Santander: (props: IconProps) => (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <rect width="24" height="24" rx="6" fill="#EC0000"/>
-      <path d="M6 12C6 8.68629 8.68629 6 12 6C15.3137 6 18 8.68629 18 12C18 15.3137 15.3137 18 12 18" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-    </svg>
-  ),
-  "Banco do Brasil": (props: IconProps) => (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <rect width="24" height="24" rx="6" fill="#FCEB00"/>
-      <path d="M8 8H16L12 12L16 16H8L12 12L8 8Z" fill="#003DA5"/>
-    </svg>
-  ),
-  Caixa: (props: IconProps) => (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <rect width="24" height="24" rx="6" fill="#005CA9"/>
-      <path d="M6 16V8H18V16H6ZM8 10V14H16V10H8Z" fill="#F39200"/>
-    </svg>
-  ),
-  XP: (props: IconProps) => (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <rect width="24" height="24" rx="6" fill="#000000"/>
-      <path d="M7 8L12 16L17 8" stroke="white" strokeWidth="2"/>
-      <path d="M7 16L12 8L17 16" stroke="white" strokeWidth="2"/>
-    </svg>
-  ),
-  "C6 Bank": (props: IconProps) => (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <rect width="24" height="24" rx="6" fill="#242424"/>
-      <path d="M15 8C12 8 9 10 9 13C9 16 12 18 15 18" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-      <circle cx="15" cy="13" r="2" fill="white"/>
-    </svg>
-  ),
+const BANK_SVG_PATHS: Partial<Record<string, string>> = {
+  "Nubank":          "/logos/banks/nubank.svg",
+  "Itaú":            "/logos/banks/itau.svg",
+  "Bradesco":        "/logos/banks/bradesco.svg",
+  "Banco do Brasil": "/logos/banks/bancodobrasil.svg",
+  "Santander":       "/logos/banks/santander.svg",
+  "Caixa Econômica": "/logos/banks/caixa.svg",
+  "Inter":           "/logos/banks/inter.svg",
+  "C6 Bank":         "/logos/banks/c6bank.svg",
+  "XP":              "/logos/banks/xp.svg",
+  "XP Investimentos":"/logos/banks/xp.svg",
 };
+
+// Fallback inline SVGs for banks without a real logo file
+export const BankLogos: Record<string, React.ReactNode | React.FC<IconProps>> = {};
 
 export const FallbackBankIcon = (props: any) => <Landmark {...props} />;
 
@@ -117,6 +70,13 @@ export const CardBrandLogos: Record<CardNetwork, React.ReactNode | React.FC<Icon
 };
 
 export const getBankIcon = (name: string, className?: string) => {
+  const svgPath = BANK_SVG_PATHS[name];
+  if (svgPath) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={svgPath} alt={name} className={className} style={{ objectFit: "contain" }} />
+    );
+  }
   const Icon = BankLogos[name as BankName];
   if (Icon) {
     return typeof Icon === "function" ? <Icon className={className} /> : Icon;
