@@ -75,7 +75,7 @@ export function ChatWidget() {
 
             {/* Panel
                 Mobile: full-width sheet from bottom
-                Desktop: floating panel above the FAB  */}
+                Desktop: floating panel anchored beside the sidebar  */}
             <motion.div
               key="panel"
               initial={{ opacity: 0, y: "100%" }}
@@ -83,10 +83,9 @@ export function ChatWidget() {
               exit={{ opacity: 0, y: "100%" }}
               transition={{ type: "spring", stiffness: 380, damping: 38 }}
               className="fixed bottom-0 left-0 right-0 z-50 flex flex-col bg-card border-t rounded-t-3xl shadow-2xl overflow-hidden
-                         lg:bottom-[4.5rem] lg:left-4 lg:right-auto lg:rounded-2xl lg:border"
+                         lg:bottom-4 lg:left-[252px] lg:right-auto lg:w-80 lg:rounded-2xl lg:border lg:border-t"
               style={{
                 height: "min(560px, calc(100vh - 5rem))",
-                // desktop: fixed width
               } as React.CSSProperties}
             >
               {/* Mobile drag handle */}
@@ -147,23 +146,6 @@ export function ChatWidget() {
         )}
       </AnimatePresence>
 
-      {/* FAB — desktop only; mobile uses bottom nav center button */}
-      <div className="hidden lg:block fixed bottom-6 left-4 z-50">
-        <motion.button
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.92 }}
-          onClick={toggle}
-          className="w-12 h-12 rounded-full bg-primary/90 text-primary-foreground shadow-xl flex items-center justify-center ring-4 ring-primary/20 hover:shadow-2xl"
-          aria-label="Abrir FinBot"
-        >
-          <motion.div
-            animate={{ rotate: isOpen ? 90 : 0, scale: isOpen ? 0.85 : 1 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-          >
-            {isOpen ? <X className="w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
-          </motion.div>
-        </motion.button>
-      </div>
     </>
   );
 }
