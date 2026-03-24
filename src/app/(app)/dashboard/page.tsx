@@ -467,13 +467,13 @@ function DashboardContent() {
                 })}
               </div>
 
-              {/* Budget Alerts — only when there are warnings/dangers */}
-              {budgetAlerts.length > 0 && (
-                <BudgetAlertBanner items={budgetAlerts} />
-              )}
-
-              {/* AI Insights */}
-              <InsightsCard />
+              {/* AI Insights + Budget Alerts */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <InsightsCard />
+                {budgetAlerts.length > 0 && (
+                  <BudgetAlertBanner items={budgetAlerts} />
+                )}
+              </div>
 
               {/* Balanço do Mês + Mini Upcoming */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
