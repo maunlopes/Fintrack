@@ -14,7 +14,7 @@ export async function POST() {
 
   const userId = session.user.id;
 
-  if (!rateLimit(`ia-insights:${userId}`, 5, 3_600_000)) {
+  if (!rateLimit(`ia-insights:${userId}`, 20, 3_600_000)) {
     return new Response(
       JSON.stringify({ error: "Limite de geração atingido. Tente novamente em uma hora." }),
       { status: 429 }
@@ -68,9 +68,10 @@ Regras obrigatórias:
       JSON.stringify({ insights: parsed.insights, generatedAt: new Date().toISOString() }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
-  } catch {
+  } catch (err) {
+    console.error("[insights] error:", err);
     return new Response(
-      JSON.stringify({ insights: [], generatedAt: new Date().toISOString(), error: "parse_failed" }),
+      JSON.stringify({ insights: [], generatedAt: new Date().toISOString(), error: String(err) }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   }
