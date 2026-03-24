@@ -10,13 +10,10 @@ import { ptBR } from "date-fns/locale";
 import { Plus, CreditCard, ChevronLeft, ChevronRight } from "lucide-react";
 import { PageTransition } from "@/components/shared/page-transition";
 import { Breadcrumb } from "@/components/shared/breadcrumb";
-import { MoneyValue } from "@/components/shared/money-value";
 import { EmptyState } from "@/components/shared/empty-state";
 import { AnimatedCard, listVariants, listItemVariants } from "@/components/shared/animated-card";
 import { Button } from "@/components/ui/button";
-import { LinkButton } from "@/components/shared/link-button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -30,17 +27,7 @@ import { getCardBrandIcon } from "@/components/ui/brand-icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Category { id: string; name: string; icon: string; color: string; }
-interface CardTransaction {
-  id: string;
-  description: string;
-  totalAmount: string;
-  installmentAmount: string | null;
-  purchaseDate: string;
-  isInstallment: boolean;
-  totalInstallments: number | null;
-  currentInstallment: number | null;
-  category: Category;
-}
+
 interface CardDetail {
   id: string;
   name: string;
@@ -49,7 +36,7 @@ interface CardDetail {
   closingDay: number;
   dueDay: number;
   color: string;
-  transactions: CardTransaction[];
+  transactions: unknown[]; // kept for API compatibility, not rendered
 }
 
 interface InvoiceTx {
@@ -214,16 +201,18 @@ function fmt(month: number, year: number) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function FaturasView({ invoices, limit, navDate, onNav, today, cardId, onRefresh }: {
+function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, cardId, onRefresh, onNewTransaction }: {
   invoices: Invoice[];
   limit: number;
+  totalCommitted: number;
   navDate: Date;
   onNav: (d: Date) => void;
   today: Date;
   cardId: string;
   onRefresh: () => void;
+  onNewTransaction: () => void;
 }) {
-  // On first render: jump to nearest invoice month (prefer current/future, fallback to latest past)
+  // On first render: jump to nearest invoice month
   useEffect(() => {
     if (invoices.length === 0) return;
     const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
@@ -232,7 +221,6 @@ function FaturasView({ invoices, limit, navDate, onNav, today, cardId, onRefresh
       const kb = `${b.year}-${String(b.month).padStart(2, "0")}`;
       return ka.localeCompare(kb);
     });
-    // Prefer the closest invoice >= today, else the most recent past one
     const upcoming = sorted.find((inv) => `${inv.year}-${String(inv.month).padStart(2, "0")}` >= todayKey);
     const target = upcoming ?? sorted[sorted.length - 1];
     onNav(new Date(target.year, target.month - 1, 1));
@@ -243,21 +231,22 @@ function FaturasView({ invoices, limit, navDate, onNav, today, cardId, onRefresh
   const navYear = navDate.getFullYear();
   const invoice = invoices.find((inv) => inv.month === navMonth && inv.year === navYear) ?? null;
 
-  // Build a Set of "year-mm" keys for months that have invoices (for dot indicators)
   const invoiceKeys = new Set(invoices.map((inv) => `${inv.year}-${String(inv.month).padStart(2, "0")}`));
   const prevKey = `${subMonths(navDate, 1).getFullYear()}-${String(subMonths(navDate, 1).getMonth() + 1).padStart(2, "0")}`;
   const nextKey = `${addMonths(navDate, 1).getFullYear()}-${String(addMonths(navDate, 1).getMonth() + 1).padStart(2, "0")}`;
+  const currentKey = `${navYear}-${String(navMonth).padStart(2, "0")}`;
 
   const isCurrentMonth = navDate.getMonth() === today.getMonth() && navDate.getFullYear() === today.getFullYear();
   const now = new Date(today.getFullYear(), today.getMonth(), 1);
   const isPast = navDate < now;
 
-  // Derive status from API (already computed server-side)
   const status = invoice?.status ?? null;
   const isOverdue = status === "OVERDUE";
   const isPaid = status === "PAID";
 
+  // Limit calculations
   const pct = invoice && limit > 0 ? Math.round((invoice.totalAmount / limit) * 100) : 0;
+  const available = Math.max(0, limit - totalCommitted);
   const barColor = getLimitColor(pct);
 
   // Payment dialog state
@@ -301,27 +290,22 @@ function FaturasView({ invoices, limit, navDate, onNav, today, cardId, onRefresh
       { method: "DELETE" }
     );
     setUndoing(false);
-    if (!res.ok) {
-      toast.error("Erro ao desfazer pagamento");
-      return;
-    }
+    if (!res.ok) { toast.error("Erro ao desfazer pagamento"); return; }
     toast.success("Pagamento desfeito");
     onRefresh();
   }
 
-  const currentKey = `${navYear}-${String(navMonth).padStart(2, "0")}`;
-
   return (
     <div className="space-y-4">
-      {/* Month navigator */}
+      {/* ── Month Navigator ── */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex flex-col items-center gap-0.5">
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger asChild>
               <Button
                 variant="outline"
                 size="icon"
-                className="h-8 w-8 bg-white dark:bg-input/30"
+                className="h-8 w-8"
                 onClick={() => onNav(subMonths(navDate, 1))}
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -330,24 +314,36 @@ function FaturasView({ invoices, limit, navDate, onNav, today, cardId, onRefresh
             <TooltipContent>Mês anterior</TooltipContent>
           </Tooltip>
           {invoiceKeys.has(prevKey) && (
-            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
           )}
         </div>
 
-        <div className="flex flex-col items-center gap-0.5">
-          <span className="text-sm font-semibold">{fmt(navMonth, navYear)}</span>
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-base font-semibold">{fmt(navMonth, navYear)}</span>
           {invoiceKeys.has(currentKey) && (
-            <span className={`w-1.5 h-1.5 rounded-full ${invoice?.status === "PAID" ? "bg-success" : invoice?.status === "OVERDUE" ? "bg-destructive" : "bg-warning"}`} />
+            <span className={`w-1.5 h-1.5 rounded-full ${
+              invoice?.status === "PAID" ? "bg-success"
+              : invoice?.status === "OVERDUE" ? "bg-destructive"
+              : "bg-warning"
+            }`} />
+          )}
+          {!isCurrentMonth && (
+            <button
+              className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => onNav(new Date(today.getFullYear(), today.getMonth(), 1))}
+            >
+              Ir para hoje
+            </button>
           )}
         </div>
 
         <div className="flex flex-col items-center gap-0.5">
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger asChild>
               <Button
                 variant="outline"
                 size="icon"
-                className="h-8 w-8 bg-white dark:bg-input/30"
+                className="h-8 w-8"
                 onClick={() => onNav(addMonths(navDate, 1))}
               >
                 <ChevronRight className="w-4 h-4" />
@@ -356,24 +352,12 @@ function FaturasView({ invoices, limit, navDate, onNav, today, cardId, onRefresh
             <TooltipContent>Próximo mês</TooltipContent>
           </Tooltip>
           {invoiceKeys.has(nextKey) && (
-            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
           )}
         </div>
       </div>
 
-      {!isCurrentMonth && (
-        <div className="flex justify-center">
-          <Button
-            variant="link"
-            size="sm"
-            className="text-xs h-auto p-0 text-muted-foreground"
-            onClick={() => onNav(new Date(today.getFullYear(), today.getMonth(), 1))}
-          >
-            Ir para o mês atual
-          </Button>
-        </div>
-      )}
-
+      {/* ── Invoice content ── */}
       <AnimatePresence mode="wait">
         {invoice ? (
           <motion.div
@@ -385,45 +369,61 @@ function FaturasView({ invoices, limit, navDate, onNav, today, cardId, onRefresh
             className="space-y-3"
           >
             {/* Invoice summary card */}
-            <Card className={isPaid ? "border-success/40 bg-success/5" : isOverdue ? "border-destructive/40" : ""}>
+            <Card className={isPaid ? "bg-success/5" : isOverdue ? "bg-destructive/5" : ""}>
               <CardContent className="pt-5 pb-4 px-5 space-y-4">
+
+                {/* Total + status + due date */}
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Total da fatura</p>
-                    <p className={`text-3xl font-bold tabular-nums mt-0.5 ${isPaid ? "text-success" : ""}`}>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-0.5">
+                      Total da fatura
+                    </p>
+                    <p className={`text-3xl font-bold tabular-nums ${isPaid ? "text-success" : ""}`}>
                       {formatCurrency(invoice.totalAmount)}
                     </p>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-xs text-muted-foreground">Vencimento</p>
-                    <p className={`text-sm font-semibold mt-0.5 ${isOverdue ? "text-destructive" : isPast && !isPaid ? "text-muted-foreground" : "text-foreground"}`}>
-                      {formatDate(invoice.dueDate)}
+                  <div className="text-right shrink-0 space-y-1">
+                    <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${
+                      isPaid ? "bg-success/15 text-success"
+                      : isOverdue ? "bg-destructive/15 text-destructive"
+                      : "bg-warning/15 text-warning"
+                    }`}>
+                      {isPaid ? "Pago" : isOverdue ? "Em atraso" : isPast ? "Não pago" : "Pendente"}
+                    </span>
+                    <p className="text-xs text-muted-foreground">
+                      Vence {formatDate(invoice.dueDate)}
                     </p>
-                    {isPaid && <p className="text-xs text-success font-semibold">Pago</p>}
-                    {isOverdue && <p className="text-xs text-destructive font-medium">Em atraso</p>}
-                    {!isPaid && !isOverdue && !isPast && <p className="text-xs text-warning font-medium">Pendente</p>}
-                    {!isPaid && !isOverdue && isPast && <p className="text-xs text-muted-foreground">Não pago</p>}
                   </div>
                 </div>
 
-                {/* Limit usage bar */}
-                <div>
-                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                    <span>{pct}% do limite</span>
-                    <span>{invoice.transactions.length} lançamento{invoice.transactions.length !== 1 ? "s" : ""}</span>
+                {/* Limit bar integrated */}
+                {limit > 0 && (
+                  <div>
+                    <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
+                      <span>{pct}% do limite</span>
+                      <span className="tabular-nums">{formatCurrency(available)} disponível</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-muted overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full"
+                        style={{ backgroundColor: isPaid ? "var(--success)" : barColor }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min(pct, 100)}%` }}
+                        transition={{ duration: 0.6, ease: "easeOut" }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 tabular-nums">
+                      {formatCurrency(invoice.totalAmount)} de {formatCurrency(limit)}
+                      {totalCommitted > invoice.totalAmount && (
+                        <span className="text-warning font-medium">
+                          {" "}· {formatCurrency(totalCommitted)} comprometido
+                        </span>
+                      )}
+                    </p>
                   </div>
-                  <div className="h-2 rounded-full bg-muted overflow-hidden">
-                    <motion.div
-                      className="h-full rounded-full"
-                      style={{ backgroundColor: isPaid ? "var(--success)" : barColor }}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${Math.min(pct, 100)}%` }}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                    />
-                  </div>
-                </div>
+                )}
 
-                {/* Payment info or action */}
+                {/* Payment action */}
                 {isPaid && invoice.payment ? (
                   <div className="flex items-center justify-between pt-1 border-t border-success/20">
                     <p className="text-xs text-success">
@@ -452,34 +452,45 @@ function FaturasView({ invoices, limit, navDate, onNav, today, cardId, onRefresh
             </Card>
 
             {/* Transactions list */}
-            <div className="space-y-2">
-              {invoice.transactions.map((tx) => (
-                <Card key={tx.id} className="hover:shadow-sm transition-shadow">
-                  <CardContent className="py-3 px-4 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                        style={{ backgroundColor: tx.category.color }}
-                      >
-                        {tx.category.name[0]}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{tx.description}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDate(tx.purchaseDate)} · {tx.category.name}
-                          {tx.isInstallment && tx.currentInstallment && tx.totalInstallments && (
-                            <span className="ml-1 text-primary font-medium">
-                              {tx.currentInstallment}/{tx.totalInstallments}x
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="text-sm font-semibold tabular-nums shrink-0">{formatCurrency(tx.amount)}</span>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {invoice.transactions.length > 0 && (
+              <>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">
+                  {invoice.transactions.length} lançamento{invoice.transactions.length !== 1 ? "s" : ""}
+                </p>
+                <motion.div variants={listVariants} initial="hidden" animate="show" className="space-y-2">
+                  {invoice.transactions.map((tx) => (
+                    <motion.div key={tx.id} variants={listItemVariants}>
+                      <Card>
+                        <CardContent className="py-3 px-4 flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                              style={{ backgroundColor: tx.category.color }}
+                            >
+                              {tx.category.name[0]}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium truncate">{tx.description}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {formatDate(tx.purchaseDate)} · {tx.category.name}
+                                {tx.isInstallment && tx.currentInstallment && tx.totalInstallments && (
+                                  <span className="ml-1 text-primary font-medium">
+                                    {tx.currentInstallment}/{tx.totalInstallments}x
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="text-sm font-semibold tabular-nums shrink-0">
+                            {formatCurrency(tx.amount)}
+                          </span>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </>
+            )}
           </motion.div>
         ) : (
           <motion.div
@@ -490,12 +501,17 @@ function FaturasView({ invoices, limit, navDate, onNav, today, cardId, onRefresh
             transition={{ duration: 0.15 }}
           >
             <Card className="border-dashed">
-              <CardContent className="py-12 flex flex-col items-center justify-center gap-2 text-center">
-                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-1">
+              <CardContent className="py-12 flex flex-col items-center justify-center gap-3 text-center">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
                   <CreditCard className="w-6 h-6 text-muted-foreground" />
                 </div>
-                <p className="font-medium">Sem fatura em {fmt(navMonth, navYear)}</p>
-                <p className="text-sm text-muted-foreground">Nenhuma compra com vencimento neste mês.</p>
+                <div>
+                  <p className="font-medium">Sem lançamentos em {fmt(navMonth, navYear)}</p>
+                  <p className="text-sm text-muted-foreground">Nenhuma compra com vencimento neste mês.</p>
+                </div>
+                <Button size="sm" variant="outline" onClick={onNewTransaction}>
+                  <Plus className="w-3.5 h-3.5 mr-1.5" /> Lançar compra
+                </Button>
               </CardContent>
             </Card>
           </motion.div>
@@ -513,7 +529,6 @@ function FaturasView({ invoices, limit, navDate, onNav, today, cardId, onRefresh
               <span className="text-sm text-muted-foreground">Valor da fatura</span>
               <span className="font-bold text-lg tabular-nums">{formatCurrency(invoice?.totalAmount ?? 0)}</span>
             </div>
-
             <div className="space-y-2">
               <p className="text-sm font-medium">Debitar de qual conta?</p>
               {bankAccounts.length === 0 ? (
@@ -542,7 +557,6 @@ function FaturasView({ invoices, limit, navDate, onNav, today, cardId, onRefresh
                 </div>
               )}
             </div>
-
             <Button
               className="w-full"
               disabled={!selectedAccount || paying}
@@ -566,7 +580,6 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"transacoes" | "faturas">("transacoes");
   const today = new Date();
   const [navDate, setNavDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
 
@@ -578,17 +591,12 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
         fetch(`/api/cartoes/${id}/faturas`),
       ]);
 
-      if (cardRes.ok) {
-        setCard(await cardRes.json());
-      } else {
-        setCard(null);
-      }
+      if (cardRes.ok) setCard(await cardRes.json());
+      else setCard(null);
 
       if (catRes.ok) {
         const cats = await catRes.json();
         setCategories(cats.filter((c: Category & { type: string }) => c.type === "EXPENSE"));
-      } else {
-        setCategories([]);
       }
 
       if (fatRes.ok) {
@@ -597,7 +605,6 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
       }
     } catch {
       setCard(null);
-      setCategories([]);
     }
     setLoading(false);
   }
@@ -617,19 +624,15 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
   if (!card) return <PageTransition><p>Cartão não encontrado.</p></PageTransition>;
 
   const limit = parseFloat(card.creditLimit);
-  const used = card.transactions.reduce((sum, t) => {
-    return sum + (t.isInstallment ? parseFloat(t.installmentAmount ?? "0") : parseFloat(t.totalAmount));
-  }, 0);
-  const pct = limit > 0 ? Math.round((used / limit) * 100) : 0;
-  const color = getLimitColor(pct);
 
-  // Total committed across all future invoices (for the "committed limit" summary)
+  // Total committed = all unpaid invoices from current month forward
   const now = new Date();
-  const futureInvoices = invoices.filter((inv) => {
-    const d = new Date(inv.dueDate);
-    return d >= new Date(now.getFullYear(), now.getMonth(), 1);
-  });
-  const totalCommitted = futureInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+  const totalCommitted = invoices
+    .filter((inv) => {
+      const d = new Date(inv.dueDate);
+      return d >= new Date(now.getFullYear(), now.getMonth(), 1) && inv.status !== "PAID";
+    })
+    .reduce((sum, inv) => sum + inv.totalAmount, 0);
 
   return (
     <PageTransition>
@@ -658,126 +661,27 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
 
-      {/* Limit card */}
-      <AnimatedCard className="mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Limite utilizado</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex justify-between items-end mb-2">
-              <MoneyValue value={used} className="text-2xl" />
-              <span className="text-sm text-muted-foreground">de {formatCurrency(limit)}</span>
-            </div>
-            <motion.div initial={{ width: 0 }} animate={{ width: "100%" }} className="w-full">
-              <div className="h-3 rounded-full bg-muted overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full"
-                  style={{ backgroundColor: color }}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(pct, 100)}%` }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                />
-              </div>
-            </motion.div>
-            <div className="flex justify-between items-center mt-1">
-              <p className="text-xs text-muted-foreground">{pct}% utilizado</p>
-              {totalCommitted > 0 && (
-                <p className="text-xs text-warning font-medium">
-                  {formatCurrency(totalCommitted)} comprometido em faturas
-                </p>
-              )}
-            </div>
-            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/50">
-              <span className="text-[11px] text-muted-foreground">Referência:</span>
-              <span className="flex items-center gap-1 text-[11px] text-success"><span className="inline-block w-2 h-2 rounded-full bg-success" /> &lt;50%</span>
-              <span className="flex items-center gap-1 text-[11px] text-warning"><span className="inline-block w-2 h-2 rounded-full bg-warning" /> &lt;80%</span>
-              <span className="flex items-center gap-1 text-[11px] text-orange-500"><span className="inline-block w-2 h-2 rounded-full bg-orange-500" /> &lt;95%</span>
-              <span className="flex items-center gap-1 text-[11px] text-destructive"><span className="inline-block w-2 h-2 rounded-full bg-destructive" /> &gt;95%</span>
-            </div>
-          </CardContent>
-        </Card>
-      </AnimatedCard>
-
-      {/* Tabs */}
-      <div className="mb-4">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-          <TabsList>
-            <TabsTrigger value="transacoes">Transações</TabsTrigger>
-            <TabsTrigger value="faturas">
-              Faturas
-              {invoices.length > 0 && (
-                <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
-                  {invoices.length}
-                </span>
-              )}
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-
-      {/* Transações tab */}
-      {activeTab === "transacoes" && (
-        <>
-          {card.transactions.length === 0 ? (
-            <EmptyState
-              illustration="transactions"
-              title="Nenhuma transação"
-              description="Adicione uma compra neste cartão."
-              actionLabel="Nova transação"
-              onAction={() => setDialogOpen(true)}
-            />
-          ) : (
-            <motion.div variants={listVariants} initial="hidden" animate="show" className="space-y-2">
-              {card.transactions.map((t) => (
-                <motion.div key={t.id} variants={listItemVariants}>
-                  <Card className="hover:shadow-sm transition-shadow">
-                    <CardContent className="py-3 px-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                          style={{ backgroundColor: t.category?.color || "#075056" }}
-                        >
-                          {t.category?.name?.[0] || "?"}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">{t.description}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatDate(t.purchaseDate)} · {t.category?.name}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="money text-sm font-semibold">
-                          {t.isInstallment
-                            ? formatCurrency(parseFloat(t.installmentAmount ?? "0"))
-                            : formatCurrency(parseFloat(t.totalAmount))}
-                        </p>
-                        {t.isInstallment && (
-                          <p className="text-xs text-muted-foreground">
-                            {t.currentInstallment}/{t.totalInstallments}x
-                          </p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </>
-      )}
-
-      {/* Faturas tab */}
-      {activeTab === "faturas" && (
+      {invoices.length === 0 && !loading ? (
+        <AnimatedCard>
+          <EmptyState
+            illustration="transactions"
+            title="Nenhuma fatura ainda"
+            description="Lance uma compra para ver a fatura do cartão."
+            actionLabel="Nova transação"
+            onAction={() => setDialogOpen(true)}
+          />
+        </AnimatedCard>
+      ) : (
         <FaturasView
           invoices={invoices}
           limit={limit}
+          totalCommitted={totalCommitted}
           navDate={navDate}
           onNav={setNavDate}
           today={today}
           cardId={id}
           onRefresh={fetchData}
+          onNewTransaction={() => setDialogOpen(true)}
         />
       )}
 
