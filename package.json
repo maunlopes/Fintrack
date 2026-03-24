@@ -26,6 +26,7 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@tanstack/react-query": "^5.90.21",
     "@types/pg": "^8.18.0",
+    "@vercel/blob": "^2.3.1",
     "ai": "^6.0.136",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",

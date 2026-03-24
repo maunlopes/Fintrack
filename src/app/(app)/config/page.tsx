@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { LogOut, User, Settings, PlayCircle, KeyRound, Eye, EyeOff, Loader2, DatabaseZap, TriangleAlert } from "lucide-react";
+import { LogOut, User, Settings, PlayCircle, KeyRound, Eye, EyeOff, Loader2, DatabaseZap, TriangleAlert, Camera } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { resetTour } from "@/lib/tour";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
@@ -32,6 +32,8 @@ export default function ConfigPage() {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [clearConfirmText, setClearConfirmText] = useState("");
@@ -94,6 +96,34 @@ export default function ConfigPage() {
     passwordForm.reset();
   }
 
+  async function onAvatarFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Immediate preview
+    const objectUrl = URL.createObjectURL(file);
+    setAvatarPreview(objectUrl);
+
+    setIsUploadingAvatar(true);
+    const fd = new FormData();
+    fd.append("file", file);
+
+    const res = await fetch("/api/upload/avatar", { method: "POST", body: fd });
+    setIsUploadingAvatar(false);
+
+    if (!res.ok) {
+      const err = await res.json();
+      toast.error(err.error ?? "Erro ao fazer upload da foto");
+      setAvatarPreview(profileForm.getValues("image") ?? "");
+      return;
+    }
+
+    const { url } = await res.json();
+    profileForm.setValue("image", url, { shouldDirty: true });
+    setAvatarPreview(url);
+    URL.revokeObjectURL(objectUrl);
+  }
+
   async function onClearData() {
     setIsClearing(true);
     const res = await fetch("/api/usuario/limpar-dados", { method: "POST" });
@@ -129,23 +159,51 @@ export default function ConfigPage() {
         <Form {...profileForm}>
           <form onSubmit={profileForm.handleSubmit(onSaveProfile)} className="space-y-4">
             <div className="flex items-center gap-4">
-              <Avatar className="w-16 h-16 shrink-0">
-                <AvatarImage src={avatarPreview || undefined} />
-                <AvatarFallback className="bg-secondary text-secondary-foreground text-lg">{initials}</AvatarFallback>
-              </Avatar>
-              <FormField
-                control={profileForm.control}
-                name="image"
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel>URL da foto</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://..." {...field} onChange={(e) => { field.onChange(e); setAvatarPreview(e.target.value); }} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+              {/* Clickable avatar — opens file picker */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="relative w-16 h-16 shrink-0 rounded-full group"
+                title="Trocar foto"
+              >
+                <Avatar className="w-16 h-16">
+                  <AvatarImage src={avatarPreview || undefined} />
+                  <AvatarFallback className="bg-secondary text-secondary-foreground text-lg">{initials}</AvatarFallback>
+                </Avatar>
+                <span className={cn(
+                  "absolute inset-0 rounded-full flex items-center justify-center bg-black/50 transition-opacity",
+                  isUploadingAvatar ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                )}>
+                  {isUploadingAvatar
+                    ? <Loader2 className="w-5 h-5 text-white animate-spin" />
+                    : <Camera className="w-5 h-5 text-white" />
+                  }
+                </span>
+              </button>
+
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={onAvatarFileChange}
               />
+
+              <div className="flex-1 space-y-1">
+                <p className="text-sm font-medium">Foto de perfil</p>
+                <p className="text-xs text-muted-foreground">Clique na foto para trocar. JPG, PNG, WebP ou GIF — máx. 4 MB.</p>
+                {/* Hidden form field keeps the URL in sync with react-hook-form */}
+                <FormField
+                  control={profileForm.control}
+                  name="image"
+                  render={({ field }) => (
+                    <FormItem className="hidden">
+                      <FormControl><Input {...field} /></FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
             <FormField control={profileForm.control} name="name" render={({ field }) => (
               <FormItem>
