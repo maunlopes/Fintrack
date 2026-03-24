@@ -232,7 +232,6 @@ export async function POST() {
           type: "FIXED_RECURRING",
           status: m > 0 ? "PAID" : "PENDING",
           isRecurring: true,
-          recurrenceFrequency: "MONTHLY",
           bankAccountId: f.bankId,
         },
       });
