@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Sparkles, AlertTriangle, Lightbulb, CheckCircle2, Info, RefreshCw } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -109,12 +109,11 @@ export function InsightsCard() {
   }
 
   return (
-    <Card>
-      <CardContent className="p-4">
-        {/* Header */}
+    <Card className="p-6 h-full flex flex-col shadow-sm">
+      <CardHeader className="p-0 pb-4">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary shrink-0" />
-          <span className="text-sm font-semibold flex-1">Análise FinBot</span>
+          <CardTitle className="text-muted-foreground font-semibold flex-1">Análise FinBot</CardTitle>
           <Button
             variant="ghost"
             size="icon"
@@ -135,14 +134,13 @@ export function InsightsCard() {
             <span className="text-xs font-bold">→</span>
           </Button>
         </div>
+        <CardDescription>
+          {generatedAt && status === "loaded" ? `Gerado às ${formatTime(generatedAt)} · hoje` : "Análise dos seus dados financeiros"}
+        </CardDescription>
+      </CardHeader>
 
-        {generatedAt && status === "loaded" && (
-          <p className="text-xs text-muted-foreground mt-0.5 ml-6">
-            Gerado às {formatTime(generatedAt)} · hoje
-          </p>
-        )}
-
-        <Separator className="my-3" />
+      <CardContent className="p-0 flex-1">
+        <Separator className="mb-4" />
 
         {/* Loading */}
         {status === "loading" && (
@@ -203,3 +201,4 @@ export function InsightsCard() {
     </Card>
   );
 }
+

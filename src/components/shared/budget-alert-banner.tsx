@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -34,12 +34,11 @@ export function BudgetAlertBanner({ items }: BudgetAlertBannerProps) {
   const sorted = [...dangers, ...warnings];
 
   return (
-    <Card>
-      <CardContent className="p-4">
-        {/* Header */}
+    <Card className="p-6 h-full flex flex-col shadow-sm">
+      <CardHeader className="p-0 pb-4">
         <div className="flex items-center gap-2 flex-wrap">
-          <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0" />
-          <span className="text-sm font-semibold flex-1">Alertas de Orçamento</span>
+          <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
+          <CardTitle className="text-muted-foreground font-semibold flex-1">Alertas de Orçamento</CardTitle>
           {dangers.length > 0 && (
             <Badge variant="destructive">
               {dangers.length} {dangers.length === 1 ? "estourado" : "estourados"}
@@ -57,8 +56,11 @@ export function BudgetAlertBanner({ items }: BudgetAlertBannerProps) {
             Ver →
           </Link>
         </div>
+        <CardDescription>Categorias próximas ou acima do limite</CardDescription>
+      </CardHeader>
 
-        <Separator className="my-3" />
+      <CardContent className="p-0 flex-1">
+        <Separator className="mb-4" />
 
         {/* Items — 2 rows each, compact */}
         <div className="space-y-2.5">
@@ -103,3 +105,4 @@ export function BudgetAlertBanner({ items }: BudgetAlertBannerProps) {
     </Card>
   );
 }
+
