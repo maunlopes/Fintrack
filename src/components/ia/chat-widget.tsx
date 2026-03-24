@@ -59,76 +59,101 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* Panel */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 24, scale: 0.96 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="fixed bottom-36 left-4 z-40 lg:bottom-[4.5rem] flex flex-col rounded-2xl border bg-card shadow-2xl overflow-hidden"
-            style={{
-              width: "min(380px, calc(100vw - 2rem))",
-              height: "min(560px, calc(100vh - 8rem))",
-            }}
-          >
-            {/* Header */}
-            <div className="flex items-center gap-2.5 px-4 py-3 border-b bg-card shrink-0">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-                <Sparkles className="w-4 h-4 text-primary" />
+          <>
+            {/* Mobile backdrop */}
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+              onClick={close}
+            />
+
+            {/* Panel
+                Mobile: full-width sheet from bottom
+                Desktop: floating panel above the FAB  */}
+            <motion.div
+              key="panel"
+              initial={{ opacity: 0, y: "100%" }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: "100%" }}
+              transition={{ type: "spring", stiffness: 380, damping: 38 }}
+              className="fixed bottom-0 left-0 right-0 z-50 flex flex-col bg-card border-t rounded-t-3xl shadow-2xl overflow-hidden
+                         lg:bottom-[4.5rem] lg:left-4 lg:right-auto lg:rounded-2xl lg:border"
+              style={{
+                height: "min(560px, calc(100vh - 5rem))",
+                // desktop: fixed width
+              } as React.CSSProperties}
+            >
+              {/* Mobile drag handle */}
+              <div className="flex justify-center pt-3 pb-1 shrink-0 lg:hidden">
+                <div className="w-10 h-1 rounded-full bg-muted-foreground/25" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold leading-none">FinBot</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Assistente financeiro IA</p>
-              </div>
-              {messages.length > 0 && (
+
+              {/* Header */}
+              <div className="flex items-center gap-2.5 px-4 py-3 border-b bg-card shrink-0">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold leading-none">FinBot</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Assistente financeiro IA</p>
+                </div>
+                {messages.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                    onClick={clearMessages}
+                    title="Limpar conversa"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
                   className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                  onClick={clearMessages}
-                  title="Limpar conversa"
+                  onClick={close}
+                  title="Fechar"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <X className="w-3.5 h-3.5" />
                 </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                onClick={close}
-                title="Fechar"
-              >
-                <X className="w-3.5 h-3.5" />
-              </Button>
-            </div>
+              </div>
 
-            {/* Messages */}
-            <ChatMessages
-              messages={messages}
-              isStreaming={isStreaming}
-              onSuggestion={(s) => sendMessage(s)}
-            />
+              {/* Messages */}
+              <ChatMessages
+                messages={messages}
+                isStreaming={isStreaming}
+                onSuggestion={(s) => sendMessage(s)}
+              />
 
-            {/* Input */}
-            <ChatInput
-              value={input}
-              onChange={setInput}
-              onSend={() => sendMessage()}
-              disabled={isStreaming}
-            />
-          </motion.div>
+              {/* Input */}
+              <ChatInput
+                value={input}
+                onChange={setInput}
+                onSend={() => sendMessage()}
+                disabled={isStreaming}
+              />
+
+              {/* Safe area spacer — mobile only */}
+              <div className="pb-safe shrink-0 lg:hidden" />
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
-      {/* FAB */}
-      <div className="fixed bottom-20 left-4 z-50 lg:bottom-6">
+      {/* FAB — desktop only; mobile uses bottom nav center button */}
+      <div className="hidden lg:block fixed bottom-6 left-4 z-50">
         <motion.button
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.92 }}
           onClick={toggle}
-          className="w-12 h-12 rounded-full bg-primary/90 text-primary-foreground shadow-xl flex items-center justify-center ring-4 ring-primary/20 transition-shadow hover:shadow-2xl"
+          className="w-12 h-12 rounded-full bg-primary/90 text-primary-foreground shadow-xl flex items-center justify-center ring-4 ring-primary/20 hover:shadow-2xl"
           aria-label="Abrir FinBot"
         >
           <motion.div
