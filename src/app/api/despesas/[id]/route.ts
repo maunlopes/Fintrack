@@ -16,15 +16,16 @@ export async function PUT(req: Request, { params }: Params) {
   const body = await req.json();
 
   // Partial status update
-  if (body.status && Object.keys(body).length === 1) {
+  if (body.status && Object.keys(body).filter(k => k !== "paidAt").length === 1) {
     const wasAlreadyPaid = expense.status === "PAID";
     const markingAsPaid = body.status === "PAID";
     const reverting = wasAlreadyPaid && !markingAsPaid;
+    const paidAt = body.paidAt ? new Date(body.paidAt) : new Date();
 
     // Mark as PAID → debit bank account atomically
     if (markingAsPaid && !wasAlreadyPaid && expense.bankAccountId) {
       const [updated] = await prisma.$transaction([
-        prisma.expense.update({ where: { id }, data: { status: "PAID" } }),
+        prisma.expense.update({ where: { id }, data: { status: "PAID", paidAt } }),
         prisma.bankAccount.update({
           where: { id: expense.bankAccountId },
           data: { balance: { decrement: expense.amount } },
@@ -36,7 +37,7 @@ export async function PUT(req: Request, { params }: Params) {
     // Revert from PAID → restore bank account balance
     if (reverting && expense.bankAccountId) {
       const [updated] = await prisma.$transaction([
-        prisma.expense.update({ where: { id }, data: { status: body.status } }),
+        prisma.expense.update({ where: { id }, data: { status: body.status, paidAt: null } }),
         prisma.bankAccount.update({
           where: { id: expense.bankAccountId },
           data: { balance: { increment: expense.amount } },
@@ -46,7 +47,10 @@ export async function PUT(req: Request, { params }: Params) {
     }
 
     // No bank account linked — just update status
-    const updated = await prisma.expense.update({ where: { id }, data: { status: body.status } });
+    const updated = await prisma.expense.update({
+      where: { id },
+      data: { status: body.status, paidAt: markingAsPaid ? paidAt : null },
+    });
     return NextResponse.json(updated);
   }
 

@@ -160,6 +160,7 @@ model Expense {
   currentInstallment Int?
   bankAccountId      String?
   notes              String?
+  paidAt             DateTime?
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
   parentExpenseId    String?

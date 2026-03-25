@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Plus, TrendingDown, Trash2, Pencil, BadgeCheck, Search, Tag, CreditCard, Wallet, X, RotateCcw, MoreHorizontal } from "lucide-react";
 type ExpenseType = "FIXED_RECURRING" | "VARIABLE_RECURRING" | "ONE_TIME" | "INSTALLMENT";
 import { PageTransition } from "@/components/shared/page-transition";
+import { ConfirmPaymentDialog } from "@/components/despesas/confirm-payment-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { ViewToggle } from "@/components/shared/view-toggle";
@@ -371,6 +372,7 @@ function DespesasContent() {
   const [newExpenseMode, setNewExpenseMode] = useState<"conta" | "cartao">("conta");
   const [editExpense, setEditExpense] = useState<Expense | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [confirmPayExpense, setConfirmPayExpense] = useState<Expense | null>(null);
   const [filter, setFilter] = useState<"ALL" | "PAID" | "PENDING">("ALL");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
@@ -424,11 +426,16 @@ function DespesasContent() {
     setDeleteId(null);
   }
 
-  async function handlePay(id: string) {
+  function handlePay(id: string) {
+    const expense = expenses.find((e) => e.id === id);
+    if (expense) setConfirmPayExpense(expense);
+  }
+
+  async function confirmPay(id: string, paidAt: string) {
     const res = await fetch(`/api/despesas/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "PAID" }),
+      body: JSON.stringify({ status: "PAID", paidAt }),
     });
     if (res.ok) { toast.success("Despesa marcada como paga! ✅"); fetchData(); }
     else toast.error("Erro ao atualizar status");
@@ -911,6 +918,13 @@ function DespesasContent() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ConfirmPaymentDialog
+        expense={confirmPayExpense}
+        open={!!confirmPayExpense}
+        onOpenChange={(o) => !o && setConfirmPayExpense(null)}
+        onConfirm={confirmPay}
+      />
     </PageTransition>
   );
 }
