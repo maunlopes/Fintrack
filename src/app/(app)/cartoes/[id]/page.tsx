@@ -324,7 +324,7 @@ function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, c
               const topTx = txs.length > 0 ? txs.reduce((a, b) => a.amount > b.amount ? a : b) : null;
               const byCategory = txs.reduce<Record<string, { name: string; color: string; icon: string; total: number }>>((acc, tx) => {
                 const key = tx.category.name;
-                if (!acc[key]) acc[key] = { name: tx.category.name, color: tx.category.color, icon: tx.category.icon, total: 0 };
+                if (!acc[key]) acc[key] = { name: tx.category.name, color: tx.category.color, icon: tx.category.icon || "circle", total: 0 };
                 acc[key].total += tx.amount;
                 return acc;
               }, {});
