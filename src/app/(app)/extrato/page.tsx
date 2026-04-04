@@ -29,7 +29,7 @@ interface Transaction {
   amount: number;
   date: string;
   status: "PENDING" | "PAID" | "OVERDUE";
-  category: { id: string; name: string; color: string };
+  category: { id: string; name: string; color: string; icon?: string };
   bankAccount: { id: string; nickname: string } | null;
 }
 
