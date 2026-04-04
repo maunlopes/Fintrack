@@ -20,9 +20,8 @@ import {
   CalendarCheck,
   type Icon as PhosphorIcon,
 } from "@phosphor-icons/react";
-import { X, Sparkles } from "lucide-react";
+import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useChatStore } from "@/components/ia/chat-store";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -73,16 +72,15 @@ const navGroups: NavGroup[] = [
     items: [
       { href: "/investimentos", label: "Investimentos", icon: ph(ChartBar) },
       { href: "/contas",        label: "Contas",        icon: ph(Bank), tourId: "nav-contas" },
-      { href: "/categorias",    label: "Categorias",    icon: ph(Tag) },
-      { href: "/open-finance",  label: "Open Finance",  icon: ph(LinkSimple) },
       { href: "/resumo-anual",  label: "Resumo Anual",  icon: ph(CalendarCheck) },
     ],
   },
 ];
 
 const footerItems = [
-  { href: "/ajuda",  label: "Ajuda",          icon: ph(BookOpen) },
-  { href: "/config", label: "Configurações",  icon: ph(GearSix) },
+  { href: "/categorias", label: "Categorias",    icon: ph(Tag) },
+  { href: "/ajuda",      label: "Ajuda",          icon: ph(BookOpen) },
+  { href: "/config",     label: "Configurações",  icon: ph(GearSix) },
 ];
 
 interface SidebarProps {
@@ -93,7 +91,6 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen = true, onClose, collapsed = false }: SidebarProps) {
   const pathname = usePathname();
-  const { toggle: toggleChat, isOpen: chatOpen } = useChatStore();
 
   return (
     <nav className="flex flex-col h-full w-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border overflow-hidden">
@@ -205,43 +202,8 @@ export function Sidebar({ isOpen = true, onClose, collapsed = false }: SidebarPr
 
       <Separator className="bg-sidebar-border" />
 
-      {/* Footer — FinBot + Ajuda + Configurações */}
+      {/* Footer — Ajuda + Configurações */}
       <div className={cn("py-4 pb-20 lg:pb-4 space-y-1", collapsed ? "px-1.5" : "px-2")}>
-        {/* FinBot button — distinct highlight */}
-        {collapsed ? (
-          <Tooltip>
-            <TooltipTrigger render={
-              <button
-                onClick={toggleChat}
-                className={cn(
-                  "flex items-center justify-center h-10 w-10 mx-auto rounded-xl transition-all duration-150 cursor-pointer",
-                  chatOpen
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-primary/10 text-primary hover:bg-primary/20"
-                )}
-              >
-                <Sparkles className="w-4 h-4" />
-              </button>
-            } />
-            <TooltipContent side="right">FinBot</TooltipContent>
-          </Tooltip>
-        ) : (
-          <button
-            onClick={toggleChat}
-            className={cn(
-              "flex items-center gap-3 h-10 px-3 w-full rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer",
-              chatOpen
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "bg-primary/10 text-primary hover:bg-primary/20"
-            )}
-          >
-            <Sparkles className="w-4 h-4 shrink-0" />
-            FinBot
-          </button>
-        )}
-
-        <Separator className="bg-sidebar-border my-2" />
-
         {footerItems.map(({ href, label, icon: Icon }) =>
           collapsed ? (
             <Tooltip key={href}>

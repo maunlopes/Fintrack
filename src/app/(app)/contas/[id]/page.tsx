@@ -7,7 +7,7 @@ import { ArrowLeft, TrendingUp, TrendingDown, Tag, Wallet } from "lucide-react";
 
 import { PageTransition } from "@/components/shared/page-transition";
 import { MonthSelector } from "@/components/shared/month-selector";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { MoneyValue } from "@/components/shared/money-value";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -15,6 +15,7 @@ import { listVariants, listItemVariants } from "@/components/shared/animated-car
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LinkButton } from "@/components/shared/link-button";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { cn, radialGradient } from "@/lib/utils";
 import { getBankIcon } from "@/components/ui/brand-icons";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -150,51 +151,46 @@ function ContaExtratoContent({ id }: { id: string }) {
 
       {/* SUMMARY CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        <Card className="p-6 border-success/30 bg-success/5 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between p-0 pb-3">
-            <CardTitle className="text-success font-semibold">Entradas do Mês</CardTitle>
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-success/10">
-              <TrendingUp className="h-4 w-4 text-success" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <MoneyValue value={(summary?.incomePaid || 0) + (summary?.incomePending || 0)} className="text-2xl font-bold" />
-            <div className="flex justify-between items-center text-xs mt-3 pt-2 border-t border-success/20 text-success/80">
-              <span>{formatCurrency(summary?.incomePaid || 0)} Recebido</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="p-6 border-destructive/30 bg-destructive/5 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between p-0 pb-3">
-            <CardTitle className="text-destructive font-semibold">Saídas do Mês</CardTitle>
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-destructive/10">
-              <TrendingDown className="h-4 w-4 text-destructive" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <MoneyValue value={(summary?.expensePaid || 0) + (summary?.expensePending || 0)} className="text-2xl font-bold text-foreground" />
-            <div className="flex justify-between items-center text-xs mt-3 pt-2 border-t border-destructive/20 text-destructive/80">
-              <span>{formatCurrency(summary?.expensePaid || 0)} Pago</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="p-6 bg-primary text-primary-foreground border-primary shadow-sm sm:col-span-2 lg:col-span-1">
-          <CardHeader className="flex flex-row items-center justify-between p-0 pb-3">
-            <CardTitle className="font-extrabold text-primary-foreground/90 text-sm">
-              {isPastMonth ? "Saldo Final no Mês" : "Saldo Projetado no Mês"}
+        <Card className="border-l-4 border-l-success" style={radialGradient("success")}>
+          <CardHeader>
+            <CardDescription className="text-success-label">Entradas do Mês</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums font-numbers text-success-dark">
+              {formatCurrency((summary?.incomePaid || 0) + (summary?.incomePending || 0))}
             </CardTitle>
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-foreground/20">
-              <Wallet className="h-4 w-4 text-primary-foreground" />
-            </div>
           </CardHeader>
-          <CardContent className="p-0">
-            <MoneyValue value={summary?.projectedBalance || 0} className="text-3xl font-bold drop-shadow-sm" />
-            <div className="flex justify-between items-center text-xs mt-3 pt-2 border-t border-primary-foreground/20 text-primary-foreground/80">
-              <span>Saldo Atual: {formatCurrency(parseFloat(account?.balance || "0"))}</span>
-            </div>
-          </CardContent>
+          <CardFooter className="text-xs text-muted-foreground">
+            {formatCurrency(summary?.incomePaid || 0)} Recebido
+          </CardFooter>
+        </Card>
+
+        <Card className="border-l-4 border-l-destructive" style={radialGradient("destructive")}>
+          <CardHeader>
+            <CardDescription className="text-destructive">Saídas do Mês</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums font-numbers text-destructive">
+              {formatCurrency((summary?.expensePaid || 0) + (summary?.expensePending || 0))}
+            </CardTitle>
+          </CardHeader>
+          <CardFooter className="text-xs text-muted-foreground">
+            {formatCurrency(summary?.expensePaid || 0)} Pago
+          </CardFooter>
+        </Card>
+
+        <Card className={cn(
+          "sm:col-span-2 lg:col-span-1 border-l-4",
+          (summary?.projectedBalance || 0) >= 0 ? "border-l-success" : "border-l-destructive"
+        )}>
+          <CardHeader>
+            <CardDescription>{isPastMonth ? "Saldo Final no Mês" : "Saldo Projetado no Mês"}</CardDescription>
+            <CardTitle className={cn(
+              "text-3xl font-black tabular-nums font-numbers",
+              (summary?.projectedBalance || 0) >= 0 ? "text-success" : "text-destructive"
+            )}>
+              {formatCurrency(summary?.projectedBalance || 0)}
+            </CardTitle>
+          </CardHeader>
+          <CardFooter className="text-xs text-muted-foreground">
+            Saldo Atual: {formatCurrency(parseFloat(account?.balance || "0"))}
+          </CardFooter>
         </Card>
       </div>
 
@@ -248,7 +244,7 @@ function ContaExtratoContent({ id }: { id: string }) {
                           <span className="flex items-center gap-1">
                             <span
                               className="w-1.5 h-1.5 rounded-full inline-block"
-                              style={{ backgroundColor: tx.category?.color || "#ccc" }}
+                              style={{ backgroundColor: tx.category?.color || "var(--muted-foreground)" }}
                             />
                             {tx.category?.name}
                           </span>

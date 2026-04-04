@@ -5,13 +5,15 @@ import { motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { PageTransition } from "@/components/shared/page-transition";
 import { MonthSelector } from "@/components/shared/month-selector";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { MoneyValue } from "@/components/shared/money-value";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { listVariants, listItemVariants } from "@/components/shared/animated-card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/lib/format";
+import { cn, radialGradient } from "@/lib/utils";
+import { CATEGORY_ICONS } from "@/lib/category-icons";
 import { TrendingUp, TrendingDown, ListOrdered, Search, Wallet, X } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
@@ -177,74 +179,52 @@ function ExtratoContent() {
       </div>
 
       {/* SUMMARY CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
-        <Card className="p-6 border-success/30 bg-success/5 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between p-0 pb-3">
-            <CardTitle className="text-success font-semibold">Recebido</CardTitle>
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-success/10">
-              <TrendingUp className="h-4 w-4 text-success" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <MoneyValue value={summary?.incomePaid || 0} className="text-2xl font-bold" />
-          </CardContent>
-        </Card>
-        <Card className="p-6 border-dashed border-success/40 bg-card shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between p-0 pb-3">
-            <CardTitle className="text-muted-foreground font-semibold">A Receber</CardTitle>
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-success/10">
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <MoneyValue value={summary?.incomePending || 0} className="text-2xl font-semibold" />
-          </CardContent>
-        </Card>
-
-        <Card className="p-6 border-destructive/30 bg-destructive/5 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between p-0 pb-3">
-            <CardTitle className="text-destructive font-semibold">Pago</CardTitle>
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-destructive/10">
-              <TrendingDown className="h-4 w-4 text-destructive" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <MoneyValue value={summary?.expensePaid || 0} className="text-2xl font-bold" />
-            {!loading && topExpenseCategory && (
-              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-destructive/20">
-                <span
-                  className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: topExpenseCategory.color }}
-                />
-                <span className="text-xs text-muted-foreground truncate flex-1">{topExpenseCategory.name}</span>
-                <span className="text-xs font-semibold text-destructive shrink-0">{formatCurrency(topExpenseCategory.total)}</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="p-6 border-dashed border-destructive/40 bg-card shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between p-0 pb-3">
-            <CardTitle className="text-muted-foreground font-semibold">A Pagar / Previsto</CardTitle>
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
-              <TrendingDown className="h-4 w-4 text-muted-foreground" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <MoneyValue value={summary?.expensePending || 0} className="text-2xl font-semibold" />
-          </CardContent>
-        </Card>
-
-        <Card className="p-6 bg-primary text-primary-foreground border-primary shadow-sm md:col-span-2 lg:col-span-1">
-          <CardHeader className="flex flex-row items-center justify-between p-0 pb-3">
-            <CardTitle className="font-extrabold text-primary-foreground/90 text-sm">
-              {isPastMonth ? "Saldo Final" : "Saldo Final Projetado"}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        {/* Receitas do mês */}
+        <Card className="border-l-4 border-l-success" style={radialGradient("success")}>
+          <CardHeader>
+            <CardDescription className="text-success-label">Receitas do mês</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums font-numbers text-success-dark">
+              {formatCurrency((summary?.incomePaid || 0) + (summary?.incomePending || 0))}
             </CardTitle>
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-foreground/20">
-              <Wallet className="h-4 w-4 text-primary-foreground" />
-            </div>
           </CardHeader>
-          <CardContent className="p-0">
-            <MoneyValue value={summary?.projectedBalance || 0} className="text-3xl font-bold drop-shadow-sm" />
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Recebido</span>
+              <span className="font-semibold text-success">{formatCurrency(summary?.incomePaid || 0)}</span>
+            </div>
+            <div className="h-2 rounded-full bg-muted overflow-hidden">
+              <div className="h-full rounded-full bg-success transition-all duration-700"
+                style={{ width: `${((summary?.incomePaid || 0) + (summary?.incomePending || 0)) > 0 ? ((summary?.incomePaid || 0) / ((summary?.incomePaid || 0) + (summary?.incomePending || 0))) * 100 : 0}%` }} />
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">A receber</span>
+              <span className="font-semibold text-muted-foreground">{formatCurrency(summary?.incomePending || 0)}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Despesas do mês */}
+        <Card className="border-l-4 border-l-destructive" style={radialGradient("destructive")}>
+          <CardHeader>
+            <CardDescription className="text-destructive-label">Despesas do mês</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums font-numbers text-destructive-dark">
+              {formatCurrency((summary?.expensePaid || 0) + (summary?.expensePending || 0))}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Pago</span>
+              <span className="font-semibold text-destructive">{formatCurrency(summary?.expensePaid || 0)}</span>
+            </div>
+            <div className="h-2 rounded-full bg-muted overflow-hidden">
+              <div className="h-full rounded-full bg-destructive transition-all duration-700"
+                style={{ width: `${((summary?.expensePaid || 0) + (summary?.expensePending || 0)) > 0 ? ((summary?.expensePaid || 0) / ((summary?.expensePaid || 0) + (summary?.expensePending || 0))) * 100 : 0}%` }} />
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">A pagar / previsto</span>
+              <span className="font-semibold text-muted-foreground">{formatCurrency(summary?.expensePending || 0)}</span>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -387,19 +367,17 @@ function ExtratoContent() {
                     return (
                       <Card key={t.id} className="hover:shadow-sm transition-shadow">
                         <CardContent className="py-3 px-4 flex items-center gap-3">
-                          {/* Type/status accent bar */}
-                          <div
-                            className="w-[3px] self-stretch rounded-full flex-shrink-0"
-                            style={{ backgroundColor: accentColor }}
-                          />
 
                           {/* Category avatar */}
-                          <div
-                            className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                            style={{ backgroundColor: t.category?.color || "#8A9AA3" }}
-                          >
-                            {t.category?.name?.[0]?.toUpperCase() || "?"}
-                          </div>
+                          {(() => {
+                            const CatIcon = CATEGORY_ICONS[t.category?.icon || ""] ?? CATEGORY_ICONS["circle"];
+                            return (
+                              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                                   style={{ backgroundColor: `color-mix(in srgb, ${t.category?.color || "var(--muted-foreground)"} 15%, transparent)` }}>
+                                <CatIcon className="w-5 h-5" style={{ color: t.category?.color || "var(--muted-foreground)" }} />
+                              </div>
+                            );
+                          })()}
 
                           {/* Description + metadata */}
                           <div className="flex-1 min-w-0">
@@ -418,15 +396,10 @@ function ExtratoContent() {
                             </div>
                           </div>
 
-                          {/* Amount + status */}
-                          <div className="text-right shrink-0 min-w-[96px]">
-                            <p className={`text-base font-bold tabular-nums money ${t.type === "INCOME" ? "text-success" : ""}`}>
-                              {t.type === "INCOME" ? "+" : "-"}{formatCurrency(t.amount)}
-                            </p>
-                            <div className="mt-0.5 flex justify-end">
-                              <StatusBadge status={t.status} />
-                            </div>
-                          </div>
+                          {/* Amount */}
+                          <span className={`text-lg font-bold tabular-nums font-numbers shrink-0 ${t.type === "INCOME" ? "text-success" : ""}`}>
+                            {t.type === "INCOME" ? "+" : "-"}{formatCurrency(t.amount)}
+                          </span>
                         </CardContent>
                       </Card>
                     );

@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ChatInputProps {
   value: string;
@@ -33,7 +34,7 @@ export function ChatInput({ value, onChange, onSend, disabled }: ChatInputProps)
 
   return (
     <div className="flex items-end gap-2 p-3 border-t bg-card">
-      <textarea
+      <Textarea
         ref={textareaRef}
         value={value}
         onChange={handleInput}
@@ -41,7 +42,7 @@ export function ChatInput({ value, onChange, onSend, disabled }: ChatInputProps)
         disabled={disabled}
         placeholder="Pergunte algo sobre suas finanças…"
         rows={1}
-        className="flex-1 resize-none rounded-xl border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground disabled:opacity-50 leading-relaxed min-h-[38px] max-h-[120px]"
+        className="flex-1 resize-none rounded-xl px-3 py-2 text-sm leading-relaxed min-h-[38px] max-h-[120px]"
       />
       <Button
         size="icon"

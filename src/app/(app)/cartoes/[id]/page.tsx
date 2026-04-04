@@ -7,13 +7,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { format, addMonths, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Plus, CreditCard, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, CreditCard, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 import { PageTransition } from "@/components/shared/page-transition";
 import { Breadcrumb } from "@/components/shared/breadcrumb";
 import { EmptyState } from "@/components/shared/empty-state";
 import { AnimatedCard, listVariants, listItemVariants } from "@/components/shared/animated-card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { CATEGORY_ICONS } from "@/lib/category-icons";
+import { radialGradient } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -23,7 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cardTransactionSchema, CardTransactionInput } from "@/lib/validations/credit-card";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getCardBrandIcon } from "@/components/ui/brand-icons";
+import { getCardBrandIcon, getBankIcon } from "@/components/ui/brand-icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Category { id: string; name: string; icon: string; color: string; }
@@ -36,7 +38,8 @@ interface CardDetail {
   closingDay: number;
   dueDay: number;
   color: string;
-  transactions: unknown[]; // kept for API compatibility, not rendered
+  bankAccount?: { id: string; nickname: string; name?: string } | null;
+  transactions: unknown[];
 }
 
 interface InvoiceTx {
@@ -47,7 +50,7 @@ interface InvoiceTx {
   isInstallment: boolean;
   currentInstallment: number | null;
   totalInstallments: number | null;
-  category: { id: string; name: string; color: string };
+  category: { id: string; name: string; color: string; icon?: string };
 }
 
 interface InvoicePaymentInfo {
@@ -201,7 +204,7 @@ function fmt(month: number, year: number) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, cardId, onRefresh, onNewTransaction }: {
+function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, cardId, closingDay, dueDay, cardColor, cardBankName, onRefresh, onNewTransaction }: {
   invoices: Invoice[];
   limit: number;
   totalCommitted: number;
@@ -209,9 +212,16 @@ function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, c
   onNav: (d: Date) => void;
   today: Date;
   cardId: string;
+  closingDay: number;
+  dueDay: number;
+  cardColor: string;
+  cardBankName: string;
   onRefresh: () => void;
   onNewTransaction: () => void;
 }) {
+  const [txSearch, setTxSearch] = useState("");
+  const [txCategoryFilter, setTxCategoryFilter] = useState("ALL");
+
   // On first render: jump to nearest invoice month
   useEffect(() => {
     if (invoices.length === 0) return;
@@ -297,66 +307,6 @@ function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, c
 
   return (
     <div className="space-y-4">
-      {/* ── Month Navigator ── */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex flex-col items-center gap-0.5">
-          <Tooltip>
-            <TooltipTrigger render={
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => onNav(subMonths(navDate, 1))}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-            } />
-            <TooltipContent>Mês anterior</TooltipContent>
-          </Tooltip>
-          {invoiceKeys.has(prevKey) && (
-            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
-          )}
-        </div>
-
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-base font-semibold">{fmt(navMonth, navYear)}</span>
-          {invoiceKeys.has(currentKey) && (
-            <span className={`w-1.5 h-1.5 rounded-full ${
-              invoice?.status === "PAID" ? "bg-success"
-              : invoice?.status === "OVERDUE" ? "bg-destructive"
-              : "bg-warning"
-            }`} />
-          )}
-          {!isCurrentMonth && (
-            <button
-              className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-              onClick={() => onNav(new Date(today.getFullYear(), today.getMonth(), 1))}
-            >
-              Ir para hoje
-            </button>
-          )}
-        </div>
-
-        <div className="flex flex-col items-center gap-0.5">
-          <Tooltip>
-            <TooltipTrigger render={
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => onNav(addMonths(navDate, 1))}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            } />
-            <TooltipContent>Próximo mês</TooltipContent>
-          </Tooltip>
-          {invoiceKeys.has(nextKey) && (
-            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
-          )}
-        </div>
-      </div>
-
       {/* ── Invoice content ── */}
       <AnimatePresence mode="wait">
         {invoice ? (
@@ -368,75 +318,91 @@ function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, c
             transition={{ duration: 0.18 }}
             className="space-y-3"
           >
-            {/* Invoice summary card */}
-            <Card className={isPaid ? "bg-success/5" : isOverdue ? "bg-destructive/5" : ""}>
-              <CardContent className="pt-5 pb-4 px-5 space-y-4">
+            {/* Summary cards */}
+            {(() => {
+              const txs = invoice.transactions;
+              const topTx = txs.length > 0 ? txs.reduce((a, b) => a.amount > b.amount ? a : b) : null;
+              const byCategory = txs.reduce<Record<string, { name: string; color: string; icon: string; total: number }>>((acc, tx) => {
+                const key = tx.category.name;
+                if (!acc[key]) acc[key] = { name: tx.category.name, color: tx.category.color, icon: tx.category.icon, total: 0 };
+                acc[key].total += tx.amount;
+                return acc;
+              }, {});
+              const topCat = Object.values(byCategory).sort((a, b) => b.total - a.total)[0] ?? null;
 
-                {/* Total + status + due date */}
-                <div className="flex items-start justify-between gap-3">
+              return (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Left: main invoice card */}
+                  <Card
+                    className={`border-l-4 relative overflow-hidden ${isPaid ? "border-l-success" : isOverdue ? "border-l-destructive" : "border-l-warning"}`}
+                  >
+                    {/* Bank logo — aligned with header */}
+                    <div className="absolute right-6 top-7 pointer-events-none">
+                      {getBankIcon(cardBankName, "w-16 h-16")}
+                    </div>
+              <CardHeader className="relative z-10">
+                <CardDescription className={isPaid ? "text-success-label" : isOverdue ? "text-destructive-label" : ""}>
+                  Total da fatura · Fecha dia {closingDay}
+                </CardDescription>
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-0.5">
-                      Total da fatura
-                    </p>
-                    <p className={`text-3xl font-bold tabular-nums ${isPaid ? "text-success" : ""}`}>
+                    <CardTitle className={`text-3xl font-black tabular-nums font-numbers ${isPaid ? "text-success" : isOverdue ? "text-destructive" : ""}`}>
                       {formatCurrency(invoice.totalAmount)}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0 space-y-1">
-                    <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${
-                      isPaid ? "bg-success/15 text-success"
-                      : isOverdue ? "bg-destructive/15 text-destructive"
-                      : "bg-warning/15 text-warning"
-                    }`}>
-                      {isPaid ? "Pago" : isOverdue ? "Em atraso" : isPast ? "Não pago" : "Pendente"}
-                    </span>
-                    <p className="text-xs text-muted-foreground">
-                      Vence {formatDate(invoice.dueDate)}
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+                      Vencimento {formatDate(invoice.dueDate)}
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                        isPaid ? "bg-success/15 text-success"
+                        : isOverdue ? "bg-destructive/15 text-destructive"
+                        : "bg-warning/15 text-warning"
+                      }`}>
+                        {isPaid ? "Pago" : isOverdue ? "Em atraso" : isPast ? "Não pago" : "Pendente"}
+                      </span>
                     </p>
                   </div>
                 </div>
+              </CardHeader>
 
-                {/* Limit bar integrated */}
-                {limit > 0 && (
-                  <div>
-                    <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-                      <span>{pct}% do limite</span>
-                      <span className="tabular-nums">{formatCurrency(available)} disponível</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-muted overflow-hidden">
-                      <motion.div
-                        className="h-full rounded-full"
-                        style={{ backgroundColor: isPaid ? "var(--success)" : barColor }}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${Math.min(pct, 100)}%` }}
-                        transition={{ duration: 0.6, ease: "easeOut" }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1 tabular-nums">
-                      {formatCurrency(invoice.totalAmount)} de {formatCurrency(limit)}
-                      {totalCommitted > invoice.totalAmount && (
-                        <span className="text-warning font-medium">
-                          {" "}· {formatCurrency(totalCommitted)} comprometido
-                        </span>
-                      )}
-                    </p>
+              {limit > 0 && (
+                <CardContent className="space-y-1.5 relative z-10">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{pct}% do limite</span>
+                    <span className="tabular-nums">{formatCurrency(available)} disponível</span>
                   </div>
-                )}
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: isPaid ? "var(--success)" : barColor }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(pct, 100)}%` }}
+                      transition={{ duration: 0.6, ease: "easeOut" }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground tabular-nums">
+                    {formatCurrency(invoice.totalAmount)} de {formatCurrency(limit)}
+                    {totalCommitted > invoice.totalAmount && (
+                      <span className="text-warning font-medium">
+                        {" "}· {formatCurrency(totalCommitted)} comprometido
+                      </span>
+                    )}
+                  </p>
+                </CardContent>
+              )}
 
-                {/* Payment action */}
+              <CardFooter className="border-t pt-4 relative z-10">
                 {isPaid && invoice.payment ? (
-                  <div className="flex items-center justify-between pt-1 border-t border-success/20">
+                  <div className="flex items-center justify-between w-full">
                     <p className="text-xs text-success">
                       Pago em {formatDate(invoice.payment.paidAt)} via {invoice.payment.bankAccount.nickname}
                     </p>
                     <Button
-                      variant="link"
+                      variant="ghost"
                       size="sm"
-                      className="text-xs h-auto p-0 text-muted-foreground hover:text-destructive"
+                      className="text-xs text-muted-foreground hover:text-destructive"
                       onClick={handleUndoPay}
                       disabled={undoing}
                     >
-                      {undoing ? "Desfazendo..." : "Desfazer"}
+                      {undoing ? "Desfazendo..." : "Desfazer pagamento"}
                     </Button>
                   </div>
                 ) : (
@@ -448,49 +414,146 @@ function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, c
                     Pagar fatura
                   </Button>
                 )}
-              </CardContent>
-            </Card>
+              </CardFooter>
+                  </Card>
+
+                  {/* Right: top category + top transaction */}
+                  <div className="flex flex-col gap-4">
+                    {topCat && (() => {
+                      const CatIcon = CATEGORY_ICONS[topCat.icon || ""] ?? CATEGORY_ICONS["circle"];
+                      return (
+                        <Card
+                          className="border-l-4 flex-1 relative overflow-hidden"
+                          style={{
+                            borderLeftColor: topCat.color,
+                            background: `radial-gradient(circle 120px at calc(100% - 16px) 16px, color-mix(in srgb, ${topCat.color} 16%, transparent) 0%, transparent 100%) var(--card)`,
+                          }}
+                        >
+                          {CatIcon && (
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-10">
+                              <CatIcon className="w-16 h-16" style={{ color: topCat.color }} />
+                            </div>
+                          )}
+                          <CardHeader className="relative z-10">
+                            <CardDescription>Maior categoria</CardDescription>
+                            <div className="flex items-baseline gap-2">
+                              <CardTitle className="text-2xl font-semibold tabular-nums font-numbers" style={{ color: topCat.color }}>
+                                {formatCurrency(topCat.total)}
+                              </CardTitle>
+                              <span className="text-sm text-muted-foreground truncate">{topCat.name}</span>
+                            </div>
+                          </CardHeader>
+                        </Card>
+                      );
+                    })()}
+
+                    {topTx && (
+                      <Card className="border-l-4 border-l-destructive flex-1" style={radialGradient("destructive")}>
+                        <CardHeader>
+                          <CardDescription>Maior compra</CardDescription>
+                          <div className="flex items-baseline gap-2">
+                            <CardTitle className="text-2xl font-semibold tabular-nums font-numbers text-destructive">
+                              {formatCurrency(topTx.amount)}
+                            </CardTitle>
+                            <span className="text-sm text-muted-foreground truncate">{topTx.description}</span>
+                          </div>
+                        </CardHeader>
+                      </Card>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Transactions list */}
-            {invoice.transactions.length > 0 && (
+            {invoice.transactions.length > 0 && (() => {
+              const uniqueCategories = Array.from(
+                new Map(invoice.transactions.map((tx) => [tx.category.id, tx.category])).values()
+              ).sort((a, b) => a.name.localeCompare(b.name));
+
+              const filteredTxs = invoice.transactions.filter((tx) => {
+                const searchOk = !txSearch || tx.description.toLowerCase().includes(txSearch.toLowerCase());
+                const catOk = txCategoryFilter === "ALL" || tx.category.id === txCategoryFilter;
+                return searchOk && catOk;
+              });
+
+              return (
               <>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">
-                  {invoice.transactions.length} lançamento{invoice.transactions.length !== 1 ? "s" : ""}
-                </p>
+                {/* Filters */}
+                <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+                  {uniqueCategories.length > 1 && (
+                    <Select value={txCategoryFilter} onValueChange={(v) => setTxCategoryFilter(v ?? "ALL")}>
+                      <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectValue>{txCategoryFilter === "ALL" ? "Todas categorias" : uniqueCategories.find((c) => c.id === txCategoryFilter)?.name}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ALL">Todas categorias</SelectItem>
+                        {uniqueCategories.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <div className="relative flex-1 sm:max-w-[240px]">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar lançamento..."
+                      value={txSearch}
+                      onChange={(e) => setTxSearch(e.target.value)}
+                      className="pl-9 pr-8"
+                    />
+                    {txSearch && (
+                      <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6" onClick={() => setTxSearch("")}>
+                        <X className="w-3 h-3" />
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground self-center">
+                    {filteredTxs.length} de {invoice.transactions.length} lançamento{invoice.transactions.length !== 1 ? "s" : ""}
+                  </p>
+                </div>
+
                 <motion.div variants={listVariants} initial="hidden" animate="show" className="space-y-2">
-                  {invoice.transactions.map((tx) => (
-                    <motion.div key={tx.id} variants={listItemVariants}>
-                      <Card>
-                        <CardContent className="py-3 px-4 flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-3 min-w-0">
+                  {filteredTxs.map((tx) => {
+                    const CatIcon = CATEGORY_ICONS[tx.category.icon || ""] ?? CATEGORY_ICONS["circle"];
+                    return (
+                      <motion.div key={tx.id} variants={listItemVariants}>
+                        <Card>
+                          <CardContent className="flex items-center gap-3">
+                            {/* Category icon */}
                             <div
-                              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                              style={{ backgroundColor: tx.category.color }}
+                              className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                              style={{ backgroundColor: `color-mix(in srgb, ${tx.category.color} 15%, transparent)` }}
                             >
-                              {tx.category.name[0]}
+                              <CatIcon className="w-5 h-5" style={{ color: tx.category.color }} />
                             </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium truncate">{tx.description}</p>
+
+                            {/* Info */}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold truncate">{tx.description}</p>
                               <p className="text-xs text-muted-foreground">
                                 {formatDate(tx.purchaseDate)} · {tx.category.name}
                                 {tx.isInstallment && tx.currentInstallment && tx.totalInstallments && (
-                                  <span className="ml-1 text-primary font-medium">
+                                  <span className="ml-1 inline-flex items-center text-[10px] font-semibold bg-primary/10 text-primary rounded-full px-1.5 py-0.5 leading-none">
                                     {tx.currentInstallment}/{tx.totalInstallments}x
                                   </span>
                                 )}
                               </p>
                             </div>
-                          </div>
-                          <span className="text-sm font-semibold tabular-nums shrink-0">
-                            {formatCurrency(tx.amount)}
-                          </span>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
+
+                            {/* Amount */}
+                            <span className="text-lg font-bold tabular-nums font-numbers shrink-0">
+                              {formatCurrency(tx.amount)}
+                            </span>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
                 </motion.div>
               </>
-            )}
+              );
+            })()}
           </motion.div>
         ) : (
           <motion.div
@@ -647,11 +710,20 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
               {card.name}
               {card.brand && getCardBrandIcon(card.brand, "w-10 h-6 ml-2")}
             </h1>
-            <p className="text-sm text-muted-foreground">
-              Fecha dia {card.closingDay} · Vence dia {card.dueDay}
-            </p>
           </div>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            {/* Month navigator */}
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setNavDate(subMonths(navDate, 1))}>
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="text-sm font-semibold min-w-[100px] text-center capitalize">
+                {format(navDate, "MMM yyyy", { locale: ptBR })}
+              </span>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setNavDate(addMonths(navDate, 1))}>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
             <motion.div whileTap={{ scale: 0.97 }}>
               <Button onClick={() => setDialogOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" /> Nova transação
@@ -680,6 +752,10 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
           onNav={setNavDate}
           today={today}
           cardId={id}
+          closingDay={card.closingDay}
+          dueDay={card.dueDay}
+          cardColor={card.color || "#075056"}
+          cardBankName={card.bankAccount?.name || card.name}
           onRefresh={fetchData}
           onNewTransaction={() => setDialogOpen(true)}
         />

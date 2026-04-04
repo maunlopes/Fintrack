@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { formatCurrency } from "@/lib/format";
 
 interface BankAccount {
   id: string;
@@ -34,10 +35,6 @@ interface ConfirmPaymentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (expenseId: string, paidAt: string) => Promise<void>;
-}
-
-function formatBRL(v: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 }
 
 function todayISO() {
@@ -85,7 +82,7 @@ export function ConfirmPaymentDialog({ expense, open, onOpenChange, onConfirm }:
             </div>
             <div className="text-right shrink-0">
               <p className="text-sm text-muted-foreground">Valor</p>
-              <p className="font-semibold text-destructive">{formatBRL(amount)}</p>
+              <p className="font-semibold text-destructive">{formatCurrency(amount)}</p>
             </div>
           </div>
 
@@ -108,7 +105,7 @@ export function ConfirmPaymentDialog({ expense, open, onOpenChange, onConfirm }:
               <div className="text-right shrink-0">
                 <p className="text-xs text-muted-foreground">Saldo após</p>
                 <p className={`text-sm font-semibold ${balanceAfter >= 0 ? "text-success" : "text-destructive"}`}>
-                  {formatBRL(balanceAfter)}
+                  {formatCurrency(balanceAfter)}
                 </p>
               </div>
             )}

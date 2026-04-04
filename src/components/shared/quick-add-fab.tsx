@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const actions = [
   {
@@ -44,39 +45,46 @@ export function QuickAddFAB() {
         <AnimatePresence>
           {open &&
             actions.map((action, i) => (
-              <motion.button
+              <motion.div
                 key={action.label}
                 initial={{ opacity: 0, scale: 0.6, y: 8 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.6, y: 8 }}
                 transition={{ duration: 0.18, delay: i * 0.06 }}
-                className={`flex items-center gap-2 pl-3 pr-4 py-2.5 rounded-full text-sm font-semibold shadow-lg transition-colors ${action.className}`}
-                onClick={() => {
-                  setOpen(false);
-                  router.push(action.href);
-                }}
               >
-                <action.icon className="w-4 h-4" />
-                {action.label}
-              </motion.button>
+                <Button
+                  className={`rounded-full pl-3 pr-4 py-2.5 h-auto text-sm font-semibold shadow-lg ${action.className}`}
+                  onClick={() => {
+                    setOpen(false);
+                    router.push(action.href);
+                  }}
+                >
+                  <action.icon className="w-4 h-4" />
+                  {action.label}
+                </Button>
+              </motion.div>
             ))}
         </AnimatePresence>
 
         {/* Main FAB */}
-        <motion.button
+        <motion.div
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.92 }}
-          onClick={() => setOpen((o) => !o)}
-          className="w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-center ring-4 ring-primary/20 transition-shadow hover:shadow-2xl"
-          aria-label="Lançar transação"
         >
+          <Button
+            onClick={() => setOpen((o) => !o)}
+            className="w-14 h-14 rounded-full shadow-xl ring-4 ring-primary/20 hover:shadow-2xl"
+            size="icon"
+            aria-label="Lançar transação"
+          >
           <motion.div
             animate={{ rotate: open ? 45 : 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
           >
             <Plus className="w-6 h-6" />
           </motion.div>
-        </motion.button>
+          </Button>
+        </motion.div>
       </div>
     </>
   );

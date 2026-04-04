@@ -174,11 +174,12 @@ export default function ConfigPage() {
           <form onSubmit={profileForm.handleSubmit(onSaveProfile)} className="space-y-4">
             <div className="flex items-center gap-4">
               {/* Clickable avatar — opens file picker */}
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => fileInputRef.current?.click()}
-                className="relative w-16 h-16 shrink-0 rounded-full group"
-                title="Trocar foto"
+                className="relative w-16 h-16 shrink-0 rounded-full p-0 group"
+                aria-label="Trocar foto de perfil"
               >
                 <Avatar className="w-16 h-16">
                   <AvatarImage src={avatarPreview || undefined} />
@@ -193,7 +194,7 @@ export default function ConfigPage() {
                     : <Camera className="w-5 h-5 text-white" />
                   }
                 </span>
-              </button>
+              </Button>
 
               {/* Hidden file input */}
               <input
@@ -267,9 +268,9 @@ export default function ConfigPage() {
                   <FormControl>
                     <div className="relative">
                       <Input type={show ? "text" : "password"} placeholder="••••••••" className="pr-10" {...field} />
-                      <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={toggle}>
+                      <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" onClick={toggle} aria-label={show ? "Ocultar senha" : "Mostrar senha"}>
                         {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
+                      </Button>
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -406,11 +407,12 @@ export default function ConfigPage() {
             {/* ── Sidebar nav — desktop only ── */}
             <nav className="hidden lg:flex flex-col w-48 shrink-0 gap-0.5">
               {navItems.filter(i => !i.hidden).map(({ id, label, icon: Icon }) => (
-                <button
+                <Button
                   key={id}
+                  variant="ghost"
                   onClick={() => setActiveSection(id)}
                   className={cn(
-                    "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left w-full",
+                    "justify-start gap-2.5 px-3 py-2 h-auto text-sm font-medium w-full",
                     activeSection === id
                       ? "bg-secondary text-secondary-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -418,18 +420,19 @@ export default function ConfigPage() {
                 >
                   <Icon className="w-4 h-4 shrink-0" />
                   {label}
-                </button>
+                </Button>
               ))}
 
               <div className="mt-auto pt-4">
                 <Separator className="mb-4" />
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => setLogoutDialogOpen(true)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left w-full text-destructive hover:bg-destructive/10"
+                  className="justify-start gap-2.5 px-3 py-2 h-auto text-sm font-medium w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
                 >
                   <LogOut className="w-4 h-4 shrink-0" />
                   Sair da conta
-                </button>
+                </Button>
               </div>
             </nav>
 
@@ -481,12 +484,12 @@ export default function ConfigPage() {
           </AlertDialogHeader>
           <div className="px-1 pb-2">
             <p className="text-sm font-medium mb-2">Digite <span className="font-mono font-bold">CONFIRMAR</span> para prosseguir</p>
-            <input
+            <Input
               type="text"
               value={clearConfirmText}
               onChange={(e) => setClearConfirmText(e.target.value)}
               placeholder="CONFIRMAR"
-              className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="Digite CONFIRMAR para prosseguir"
             />
           </div>
           <AlertDialogFooter>

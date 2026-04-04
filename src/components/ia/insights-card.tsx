@@ -110,33 +110,22 @@ export function InsightsCard() {
 
   return (
     <Card className="p-6 h-full flex flex-col shadow-sm">
-      <CardHeader className="p-0 pb-4">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-primary shrink-0" />
-          <CardTitle className="text-muted-foreground font-semibold flex-1">Análise FinBot</CardTitle>
+      <CardHeader className="p-0 pb-4 flex flex-row items-center justify-between">
+        <CardTitle className="text-muted-foreground font-semibold">Análise FinBot</CardTitle>
+        <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
             className="h-7 w-7 text-muted-foreground hover:text-foreground"
             onClick={() => fetchInsights(true)}
             disabled={status === "loading"}
-            title="Atualizar análise"
           >
             <RefreshCw className={cn("w-3.5 h-3.5", status === "loading" && "animate-spin")} />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-foreground"
-            onClick={open}
-            title="Abrir FinBot"
-          >
-            <span className="text-xs font-bold">→</span>
+          <Button variant="ghost" size="sm" className="text-xs" onClick={open}>
+            Abrir FinBot →
           </Button>
         </div>
-        <CardDescription>
-          {generatedAt && status === "loaded" ? `Gerado às ${formatTime(generatedAt)} · hoje` : "Análise dos seus dados financeiros"}
-        </CardDescription>
       </CardHeader>
 
       <CardContent className="p-0 flex-1">

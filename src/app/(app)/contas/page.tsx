@@ -5,14 +5,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Plus, Landmark, Wallet, PiggyBank, TrendingUp, Pencil, Trash2 } from "lucide-react";
+import { Plus, Landmark, Wallet, PiggyBank, TrendingUp, Pencil, Trash2, Search, X } from "lucide-react";
 import { BankAccountType } from "@prisma/client";
 import { PageTransition } from "@/components/shared/page-transition";
 import { AnimatedCard, cardVariants, cardItemVariants } from "@/components/shared/animated-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { MoneyValue } from "@/components/shared/money-value";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -20,6 +20,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/shared/currency-input";
+import { ColorPicker } from "@/components/shared/color-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { bankAccountSchema, BankAccountInput } from "@/lib/validations/bank-account";
 import { formatCurrency, BANK_NAMES } from "@/lib/format";
@@ -174,10 +175,7 @@ function AccountForm({
             <FormItem>
               <FormLabel>Cor</FormLabel>
               <FormControl>
-                <div className="flex gap-2 items-center">
-                  <Input type="color" className="w-12 h-9 p-1 cursor-pointer" {...field} />
-                  <Input placeholder="#075056" {...field} />
-                </div>
+                <ColorPicker value={field.value} onChange={field.onChange} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -217,7 +215,20 @@ export default function ContasPage() {
 
   useEffect(() => { fetchAccounts(); }, []);
 
+  const [typeFilter, setTypeFilter] = useState<string>("ALL");
+  const [bankFilter, setBankFilter] = useState<string>("ALL");
+  const [search, setSearch] = useState("");
+
   const totalBalance = accounts.reduce((sum, a) => sum + parseFloat(a.balance), 0);
+
+  const filteredAccounts = accounts.filter((a) => {
+    const typeOk = typeFilter === "ALL" || a.type === typeFilter;
+    const bankOk = bankFilter === "ALL" || a.name === bankFilter;
+    const searchOk = !search || a.nickname.toLowerCase().includes(search.toLowerCase()) || a.name.toLowerCase().includes(search.toLowerCase());
+    return typeOk && bankOk && searchOk;
+  });
+
+  const uniqueBanks = Array.from(new Set(accounts.map((a) => a.name))).sort();
 
   async function handleDelete() {
     if (!deleteId) return;
@@ -247,13 +258,59 @@ export default function ContasPage() {
         </motion.div>
       </div>
 
+      {/* Filters */}
+      {!loading && accounts.length > 0 && (
+        <div className="mb-4 flex flex-col sm:flex-row gap-3 flex-wrap">
+          <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v ?? "ALL")}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue>{typeFilter === "ALL" ? "Todos os tipos" : typeLabels[typeFilter as BankAccountType]}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Todos os tipos</SelectItem>
+              <SelectItem value="CHECKING">Conta Corrente</SelectItem>
+              <SelectItem value="SAVINGS">Poupança</SelectItem>
+              <SelectItem value="INVESTMENT">Investimento</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {uniqueBanks.length > 1 && (
+            <Select value={bankFilter} onValueChange={(v) => setBankFilter(v ?? "ALL")}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue>{bankFilter === "ALL" ? "Todos os bancos" : bankFilter}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Todos os bancos</SelectItem>
+                {uniqueBanks.map((b) => (
+                  <SelectItem key={b} value={b}>{b}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          <div className="relative flex-1 sm:max-w-[240px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar conta..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 pr-8"
+            />
+            {search && (
+              <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6" onClick={() => setSearch("")}>
+                <X className="w-3 h-3" />
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-40 rounded-xl bg-muted animate-pulse" />
           ))}
         </div>
-      ) : accounts.length === 0 ? (
+      ) : filteredAccounts.length === 0 ? (
         <EmptyState
           illustration="accounts"
           title="Nenhuma conta cadastrada"
@@ -268,65 +325,56 @@ export default function ContasPage() {
           animate="show"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         >
-          {accounts.map((account, i) => {
+          {filteredAccounts.map((account, i) => {
             const Icon = typeIcons[account.type];
             const balance = parseFloat(account.balance);
             return (
               <motion.div key={account.id} variants={cardItemVariants}>
-                <Card className="overflow-hidden">
-                  <div className="h-2" style={{ backgroundColor: account.color }} />
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-10 h-10 rounded-xl flex items-center justify-center p-1.5 border border-border bg-card shadow-sm"
-                        >
-                          {getBankIcon(account.name, "w-full h-full object-contain")}
-                        </div>
-                        <div>
-                          <CardTitle className="text-sm font-semibold">{account.nickname}</CardTitle>
-                          <p className="text-xs text-muted-foreground">{account.name}</p>
-                        </div>
+                <Card className="h-full" style={{ borderLeftWidth: 4, borderLeftColor: account.color }}>
+                  <CardHeader className="flex flex-row items-start justify-between gap-2">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center p-1.5 border border-border bg-card shadow-sm shrink-0">
+                        {getBankIcon(account.name, "w-full h-full object-contain")}
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        {typeLabels[account.type]}
-                      </Badge>
+                      <div className="min-w-0">
+                        <CardTitle className="text-sm font-semibold truncate">{account.nickname}</CardTitle>
+                        <CardDescription className="truncate">{account.name}</CardDescription>
+                      </div>
                     </div>
+                    <Badge variant="outline" className="text-xs shrink-0">
+                      {typeLabels[account.type]}
+                    </Badge>
                   </CardHeader>
                   <CardContent>
-                    <MoneyValue
-                      value={balance}
-                      colored
-                      className={`text-2xl ${balance < 0 ? "text-destructive" : ""}`}
-                    />
-                    <div className="flex gap-2 mt-4">
-                      <Link href={`/contas/${account.id}`} className="flex-1">
-                        <Button variant="outline" size="sm" className="w-full">
-                          Ver Extrato
-                        </Button>
-                      </Link>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => { setEditAccount(account); setDialogOpen(true); }}
-                      >
-                        <Pencil className="w-3 h-3 mr-1" /> Editar
+                    <p className={`text-2xl font-bold tabular-nums font-numbers ${balance < 0 ? "text-destructive" : ""}`}>
+                      {formatCurrency(balance)}
+                    </p>
+                  </CardContent>
+                  <CardFooter className="flex items-center justify-between border-t pt-4">
+                    <Link href={`/contas/${account.id}`}>
+                      <Button variant="outline" size="sm">
+                        Ver extrato
                       </Button>
+                    </Link>
+                    <div className="flex items-center gap-1">
                       <Tooltip>
                         <TooltipTrigger>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => setDeleteId(account.id)}
-                          >
-                            <Trash2 className="w-3 h-3" />
+                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-muted" onClick={() => { setEditAccount(account); setDialogOpen(true); }}>
+                            <Pencil className="w-7 h-7" />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent>Remover conta</TooltipContent>
+                        <TooltipContent>Editar</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(account.id)}>
+                            <Trash2 className="w-7 h-7" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Excluir</TooltipContent>
                       </Tooltip>
                     </div>
-                  </CardContent>
+                  </CardFooter>
                 </Card>
               </motion.div>
             );

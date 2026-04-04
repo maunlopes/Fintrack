@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import Link from "next/link";
-import { Plus, CreditCard, Pencil, Trash2, Eye } from "lucide-react";
+import { Plus, CreditCard, Pencil, Trash2, Eye, Search, X } from "lucide-react";
 import { CardBrand } from "@prisma/client";
 import { PageTransition } from "@/components/shared/page-transition";
 import { AnimatedCard, cardVariants, cardItemVariants } from "@/components/shared/animated-card";
@@ -14,7 +14,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { MoneyValue } from "@/components/shared/money-value";
 import { Button } from "@/components/ui/button";
 import { LinkButton } from "@/components/shared/link-button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -22,9 +22,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/shared/currency-input";
+import { ColorPicker } from "@/components/shared/color-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { creditCardSchema, CreditCardInput } from "@/lib/validations/credit-card";
 import { formatCurrency } from "@/lib/format";
+import { radialGradient } from "@/lib/utils";
 import { getCardBrandIcon } from "@/components/ui/brand-icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -77,6 +79,9 @@ interface CreditCardItem {
   dueDay: number;
   color: string;
   bankAccount?: { nickname: string } | null;
+  currentMonthTotal?: number;
+  prevMonthTotal?: number;
+  topTransaction?: { description: string; amount: number; cardName: string; purchaseDate: string; categoryName: string; categoryColor: string } | null;
 }
 
 interface BankAccount { id: string; nickname: string; }
@@ -205,10 +210,7 @@ function CardForm({
           <FormItem>
             <FormLabel>Cor</FormLabel>
             <FormControl>
-              <div className="flex gap-2 items-center">
-                <Input type="color" className="w-12 h-9 p-1" {...field} />
-                <Input {...field} />
-              </div>
+              <ColorPicker value={field.value} onChange={field.onChange} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -248,7 +250,18 @@ export default function CartoesPage() {
     setLoading(false);
   }
 
+  const [brandFilter, setBrandFilter] = useState<string>("ALL");
+  const [search, setSearch] = useState("");
+
   useEffect(() => { fetchData(); }, []);
+
+  const filteredCards = cards.filter((c) => {
+    const brandOk = brandFilter === "ALL" || c.brand === brandFilter;
+    const searchOk = !search || c.name.toLowerCase().includes(search.toLowerCase());
+    return brandOk && searchOk;
+  });
+
+  const uniqueBrands = Array.from(new Set(cards.map((c) => c.brand))).sort();
 
   async function handleDelete() {
     if (!deleteId) return;
@@ -269,11 +282,104 @@ export default function CartoesPage() {
         </motion.div>
       </div>
 
+      {/* Summary Cards */}
+      {!loading && cards.length > 0 && (() => {
+        const totalFatura = cards.reduce((s, c) => s + (c.currentMonthTotal || 0), 0);
+        const topCard = cards.length > 0
+          ? cards.reduce((prev, curr) => (curr.currentMonthTotal || 0) > (prev.currentMonthTotal || 0) ? curr : prev)
+          : null;
+        const topCardPrev = topCard?.prevMonthTotal || 0;
+        const topCardCurr = topCard?.currentMonthTotal || 0;
+        const topCardVariation = topCardPrev > 0 ? ((topCardCurr - topCardPrev) / topCardPrev) * 100 : null;
+        const topPurchase = cards.reduce<{ description: string; amount: number } | null>((best, c) => {
+          if (c.topTransaction && (!best || c.topTransaction.amount > best.amount)) return c.topTransaction;
+          return best;
+        }, null);
+
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+            {/* Total fatura + cartão com maior gasto */}
+            <Card className="border-l-4 border-l-destructive" style={radialGradient("destructive")}>
+              <CardHeader>
+                <CardDescription>Total das faturas</CardDescription>
+                <CardTitle className="text-2xl font-semibold tabular-nums font-numbers text-destructive">
+                  {formatCurrency(totalFatura)}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Cartão com maior gasto</span>
+                  <span className="font-semibold">{topCard?.name || "-"}</span>
+                </div>
+                {topCardVariation !== null && (
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>vs mês anterior</span>
+                    <span className={topCardVariation <= 0 ? "text-success font-semibold" : "text-destructive font-semibold"}>
+                      {topCardVariation > 0 ? "+" : ""}{topCardVariation.toFixed(0)}%
+                    </span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Maior compra */}
+            <Card className="border-l-4 border-l-primary">
+              <CardHeader>
+                <CardDescription>Maior compra no cartão</CardDescription>
+                <div className="flex items-baseline gap-2">
+                  <CardTitle className="text-2xl font-semibold tabular-nums font-numbers">
+                    {topPurchase ? formatCurrency(topPurchase.amount) : "-"}
+                  </CardTitle>
+                  {topPurchase && <span className="text-sm text-muted-foreground truncate">{topPurchase.description}</span>}
+                </div>
+              </CardHeader>
+              {topPurchase && (
+                <CardFooter className="text-xs text-muted-foreground">
+                  {topPurchase.cardName} · {new Date(topPurchase.purchaseDate).toLocaleDateString("pt-BR")} · {topPurchase.categoryName}
+                </CardFooter>
+              )}
+            </Card>
+          </div>
+        );
+      })()}
+
+      {/* Filters */}
+      {!loading && cards.length > 0 && (
+        <div className="mb-4 flex flex-col sm:flex-row gap-3 flex-wrap">
+          <Select value={brandFilter} onValueChange={(v) => setBrandFilter(v ?? "ALL")}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue>{brandFilter === "ALL" ? "Todas as bandeiras" : brandLabels[brandFilter as CardBrand]}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Todas as bandeiras</SelectItem>
+              {uniqueBrands.map((b) => (
+                <SelectItem key={b} value={b}>{brandLabels[b]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <div className="relative flex-1 sm:max-w-[240px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar cartão..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 pr-8"
+            />
+            {search && (
+              <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6" onClick={() => setSearch("")}>
+                <X className="w-3 h-3" />
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),360px))]">
           {[1, 2, 3].map((i) => <div key={i} className="h-48 rounded-xl bg-muted animate-pulse" />)}
         </div>
-      ) : cards.length === 0 ? (
+      ) : filteredCards.length === 0 ? (
         <EmptyState
           illustration="cards"
           title="Nenhum cartão cadastrado"
@@ -288,7 +394,7 @@ export default function CartoesPage() {
           animate="show"
           className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),360px))]"
         >
-          {cards.map((card) => {
+          {filteredCards.map((card) => {
             const limit = parseFloat(card.creditLimit);
             const brandIcon = getCardBrandIcon(card.brand, "w-10 h-6");
             // Create a hex-to-rgb helper inline for gradient opacity
@@ -299,23 +405,20 @@ export default function CartoesPage() {
 
             return (
               <motion.div key={card.id} variants={cardItemVariants}>
-                <div>
-                  {/* Physical-card style */}
+                <Card className="overflow-hidden h-full py-3 gap-2">
+                  {/* Physical card visual */}
                   <div
-                    className="relative rounded-2xl overflow-hidden shadow-lg aspect-[16/10] flex flex-col justify-between p-5 select-none"
+                    className="relative rounded-md overflow-hidden aspect-[16/10] flex flex-col justify-between p-4 mx-3 select-none"
                     style={{
                       background: `linear-gradient(135deg, ${cardColor}EE 0%, ${cardColor}99 60%, ${cardColor}44 100%)`,
                       backgroundBlendMode: "overlay",
                       color: textColor,
                     }}
                   >
-                    {/* Decorative circles */}
                     <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-20" style={{ backgroundColor: decorColor }} />
                     <div className="absolute top-4 -right-4 w-24 h-24 rounded-full opacity-10" style={{ backgroundColor: decorColor }} />
 
-                    {/* Top row: chip + brand */}
                     <div className="flex items-center justify-between z-10">
-                      {/* Chip SVG */}
                       <svg width="32" height="24" viewBox="0 0 32 24" fill="none" className="opacity-90">
                         <rect width="32" height="24" rx="4" fill="#D4AF37" fillOpacity="0.8" />
                         <rect x="12" y="0" width="8" height="24" fill="#B8960A" fillOpacity="0.4" />
@@ -324,12 +427,10 @@ export default function CartoesPage() {
                       <div className="opacity-90">{brandIcon}</div>
                     </div>
 
-                    {/* Card number */}
                     <div className="z-10 tracking-widest text-sm font-mono opacity-90">
                       •••• •••• •••• {card.lastFourDigits || "••••"}
                     </div>
 
-                    {/* Closing / Due dates */}
                     <div className="z-10 flex gap-5">
                       <div>
                         <p className="text-xs opacity-60 uppercase tracking-wider mb-0.5">Fechamento</p>
@@ -341,7 +442,6 @@ export default function CartoesPage() {
                       </div>
                     </div>
 
-                    {/* Bottom row: name + limit */}
                     <div className="z-10 flex items-end justify-between">
                       <div>
                         <p className="text-xs opacity-70 uppercase tracking-wider mb-0.5">Titular</p>
@@ -354,29 +454,31 @@ export default function CartoesPage() {
                     </div>
                   </div>
 
-                  {/* Action buttons row */}
-                  <div className="mt-3 flex items-center justify-end gap-1 px-1">
+                  {/* Actions inside card */}
+                  <CardFooter className="flex items-center justify-between pt-0 px-3">
                     <LinkButton href={`/cartoes/${card.id}`} variant="outline" size="sm">
                       <Eye className="w-3 h-3 mr-1" /> Fatura
                     </LinkButton>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Button variant="outline" size="sm" onClick={() => { setEditCard(card); setDialogOpen(true); }}>
-                          <Pencil className="w-3 h-3" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Editar cartão</TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteId(card.id)}>
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Remover cartão</TooltipContent>
-                    </Tooltip>
-                  </div>
-                </div>
+                    <div className="flex items-center gap-1">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-muted" onClick={() => { setEditCard(card); setDialogOpen(true); }}>
+                            <Pencil className="w-7 h-7" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Editar</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(card.id)}>
+                            <Trash2 className="w-7 h-7" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Excluir</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </CardFooter>
+                </Card>
               </motion.div>
             );
           })}

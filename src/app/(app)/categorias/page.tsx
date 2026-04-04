@@ -19,6 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { ColorPicker } from "@/components/shared/color-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -131,10 +132,7 @@ function CategoryForm({
           <FormItem>
             <FormLabel>Cor</FormLabel>
             <FormControl>
-              <div className="flex gap-2 items-center">
-                <Input type="color" className="w-12 h-10 p-1 cursor-pointer" {...field} />
-                <Input {...field} />
-              </div>
+              <ColorPicker value={field.value} onChange={field.onChange} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -274,70 +272,53 @@ export default function CategoriasPage() {
           />
         ) : (
           <motion.div variants={listVariants} initial="hidden" animate="show" className="space-y-2">
-            {filtered.map((cat) => (
-              <motion.div key={cat.id} variants={listItemVariants}>
-                <Card>
-                  <CardContent className="py-3 px-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {(() => {
-                        const IconComp = getCategoryIcon(cat.icon || getDefaultIconForCategory(cat.name));
-                        return (
-                          <div
-                            className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                            style={{ backgroundColor: cat.color + "20" }}
-                          >
-                            <IconComp className="w-4 h-4" style={{ color: cat.color }} />
-                          </div>
-                        );
-                      })()}
-                      <div>
-                        <p className="text-sm font-medium">{cat.name}</p>
-                        {cat.isDefault && (
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <p className="text-xs text-muted-foreground flex items-center gap-1 w-fit cursor-default">
-                                <Lock className="w-2 h-2" /> Padrão do sistema
-                              </p>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              Categoria padrão do sistema. Pode ser editada ou removida.
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
+            {filtered.map((cat) => {
+              const IconComp = getCategoryIcon(cat.icon || getDefaultIconForCategory(cat.name));
+              return (
+                <motion.div key={cat.id} variants={listItemVariants}>
+                  <Card style={{ borderLeftWidth: 4, borderLeftColor: cat.color }}>
+                    <CardContent className="flex items-center gap-3">
+                      {/* Avatar */}
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: `color-mix(in srgb, ${cat.color} 15%, transparent)` }}
+                      >
+                        <IconComp className="w-5 h-5" style={{ color: cat.color }} />
                       </div>
-                    </div>
-                    <div className="flex gap-1">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="w-7 h-7"
-                            onClick={() => { setEditCat(cat); setDialogOpen(true); }}
-                          >
-                            <Pencil className="w-3 h-3" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Editar categoria</TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="w-7 h-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => openDelete(cat.id)}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Remover categoria</TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate">{cat.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {cat.type === "EXPENSE" ? "Despesa" : "Receita"}
+                          {cat.isDefault && " · Padrão do sistema"}
+                        </p>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-1 shrink-0 pl-3 border-l">
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-muted" onClick={() => { setEditCat(cat); setDialogOpen(true); }}>
+                              <Pencil className="w-7 h-7" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Editar</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => openDelete(cat.id)}>
+                              <Trash2 className="w-7 h-7" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Excluir</TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </motion.div>
         )}
 

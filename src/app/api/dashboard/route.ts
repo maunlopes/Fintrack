@@ -3,11 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getInvoicesAsExpenses } from "@/lib/invoice";
 import { startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function toNum(v: any): number {
-  if (v === null || v === undefined) return 0;
-  return parseFloat(v.toString());
-}
+import { toNum } from "@/lib/forecast";
 
 export async function GET(req: Request) {
   try {
@@ -57,6 +53,7 @@ export async function GET(req: Request) {
     categoryBreakdown,
     creditCards,
     rawExpenses,
+    topIncomeRecord,
     allInvoices,
     recurringIncomes,
     fixedExpenses,
@@ -136,6 +133,13 @@ export async function GET(req: Request) {
       },
       orderBy: { dueDate: "asc" },
       take: 10,
+    }),
+
+    // Top income of the month
+    prisma.income.findFirst({
+      where: { userId, receiveDate: { gte: monthStart, lte: monthEnd } },
+      include: { category: true },
+      orderBy: { amount: "desc" },
     }),
 
     // Invoices
@@ -301,6 +305,11 @@ export async function GET(req: Request) {
       categoryData,
       cardUtilization,
       upcomingExpenses,
+      topIncome: topIncomeRecord ? {
+        description: topIncomeRecord.description,
+        amount: toNum(topIncomeRecord.amount),
+        category: topIncomeRecord.category,
+      } : null,
     });
   } catch (error: any) {
     console.error("[DASHBOARD_GET_ERROR]", error);

@@ -1,16 +1,13 @@
 "use client";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatCurrency } from "@/lib/format";
 
 interface BudgetProgressBarProps {
   spent: number;
   limit: number;
   showValues?: boolean;
   size?: "sm" | "md";
-}
-
-function formatBRL(v: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 }
 
 export function BudgetProgressBar({ spent, limit, showValues = false, size = "md" }: BudgetProgressBarProps) {
@@ -39,14 +36,14 @@ export function BudgetProgressBar({ spent, limit, showValues = false, size = "md
           </div>
         </TooltipTrigger>
         <TooltipContent>
-          {formatBRL(spent)} gastos de {formatBRL(limit)} ({rawPct.toFixed(1)}%)
+          {formatCurrency(spent)} gastos de {formatCurrency(limit)} ({rawPct.toFixed(1)}%)
         </TooltipContent>
       </Tooltip>
 
       {showValues && (
         <div className="flex justify-between text-xs text-muted-foreground">
-          <span>{formatBRL(spent)}</span>
-          <span>{formatBRL(limit)}</span>
+          <span>{formatCurrency(spent)}</span>
+          <span>{formatCurrency(limit)}</span>
         </div>
       )}
     </div>

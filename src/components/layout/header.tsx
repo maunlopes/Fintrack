@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Bell } from "lucide-react";
+import { Bell, Link2, Sparkles } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { Session } from "next-auth";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { useChatStore } from "@/components/ia/chat-store";
 
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -37,6 +38,7 @@ interface HeaderProps {
 export function Header({ session }: HeaderProps) {
   const pathname = usePathname();
   const [alertCount, setAlertCount] = useState(0);
+  const { toggle: toggleChat } = useChatStore();
   const user = session?.user;
 
   // Resolve page title — match by longest prefix
@@ -63,6 +65,16 @@ export function Header({ session }: HeaderProps) {
       {/* Mobile: page title | Desktop: spacer */}
       <span className="text-base font-bold tracking-tight lg:hidden">{pageTitle}</span>
       <div className="flex-1" />
+
+      <Button variant="outline" size="sm" className="hidden sm:flex gap-1.5 text-xs" onClick={toggleChat}>
+        <Sparkles className="w-4 h-4" />
+        FinBot
+      </Button>
+
+      <Button variant="outline" size="sm" className="hidden sm:flex gap-1.5 text-xs" onClick={() => window.location.href = "/open-finance"}>
+        <Link2 className="w-4 h-4" />
+        Conectar contas
+      </Button>
 
       <ThemeToggle />
 

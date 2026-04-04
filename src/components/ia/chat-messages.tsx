@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ChatMessage } from "./chat-store";
 
@@ -38,13 +39,14 @@ export function ChatMessages({ messages, isStreaming, onSuggestion }: ChatMessag
         </div>
         <div className="flex flex-col gap-2 w-full max-w-[260px]">
           {SUGGESTIONS.map((s) => (
-            <button
+            <Button
               key={s}
+              variant="outline"
               onClick={() => onSuggestion(s)}
-              className="text-xs text-left rounded-xl border px-3 py-2 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+              className="text-xs text-left rounded-xl px-3 py-2 h-auto justify-start text-muted-foreground hover:text-foreground"
             >
               {s}
-            </button>
+            </Button>
           ))}
         </div>
       </div>

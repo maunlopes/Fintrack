@@ -20,6 +20,7 @@ import { CurrencyInput } from "@/components/shared/currency-input";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { radialGradient } from "@/lib/utils";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { z } from "zod";
@@ -212,7 +213,7 @@ export default function InvestmentDetailPage({ params }: { params: Promise<{ id:
           <p className="text-sm text-muted-foreground">{investment.institution}</p>
         </div>
 
-        <AnimatedCard className="border border-primary/20 bg-gradient-to-br from-primary/10 to-transparent rounded-xl overflow-hidden p-6 flex flex-col justify-between items-start sm:items-center sm:flex-row gap-6">
+        <AnimatedCard className="border border-primary/20 rounded-xl overflow-hidden p-6 flex flex-col justify-between items-start sm:items-center sm:flex-row gap-6" style={radialGradient("primary")}>
           <div>
             <p className="text-sm font-medium text-muted-foreground mb-1">Saldo Atual</p>
             <MoneyValue value={Number(investment.balance)} className="text-4xl font-black text-foreground" />

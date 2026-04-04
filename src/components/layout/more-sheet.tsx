@@ -13,6 +13,7 @@ import {
   CreditCard,
   ChartBar,
 } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/button";
 
 const sheetItems = [
   { href: "/cartoes",      label: "Cartões",        icon: CreditCard },
@@ -75,16 +76,17 @@ export function MoreSheet({ isOpen, onClose }: MoreSheetProps) {
                 {sheetItems.map((item) => {
                   const Icon = item.icon;
                   return (
-                    <button
+                    <Button
                       key={item.href}
+                      variant="ghost"
                       onClick={() => handleNav(item.href)}
-                      className="flex flex-col items-center gap-2 py-4 px-2 rounded-2xl hover:bg-muted active:scale-95 transition-all"
+                      className="flex flex-col items-center gap-2 py-4 px-2 h-auto rounded-2xl active:scale-95 transition-all"
                     >
                       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted">
                         <Icon weight="duotone" className="w-6 h-6 text-foreground" />
                       </div>
                       <span className="text-xs font-medium text-foreground">{item.label}</span>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>

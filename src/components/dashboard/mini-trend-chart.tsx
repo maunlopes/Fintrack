@@ -1,17 +1,19 @@
 "use client";
 
-import { AreaChart, Area, Tooltip, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { formatCurrency } from "@/lib/format";
 
-function formatBRL(value: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+function shortValue(v: number) {
+  if (v >= 1000) return `${(v / 1000).toFixed(0)}k`;
+  return v.toString();
 }
 
-export function MiniTrendChart({ data }: { data: { month: string; income: number; expenses: number }[] }) {
+export function MiniTrendChart({ data, height = "100%" }: { data: { month: string; income: number; expenses: number }[]; height?: number | string }) {
   const last6 = data.slice(-6);
 
   return (
-    <ResponsiveContainer width="100%" height={90}>
-      <AreaChart data={last6} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
+    <ResponsiveContainer width="100%" height={height}>
+      <AreaChart data={last6} margin={{ top: 8, right: 8, bottom: 4, left: -12 }}>
         <defs>
           <linearGradient id="trendInc" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="var(--success)" stopOpacity={0.25} />
@@ -22,6 +24,24 @@ export function MiniTrendChart({ data }: { data: { month: string; income: number
             <stop offset="95%" stopColor="var(--destructive)" stopOpacity={0} />
           </linearGradient>
         </defs>
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+        <XAxis
+          dataKey="month"
+          tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+          axisLine={false}
+          tickLine={false}
+          tickFormatter={(v) => {
+            const s = String(v);
+            return s.charAt(0).toUpperCase() + s.slice(1, 3);
+          }}
+        />
+        <YAxis
+          tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+          axisLine={false}
+          tickLine={false}
+          tickFormatter={shortValue}
+          width={40}
+        />
         <Tooltip
           contentStyle={{
             background: "var(--card)",
@@ -30,7 +50,7 @@ export function MiniTrendChart({ data }: { data: { month: string; income: number
             fontSize: "12px",
           }}
           formatter={(value: number, name: string) => [
-            formatBRL(value),
+            formatCurrency(value),
             name === "income" ? "Receitas" : "Despesas",
           ]}
           labelFormatter={(label) => {

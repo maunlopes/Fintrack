@@ -13,16 +13,17 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { LinkButton } from "@/components/shared/link-button";
 import { AnimatedCard, listVariants, listItemVariants } from "@/components/shared/animated-card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/shared/currency-input";
+import { formatCurrency } from "@/lib/format";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { z } from "zod";
-import { cn } from "@/lib/utils";
+import { cn, radialGradient } from "@/lib/utils";
 import dynamic from "next/dynamic";
 
 const InvestmentAllocationChart = dynamic(
@@ -145,77 +146,71 @@ export default function InvestimentosPage() {
           </Button>
         </div>
 
-        {/* Summary cards */}
+        {/* Chart + Summary cards */}
         {!loading && investments.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Card className="p-6 shadow-sm border-primary/30 bg-primary/5">
-              <CardHeader className="flex flex-row items-center justify-between p-0 pb-3">
-                <CardTitle className="text-primary font-semibold">Total Investido</CardTitle>
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                  <Wallet className="h-4 w-4 text-primary" />
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <MoneyValue value={totalBalance} className="text-2xl font-bold" />
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Left: Allocation chart */}
+            {investments.length > 1 && (() => {
+              const byType = investments.reduce<Record<string, number>>((acc, inv) => {
+                acc[inv.type] = (acc[inv.type] || 0) + Number(inv.balance);
+                return acc;
+              }, {});
+              const chartData = Object.entries(byType)
+                .filter(([, v]) => v > 0)
+                .map(([type, value]) => ({
+                  name: INVESTMENT_TYPES[type as keyof typeof INVESTMENT_TYPES]?.label ?? type,
+                  value,
+                  type,
+                }));
+              if (chartData.length < 2) return null;
+              return (
+                <Card className="p-6 shadow-sm">
+                  <CardHeader className="p-0 pb-2">
+                    <CardTitle className="text-muted-foreground font-semibold">Alocação da carteira</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <InvestmentAllocationChart data={chartData} />
+                  </CardContent>
+                </Card>
+              );
+            })()}
 
-            <Card className="p-6 shadow-sm border-dashed border-muted-foreground/30 bg-card">
-              <CardHeader className="flex flex-row items-center justify-between p-0 pb-3">
-                <CardTitle className="text-muted-foreground font-semibold">Total Aportado</CardTitle>
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <MoneyValue value={totalDeposited} className="text-2xl font-bold text-foreground" />
-              </CardContent>
-            </Card>
+            {/* Right: 3 KPI cards stacked */}
+            <div className="flex flex-col gap-4">
+              <Card className="border-l-4 border-l-primary flex-1" style={radialGradient("primary")}>
+                <CardHeader>
+                  <CardDescription>Total investido</CardDescription>
+                  <CardTitle className="text-2xl font-semibold tabular-nums font-numbers">
+                    {formatCurrency(totalBalance)}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
 
-            <Card className="p-6 shadow-sm">
-              <CardHeader className="flex flex-row items-center justify-between p-0 pb-3">
-                <CardTitle className="text-muted-foreground font-semibold">Rentabilidade</CardTitle>
-                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${totalProfit >= 0 ? 'bg-success/10' : 'bg-destructive/10'}`}>
-                  <TrendingUp className={`h-4 w-4 ${totalProfit >= 0 ? "text-success" : "text-destructive"}`} />
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="flex items-baseline gap-2">
-                  <MoneyValue value={totalProfit} className={`text-2xl font-bold ${totalProfit >= 0 ? "text-success" : "text-destructive"}`} />
-                  <span className={`text-sm font-semibold ${totalProfit >= 0 ? "text-success" : "text-destructive"}`}>
-                    ({totalProfit >= 0 ? "+" : ""}{profitPct}%)
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+              <Card className="border-l-4 border-l-primary flex-1">
+                <CardHeader>
+                  <CardDescription>Total aportado</CardDescription>
+                  <CardTitle className="text-2xl font-semibold tabular-nums font-numbers">
+                    {formatCurrency(totalDeposited)}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+
+              <Card className={`border-l-4 flex-1 ${totalProfit >= 0 ? 'border-l-success' : 'border-l-destructive'}`} style={radialGradient(totalProfit >= 0 ? "success" : "destructive")}>
+                <CardHeader>
+                  <CardDescription>Rentabilidade</CardDescription>
+                  <div className="flex items-baseline gap-2">
+                    <CardTitle className={`text-2xl font-semibold tabular-nums font-numbers ${totalProfit >= 0 ? "text-success" : "text-destructive"}`}>
+                      {formatCurrency(totalProfit)}
+                    </CardTitle>
+                    <span className={`text-sm font-semibold ${totalProfit >= 0 ? "text-success" : "text-destructive"}`}>
+                      {totalProfit >= 0 ? "+" : ""}{profitPct}%
+                    </span>
+                  </div>
+                </CardHeader>
+              </Card>
+            </div>
           </div>
         )}
-
-        {/* Allocation chart */}
-        {!loading && investments.length > 1 && (() => {
-          const byType = investments.reduce<Record<string, number>>((acc, inv) => {
-            acc[inv.type] = (acc[inv.type] || 0) + Number(inv.balance);
-            return acc;
-          }, {});
-          const chartData = Object.entries(byType)
-            .filter(([, v]) => v > 0)
-            .map(([type, value]) => ({
-              name: INVESTMENT_TYPES[type as keyof typeof INVESTMENT_TYPES]?.label ?? type,
-              value,
-              type,
-            }));
-          if (chartData.length < 2) return null;
-          return (
-            <Card className="p-6 shadow-sm">
-              <CardHeader className="p-0 pb-2">
-                <CardTitle className="text-sm font-semibold text-muted-foreground">Alocação da Carteira</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <InvestmentAllocationChart data={chartData} />
-              </CardContent>
-            </Card>
-          );
-        })()}
 
         {/* Filters */}
         {!loading && investments.length > 0 && (
@@ -286,7 +281,7 @@ export default function InvestimentosPage() {
                         </div>
                         <div className="min-w-0">
                           <h3 className="font-semibold tracking-tight text-foreground line-clamp-1">{inv.name}</h3>
-                          <p className="text-xs text-muted-foreground">{inv.institution}</p>
+                          <p className="text-sm text-muted-foreground">{inv.institution}</p>
                         </div>
                       </div>
 
@@ -302,12 +297,12 @@ export default function InvestimentosPage() {
                           </LinkButton>
                         </div>
                         <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-border/60 pt-2">
-                          <span>Aportado: <span className="font-medium text-foreground">{deposited.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span></span>
+                          <span>Aportado: <span className="font-medium text-foreground">{formatCurrency(deposited)}</span></span>
                           <span className={cn("flex items-center gap-1 font-semibold", isPositive ? "text-success" : "text-destructive")}>
                             {isPositive
                               ? <TrendingUp className="size-3.5" />
                               : <TrendingDown className="size-3.5" />}
-                            {isPositive ? "+" : ""}{profit.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} ({pct}%)
+                            {isPositive ? "+" : ""}{formatCurrency(profit)} ({pct}%)
                           </span>
                         </div>
                       </div>

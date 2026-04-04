@@ -4,8 +4,10 @@ import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { formatCurrency } from "@/lib/format";
 
 interface BudgetItem {
   id: string;
@@ -22,10 +24,6 @@ interface BudgetAlertBannerProps {
   items: BudgetItem[];
 }
 
-function formatBRL(v: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
-}
-
 export function BudgetAlertBanner({ items }: BudgetAlertBannerProps) {
   if (items.length === 0) return null;
 
@@ -35,10 +33,9 @@ export function BudgetAlertBanner({ items }: BudgetAlertBannerProps) {
 
   return (
     <Card className="p-6 h-full flex flex-col shadow-sm">
-      <CardHeader className="p-0 pb-4">
-        <div className="flex items-center gap-2 flex-wrap">
-          <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
-          <CardTitle className="text-muted-foreground font-semibold flex-1">Alertas de Orçamento</CardTitle>
+      <CardHeader className="p-0 pb-4 flex flex-row items-center justify-between gap-2">
+        <CardTitle className="text-muted-foreground font-semibold">Alertas de orçamento</CardTitle>
+        <div className="flex items-center gap-2 shrink-0">
           {dangers.length > 0 && (
             <Badge variant="destructive">
               {dangers.length} {dangers.length === 1 ? "estourado" : "estourados"}
@@ -49,14 +46,10 @@ export function BudgetAlertBanner({ items }: BudgetAlertBannerProps) {
               {warnings.length} {warnings.length === 1 ? "alerta" : "alertas"}
             </Badge>
           )}
-          <Link
-            href="/orcamentos"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors ml-1"
-          >
-            Ver →
-          </Link>
+          <Button variant="ghost" size="sm" className="text-xs" asChild>
+            <Link href="/orcamentos">Ver todos →</Link>
+          </Button>
         </div>
-        <CardDescription>Categorias próximas ou acima do limite</CardDescription>
       </CardHeader>
 
       <CardContent className="p-0 flex-1">
@@ -79,7 +72,7 @@ export function BudgetAlertBanner({ items }: BudgetAlertBannerProps) {
                   />
                   <span className="text-xs font-medium flex-1 truncate">{item.name}</span>
                   <span className="text-xs text-muted-foreground tabular-nums shrink-0">
-                    {formatBRL(item.spent)}&nbsp;/&nbsp;{formatBRL(item.monthlyLimit)}
+                    {formatCurrency(item.spent)}&nbsp;/&nbsp;{formatCurrency(item.monthlyLimit)}
                   </span>
                   <span
                     className={cn(

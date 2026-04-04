@@ -66,7 +66,7 @@ export async function PUT(req: Request, { params }: Params) {
   return NextResponse.json(updated);
 }
 
-export async function DELETE(_req: Request, { params }: Params) {
+export async function DELETE(req: Request, { params }: Params) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const { id } = await params;
@@ -74,8 +74,22 @@ export async function DELETE(_req: Request, { params }: Params) {
   const expense = await prisma.expense.findFirst({ where: { id, userId: session.user.id } });
   if (!expense) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
 
-  await prisma.expense.deleteMany({ where: { parentExpenseId: id } });
-  await prisma.expense.delete({ where: { id } });
+  const { searchParams } = new URL(req.url);
+  const restoreBalance = searchParams.get("restoreBalance") === "true";
+
+  if (restoreBalance && expense.status === "PAID" && expense.bankAccountId) {
+    await prisma.$transaction([
+      prisma.bankAccount.update({
+        where: { id: expense.bankAccountId },
+        data: { balance: { increment: expense.amount } },
+      }),
+      prisma.expense.deleteMany({ where: { parentExpenseId: id } }),
+      prisma.expense.delete({ where: { id } }),
+    ]);
+  } else {
+    await prisma.expense.deleteMany({ where: { parentExpenseId: id } });
+    await prisma.expense.delete({ where: { id } });
+  }
 
   return NextResponse.json({ success: true });
 }

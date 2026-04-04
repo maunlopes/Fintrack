@@ -1,6 +1,7 @@
 "use client";
 
 import { LayoutList, LayoutGrid } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface ViewToggleProps {
@@ -11,30 +12,34 @@ interface ViewToggleProps {
 export function ViewToggle({ mode, onChange }: ViewToggleProps) {
   return (
     <div className="flex items-center rounded-lg border border-input bg-background p-0.5 gap-0.5">
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => onChange("list")}
         className={cn(
-          "rounded-md p-1.5 transition-colors",
+          "h-7 w-7 rounded-md",
           mode === "list"
-            ? "bg-primary text-primary-foreground"
+            ? "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
             : "text-muted-foreground hover:text-foreground"
         )}
-        title="Lista"
+        aria-label="Visualização em lista"
       >
         <LayoutList className="w-3.5 h-3.5" />
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => onChange("grid")}
         className={cn(
-          "rounded-md p-1.5 transition-colors",
+          "h-7 w-7 rounded-md",
           mode === "grid"
-            ? "bg-primary text-primary-foreground"
+            ? "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
             : "text-muted-foreground hover:text-foreground"
         )}
-        title="Cards"
+        aria-label="Visualização em cards"
       >
         <LayoutGrid className="w-3.5 h-3.5" />
-      </button>
+      </Button>
     </div>
   );
 }

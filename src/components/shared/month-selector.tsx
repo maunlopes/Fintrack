@@ -60,7 +60,7 @@ export function MonthSelector() {
       <Button
         variant="outline"
         size="icon"
-        className="w-8 h-8 bg-white dark:bg-input/30"
+        className="w-8 h-8 bg-card dark:bg-input/30"
         onClick={handlePreviousMonth}
       >
         <ChevronLeft className="w-4 h-4" />
@@ -75,7 +75,7 @@ export function MonthSelector() {
       <Button
         variant="outline"
         size="icon"
-        className="w-8 h-8 bg-white dark:bg-input/30"
+        className="w-8 h-8 bg-card dark:bg-input/30"
         onClick={handleNextMonth}
       >
         <ChevronRight className="w-4 h-4" />

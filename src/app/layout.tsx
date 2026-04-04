@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
+import { Space_Grotesk } from "next/font/google";
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
+  display: "swap",
+});
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -29,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           gtag('config', 'G-9BD1Y1VBW7');
         `}</Script>
       </head>
-      <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
+      <body className={`${GeistSans.variable} ${GeistMono.variable} ${spaceGrotesk.variable} antialiased`}>
         <SessionProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <TooltipProvider>
