@@ -291,7 +291,7 @@ export default function CartoesPage() {
         const topCardPrev = topCard?.prevMonthTotal || 0;
         const topCardCurr = topCard?.currentMonthTotal || 0;
         const topCardVariation = topCardPrev > 0 ? ((topCardCurr - topCardPrev) / topCardPrev) * 100 : null;
-        const topPurchase = cards.reduce<{ description: string; amount: number } | null>((best, c) => {
+        const topPurchase = cards.reduce<{ description: string; amount: number; cardName: string; purchaseDate: string; categoryName: string; categoryColor: string } | null>((best, c) => {
           if (c.topTransaction && (!best || c.topTransaction.amount > best.amount)) return c.topTransaction;
           return best;
         }, null);
