@@ -1096,7 +1096,7 @@ function DespesasContent() {
           </AlertDialogHeader>
           <div className="py-2">
             <label className="text-sm font-medium mb-2 block">Conta para débito</label>
-            <Select onValueChange={setInvoicePayAccount} value={invoicePayAccount}>
+            <Select onValueChange={(v) => setInvoicePayAccount(v ?? "")} value={invoicePayAccount}>
               <SelectTrigger><SelectValue>{bankAccounts.find((a) => a.id === invoicePayAccount)?.nickname || "Selecione..."}</SelectValue></SelectTrigger>
               <SelectContent>
                 {bankAccounts.map((a) => (
