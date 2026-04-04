@@ -213,7 +213,7 @@ export default function InvestmentDetailPage({ params }: { params: Promise<{ id:
           <p className="text-sm text-muted-foreground">{investment.institution}</p>
         </div>
 
-        <AnimatedCard className="border border-primary/20 rounded-xl overflow-hidden p-6 flex flex-col justify-between items-start sm:items-center sm:flex-row gap-6" style={radialGradient("primary")}>
+        <div className="border border-primary/20 rounded-xl overflow-hidden p-6 flex flex-col justify-between items-start sm:items-center sm:flex-row gap-6" style={radialGradient("primary")}>
           <div>
             <p className="text-sm font-medium text-muted-foreground mb-1">Saldo Atual</p>
             <MoneyValue value={Number(investment.balance)} className="text-4xl font-black text-foreground" />
@@ -221,7 +221,7 @@ export default function InvestmentDetailPage({ params }: { params: Promise<{ id:
           <Button onClick={openNew}>
             <Plus className="size-4 mr-2" /> Movimentação
           </Button>
-        </AnimatedCard>
+        </div>
 
         {/* New / Edit Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

@@ -108,6 +108,7 @@ export async function GET(req: Request) {
     isForecast: boolean;
     fixedExpenses?: number;
     variableExpensesAvg?: number;
+    oneTimeExpensesAvg?: number;
     cardInstallments?: number;
     variationPercent?: number;
   }> = [];

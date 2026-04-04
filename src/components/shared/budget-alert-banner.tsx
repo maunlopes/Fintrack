@@ -46,9 +46,9 @@ export function BudgetAlertBanner({ items }: BudgetAlertBannerProps) {
               {warnings.length} {warnings.length === 1 ? "alerta" : "alertas"}
             </Badge>
           )}
-          <Button variant="ghost" size="sm" className="text-xs" asChild>
-            <Link href="/orcamentos">Ver todos →</Link>
-          </Button>
+          <Link href="/orcamentos" className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0">
+            Ver todos →
+          </Link>
         </div>
       </CardHeader>
 
