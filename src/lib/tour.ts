@@ -1,6 +1,6 @@
 import { driver, type DriveStep } from "driver.js";
 
-const TOUR_KEY = "fintrack_tour_v1";
+const TOUR_KEY = "pqgastei_tour_v1";
 
 export function isTourDone(): boolean {
   if (typeof window === "undefined") return true;
@@ -25,7 +25,7 @@ export function resetTour(): void {
 const STEPS: DriveStep[] = [
   {
     popover: {
-      title: "Bem-vindo ao FinTrack! 🎉",
+      title: "Bem-vindo ao PQGASTEI?! 🎉",
       description:
         "Vamos te mostrar o essencial em 6 passos rápidos. Você pode pular a qualquer momento clicando em <strong>Pular tour</strong>.",
       align: "center",
@@ -127,7 +127,7 @@ export function startTour(): void {
     overlayOpacity: 0.55,
     stagePadding: 10,
     stageRadius: 12,
-    popoverClass: "fintrack-tour",
+    popoverClass: "pqgastei-tour",
     onDestroyStarted: () => {
       markTourDone();
       driverObj.destroy();

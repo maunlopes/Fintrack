@@ -830,14 +830,14 @@ function DespesasContent() {
                       {formatDate(expense.dueDate)}
                       {isInvoice ? ` · ${expense.cardName}` : expense.bankAccount ? ` · ${expense.bankAccount.nickname}` : ""}
                     </p>
-                    <p className="text-lg font-bold tabular-nums font-numbers mt-1">{formatCurrency(parseFloat(expense.amount))}</p>
+                    <p className="text-sm sm:text-lg font-bold tabular-nums font-numbers mt-1">{formatCurrency(parseFloat(expense.amount))}</p>
                   </CardContent>
                   <CardFooter className="flex items-center justify-end border-t pt-4">
                     <div className="flex items-center gap-1">
                       <Tooltip>
                         <TooltipTrigger>
-                          <Button variant="ghost" size="icon" className={cn("h-9 w-9 rounded-lg", expense.status === "PAID" ? "text-warning hover:text-warning hover:bg-warning/10" : "text-success hover:text-success hover:bg-success/10")} onClick={() => isInvoice ? (expense.status === "PAID" ? handleRevertInvoice(expense) : handlePayInvoice(expense)) : handlePay(expense.id)}>
-                            {expense.status === "PAID" ? <RotateCcw className="w-7 h-7" /> : <CircleCheck className="w-7 h-7" />}
+                          <Button variant="ghost" size="icon" className={cn("h-8 w-8 sm:h-9 sm:w-9 rounded-lg", expense.status === "PAID" ? "text-warning hover:text-warning hover:bg-warning/10" : "text-success hover:text-success hover:bg-success/10")} onClick={() => isInvoice ? (expense.status === "PAID" ? handleRevertInvoice(expense) : handlePayInvoice(expense)) : handlePay(expense.id)}>
+                            {expense.status === "PAID" ? <RotateCcw className="w-5 h-5 sm:w-7 sm:h-7" /> : <CircleCheck className="w-5 h-5 sm:w-7 sm:h-7" />}
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>{expense.status === "PAID" ? "Reverter pagamento" : "Marcar como pago"}</TooltipContent>
@@ -846,16 +846,16 @@ function DespesasContent() {
                         <>
                           <Tooltip>
                             <TooltipTrigger>
-                              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-muted" onClick={() => { setEditExpense(expense); setDialogOpen(true); }}>
-                                <Pencil className="w-7 h-7" />
+                              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => { setEditExpense(expense); setDialogOpen(true); }}>
+                                <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>Editar</TooltipContent>
                           </Tooltip>
                           <Tooltip>
                             <TooltipTrigger>
-                              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(expense.id)}>
-                                <Trash2 className="w-7 h-7" />
+                              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(expense.id)}>
+                                <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>Excluir</TooltipContent>
@@ -863,11 +863,11 @@ function DespesasContent() {
                         </>
                       ) : (
                         <>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
-                            <Pencil className="w-7 h-7" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
+                            <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
-                            <Trash2 className="w-7 h-7" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
+                            <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                           </Button>
                         </>
                       )}
@@ -944,18 +944,18 @@ function DespesasContent() {
                     </div>
 
                     {/* Amount */}
-                    <div className="shrink-0 min-w-[120px] text-right">
-                      <span className="text-lg font-bold tabular-nums font-numbers">
+                    <div className="shrink-0 min-w-[80px] sm:min-w-[120px] text-right">
+                      <span className="text-sm sm:text-lg font-bold tabular-nums font-numbers">
                         {formatCurrency(parseFloat(expense.amount))}
                       </span>
                     </div>
 
                     {/* Actions — fixed width */}
-                    <div className="flex items-center justify-end gap-1 shrink-0 pl-3 border-l w-[124px]">
+                    <div className="flex items-center justify-end gap-1 shrink-0 pl-2 sm:pl-3 border-l w-auto sm:w-[124px]">
                       <Tooltip>
                         <TooltipTrigger>
-                          <Button variant="ghost" size="icon" className={cn("h-9 w-9 rounded-lg", expense.status === "PAID" ? "text-warning hover:text-warning hover:bg-warning/10" : "text-success hover:text-success hover:bg-success/10")} onClick={() => isInvoice ? (expense.status === "PAID" ? handleRevertInvoice(expense) : handlePayInvoice(expense)) : handlePay(expense.id)}>
-                            {expense.status === "PAID" ? <RotateCcw className="w-7 h-7" /> : <CircleCheck className="w-7 h-7" />}
+                          <Button variant="ghost" size="icon" className={cn("h-8 w-8 sm:h-9 sm:w-9 rounded-lg", expense.status === "PAID" ? "text-warning hover:text-warning hover:bg-warning/10" : "text-success hover:text-success hover:bg-success/10")} onClick={() => isInvoice ? (expense.status === "PAID" ? handleRevertInvoice(expense) : handlePayInvoice(expense)) : handlePay(expense.id)}>
+                            {expense.status === "PAID" ? <RotateCcw className="w-5 h-5 sm:w-7 sm:h-7" /> : <CircleCheck className="w-5 h-5 sm:w-7 sm:h-7" />}
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>{expense.status === "PAID" ? "Reverter pagamento" : "Marcar como pago"}</TooltipContent>
@@ -964,16 +964,16 @@ function DespesasContent() {
                         <>
                           <Tooltip>
                             <TooltipTrigger>
-                              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-muted" onClick={() => { setEditExpense(expense); setDialogOpen(true); }}>
-                                <Pencil className="w-7 h-7" />
+                              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => { setEditExpense(expense); setDialogOpen(true); }}>
+                                <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>Editar</TooltipContent>
                           </Tooltip>
                           <Tooltip>
                             <TooltipTrigger>
-                              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(expense.id)}>
-                                <Trash2 className="w-7 h-7" />
+                              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(expense.id)}>
+                                <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>Excluir</TooltipContent>
@@ -981,11 +981,11 @@ function DespesasContent() {
                         </>
                       ) : (
                         <>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
-                            <Pencil className="w-7 h-7" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
+                            <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
-                            <Trash2 className="w-7 h-7" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
+                            <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                           </Button>
                         </>
                       )}

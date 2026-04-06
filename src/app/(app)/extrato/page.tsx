@@ -397,7 +397,7 @@ function ExtratoContent() {
                           </div>
 
                           {/* Amount */}
-                          <span className={`text-lg font-bold tabular-nums font-numbers shrink-0 ${t.type === "INCOME" ? "text-success" : ""}`}>
+                          <span className={`text-sm sm:text-lg font-bold tabular-nums font-numbers shrink-0 ${t.type === "INCOME" ? "text-success" : ""}`}>
                             {t.type === "INCOME" ? "+" : "-"}{formatCurrency(t.amount)}
                           </span>
                         </CardContent>

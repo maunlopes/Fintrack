@@ -44,7 +44,7 @@ export function Header({ session }: HeaderProps) {
   // Resolve page title — match by longest prefix
   const pageTitle = Object.entries(PAGE_TITLES)
     .filter(([route]) => pathname === route || pathname.startsWith(route + "/"))
-    .sort((a, b) => b[0].length - a[0].length)[0]?.[1] ?? "FinTrack";
+    .sort((a, b) => b[0].length - a[0].length)[0]?.[1] ?? "PQGASTEI?";
 
   useEffect(() => {
     fetch("/api/orcamentos")

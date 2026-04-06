@@ -108,7 +108,7 @@ export async function POST(req: Request) {
   const { year, months } = parsed.data;
   const annualContext = buildAnnualContext(year, months);
 
-  const systemPrompt = `Você é um consultor financeiro pessoal integrado ao FinTrack.
+  const systemPrompt = `Você é um consultor financeiro pessoal integrado ao PQGASTEI?.
 
 TAREFA: Analise o resumo anual abaixo (dados reais + projeções) e forneça um diagnóstico completo.
 

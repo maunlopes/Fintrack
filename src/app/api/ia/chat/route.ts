@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     financialContext = "(Não foi possível carregar os dados financeiros no momento.)";
   }
 
-  const systemPrompt = `Você é o FinBot, assistente financeiro pessoal integrado ao FinTrack.
+  const systemPrompt = `Você é o FinBot, assistente financeiro pessoal integrado ao PQGASTEI?.
 
 REGRAS:
 - Responda SEMPRE em português brasileiro.

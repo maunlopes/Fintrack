@@ -63,7 +63,7 @@ const SECTIONS: Section[] = [
     id: "acesso",
     icon: LogIn,
     title: "Acesso ao Sistema",
-    description: "A porta de entrada do FinTrack. Aqui você cria sua conta ou entra com suas credenciais para acessar suas finanças com segurança.",
+    description: "A porta de entrada do PQGASTEI?. Aqui você cria sua conta ou entra com suas credenciais para acessar suas finanças com segurança.",
     features: [
       { text: "Entrar com e-mail e senha", detail: "Use o e-mail e a senha que você cadastrou para acessar o sistema." },
       { text: "Criar uma conta nova", detail: "Preencha nome, e-mail e uma senha. Após criar, você é redirecionado ao login automaticamente." },
@@ -83,7 +83,7 @@ const SECTIONS: Section[] = [
     id: "dashboard",
     icon: LayoutDashboard,
     title: "Dashboard",
-    description: "A tela principal do FinTrack — um painel de controle com visão completa da sua vida financeira no mês selecionado.",
+    description: "A tela principal do PQGASTEI? — um painel de controle com visão completa da sua vida financeira no mês selecionado.",
     features: [
       { text: "Navegar entre meses", detail: "Use o seletor de mês/ano no topo para ver qualquer período." },
       { text: "5 indicadores principais", detail: "Patrimônio Total, Saldo das Contas, Total Investido, Receita do Mês e Despesas do Mês." },
@@ -185,7 +185,7 @@ const SECTIONS: Section[] = [
       { text: "Saldo total", detail: "Exibido no topo — é a soma de todas as contas cadastradas." },
     ],
     tips: [
-      "Ao cadastrar, informe o saldo real atual. O FinTrack cuida dos cálculos a partir daí.",
+      "Ao cadastrar, informe o saldo real atual. O PQGASTEI? cuida dos cálculos a partir daí.",
       "Se o saldo ficar incorreto, edite a conta e corrija o valor para o real.",
     ],
     connections: ["Despesas", "Receitas", "Cartões", "Investimentos", "Dashboard"],
@@ -290,7 +290,7 @@ const SECTIONS: Section[] = [
     id: "configuracoes",
     icon: Settings,
     title: "Configurações",
-    description: "Suas preferências pessoais no FinTrack.",
+    description: "Suas preferências pessoais no PQGASTEI?.",
     features: [
       { text: "Alternar tema", detail: "Mude entre tema claro e escuro. O botão de tema também fica disponível no cabeçalho." },
       { text: "Ver perfil", detail: "Nome, e-mail e foto de perfil da sua conta." },
@@ -312,7 +312,7 @@ const FAQ: FaqCategory[] = [
     color: "text-primary",
     items: [
       {
-        q: "Como crio minha conta no FinTrack?",
+        q: "Como crio minha conta no PQGASTEI??",
         a: "Na tela inicial, clique na aba Criar conta, preencha seu nome, e-mail e uma senha. Clique em Criar conta. Se preferir, pode entrar diretamente com sua conta do Google — sem precisar criar senha.",
       },
       {
@@ -324,7 +324,7 @@ const FAQ: FaqCategory[] = [
         a: "Sim! Todos os dados são salvos automaticamente assim que você os registra. Não há botão de salvar manual.",
       },
       {
-        q: "Posso usar o FinTrack no celular?",
+        q: "Posso usar o PQGASTEI? no celular?",
         a: "Sim. O sistema é responsivo e funciona em qualquer dispositivo com navegador — celular, tablet ou computador.",
       },
     ],
@@ -367,7 +367,7 @@ const FAQ: FaqCategory[] = [
       },
       {
         q: "Posso ter mais de uma conta bancária?",
-        a: "Sim! Cadastre quantas contas quiser. Cada uma tem seu saldo individual e o FinTrack mostra o saldo total de todas somadas no topo da página.",
+        a: "Sim! Cadastre quantas contas quiser. Cada uma tem seu saldo individual e o PQGASTEI? mostra o saldo total de todas somadas no topo da página.",
       },
       {
         q: "O que acontece com o saldo quando pago uma despesa?",
@@ -385,8 +385,8 @@ const FAQ: FaqCategory[] = [
         a: "O saldo é atualizado a cada movimentação: Aportes e Rendimentos aumentam o saldo, Resgates diminuem. Ao excluir ou editar uma movimentação, o saldo é revertido automaticamente.",
       },
       {
-        q: "O FinTrack conecta com corretoras ou bancos automaticamente?",
-        a: "Não. O FinTrack não faz integração automática com instituições financeiras. Todos os lançamentos são manuais — você insere os dados do seu extrato ou informe mensal.",
+        q: "O PQGASTEI? conecta com corretoras ou bancos automaticamente?",
+        a: "Não. O PQGASTEI? não faz integração automática com instituições financeiras. Todos os lançamentos são manuais — você insere os dados do seu extrato ou informe mensal.",
       },
       {
         q: "Qual a diferença entre Rendimento e Dividendo?",
@@ -401,7 +401,7 @@ const FAQ: FaqCategory[] = [
     items: [
       {
         q: "Posso excluir uma categoria que já tem despesas registradas?",
-        a: "Sim. O FinTrack avisa quantos registros serão afetados (despesas, receitas, transações de cartão) e pergunta se deseja continuar. Se confirmar, tudo é movido automaticamente para Sem Categoria.",
+        a: "Sim. O PQGASTEI? avisa quantos registros serão afetados (despesas, receitas, transações de cartão) e pergunta se deseja continuar. Se confirmar, tudo é movido automaticamente para Sem Categoria.",
       },
       {
         q: "Posso editar as categorias padrão do sistema?",
@@ -476,7 +476,7 @@ export default function AjudaPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Central de Ajuda</h1>
-            <p className="text-sm text-muted-foreground">Manual de uso e perguntas frequentes do FinTrack</p>
+            <p className="text-sm text-muted-foreground">Manual de uso e perguntas frequentes do PQGASTEI?</p>
           </div>
         </div>
 

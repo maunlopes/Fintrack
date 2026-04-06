@@ -410,7 +410,7 @@ function DashboardContent() {
                               <TrendUp weight="fill" className="w-3 h-3 shrink-0 text-success" />
                               Maior receita
                             </span>
-                            <span className="font-semibold truncate max-w-[160px] text-right" title={topIncome.description}>
+                            <span className="font-semibold truncate max-w-[100px] sm:max-w-[160px] text-right" title={topIncome.description}>
                               {topIncome.description} <span className="text-muted-foreground font-normal ml-0.5">({formatCurrency(topIncome.amount)})</span>
                             </span>
                           </div>
@@ -421,7 +421,7 @@ function DashboardContent() {
                               <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: topCategory.color || "var(--muted)" }} />
                               Maior gasto
                             </span>
-                            <span className="font-semibold truncate max-w-[160px] text-right" title={topCategory.name}>
+                            <span className="font-semibold truncate max-w-[100px] sm:max-w-[160px] text-right" title={topCategory.name}>
                               {topCategory.name} <span className="text-muted-foreground font-normal ml-0.5">({formatCurrency(topCategory.value)})</span>
                             </span>
                           </div>
@@ -432,7 +432,7 @@ function DashboardContent() {
                               <Tag weight="fill" className="w-3 h-3 shrink-0" />
                               Despesa mais cara
                             </span>
-                            <span className="font-semibold truncate max-w-[160px] text-right" title={topExpense.description}>
+                            <span className="font-semibold truncate max-w-[100px] sm:max-w-[160px] text-right" title={topExpense.description}>
                               {topExpense.description} <span className="text-muted-foreground font-normal ml-0.5">({formatCurrency(Number(topExpense.amount))})</span>
                             </span>
                           </div>
@@ -443,7 +443,7 @@ function DashboardContent() {
                 </Card>
 
                 {/* KPI Cards 2x2 */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {summaryCards.map((card, idx) => {
                     const Icon = card.icon;
                     const cardStyles = [

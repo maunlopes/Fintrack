@@ -96,15 +96,17 @@ export function Sidebar({ isOpen = true, onClose, collapsed = false }: SidebarPr
     <nav className="flex flex-col h-full w-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border overflow-hidden">
       {/* Logo */}
       <div className={cn("flex items-center h-14", collapsed ? "justify-center px-2" : "px-4")}>
-        <Link href="/dashboard" title="Dashboard Home" className={cn("flex items-center gap-2.5 cursor-pointer", !collapsed && "flex-1")}>
-          <span className="inline-flex items-center justify-center rounded-md bg-primary/10 p-1 shrink-0">
-            <Wallet weight="duotone" className="w-4 h-4 text-primary" />
-          </span>
-          {!collapsed && (
-            <span className="text-xl text-sidebar-foreground">
-              <span className="font-normal tracking-normal mr-[0.3em]">Fin</span>
-              <span className="font-bold tracking-[0.3em]">Track</span>
-            </span>
+        <Link href="/dashboard" title="PQGASTEI?" className={cn("flex items-center cursor-pointer", !collapsed && "flex-1")}>
+          {collapsed ? (
+            <>
+              <img src="/logos/logo-light-mobile.svg" alt="PG?" className="h-6 dark:hidden" />
+              <img src="/logos/logo-dark-mobile.svg" alt="PG?" className="h-6 hidden dark:block" />
+            </>
+          ) : (
+            <>
+              <img src="/logos/logo-light.svg" alt="PQGASTEI?" className="max-h-6 dark:hidden" />
+              <img src="/logos/logo-dark.svg" alt="PQGASTEI?" className="max-h-6 hidden dark:block" />
+            </>
           )}
         </Link>
 
@@ -262,7 +264,7 @@ export function MobileSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: (
             animate={{ x: 0 }}
             exit={{ x: -240 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed left-0 top-0 bottom-0 z-50 w-60 lg:hidden"
+            className="fixed left-0 top-0 bottom-0 z-50 w-[175px] lg:hidden"
           >
             <Sidebar isOpen={isOpen} onClose={onClose} />
           </motion.div>

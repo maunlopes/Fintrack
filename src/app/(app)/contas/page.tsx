@@ -359,16 +359,16 @@ export default function ContasPage() {
                     <div className="flex items-center gap-1">
                       <Tooltip>
                         <TooltipTrigger>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-muted" onClick={() => { setEditAccount(account); setDialogOpen(true); }}>
-                            <Pencil className="w-7 h-7" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => { setEditAccount(account); setDialogOpen(true); }}>
+                            <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>Editar</TooltipContent>
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(account.id)}>
-                            <Trash2 className="w-7 h-7" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(account.id)}>
+                            <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>Excluir</TooltipContent>

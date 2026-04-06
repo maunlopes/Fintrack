@@ -199,7 +199,7 @@ export function ConnectedItemsList({ items, onRefresh }: Props) {
             <AlertDialogTitle>Desconectar banco?</AlertDialogTitle>
             <AlertDialogDescription>
               As contas e transações importadas de{" "}
-              <strong>{confirmDelete?.connector?.name}</strong> serão removidas do FinTrack.
+              <strong>{confirmDelete?.connector?.name}</strong> serão removidas do PQGASTEI?.
               Isso não afeta sua conta no banco.
             </AlertDialogDescription>
           </AlertDialogHeader>

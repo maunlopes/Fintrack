@@ -285,10 +285,8 @@ function AuthPageInner() {
         className="w-full max-w-md"
       >
         <div className="flex flex-col items-center mb-5">
-          <h1 className="text-5xl tracking-tight mb-2">
-            <span className="font-normal">Fin</span>
-            <span className="font-bold">Track</span>
-          </h1>
+          <img src="/logos/logo-light.svg" alt="PQGASTEI?" className="h-10 dark:hidden mb-2" />
+          <img src="/logos/logo-dark.svg" alt="PQGASTEI?" className="h-10 hidden dark:block mb-2" />
           <p className="text-muted-foreground text-sm">Gestão financeira pessoal</p>
         </div>
 

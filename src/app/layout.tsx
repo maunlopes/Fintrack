@@ -16,7 +16,7 @@ import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "FinTrack — Gestão Financeira Pessoal",
+  title: "PQGASTEI? — Gestão Financeira Pessoal",
   description: "Controle seus cartões, despesas, receitas e preveja seu fluxo de caixa futuro.",
 };
 

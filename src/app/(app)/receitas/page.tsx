@@ -512,25 +512,25 @@ function ReceitasContent() {
                     {formatDate(income.receiveDate)}
                     {income.bankAccount ? ` · ${income.bankAccount.nickname}` : ""}
                   </p>
-                  <p className="text-lg font-bold tabular-nums font-numbers text-success mt-1">+{formatCurrency(parseFloat(income.amount))}</p>
+                  <p className="text-sm sm:text-lg font-bold tabular-nums font-numbers text-success mt-1">+{formatCurrency(parseFloat(income.amount))}</p>
                 </CardContent>
                 <CardFooter className="flex items-center justify-end border-t pt-4">
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
-                      <CircleCheck className="w-7 h-7" />
+                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
+                      <CircleCheck className="w-5 h-5 sm:w-7 sm:h-7" />
                     </Button>
                     <Tooltip>
                       <TooltipTrigger>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-muted" onClick={() => { setEditIncome(income); setDialogOpen(true); }}>
-                          <Pencil className="w-7 h-7" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => { setEditIncome(income); setDialogOpen(true); }}>
+                          <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>Editar</TooltipContent>
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(income.id)}>
-                          <Trash2 className="w-7 h-7" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(income.id)}>
+                          <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>Excluir</TooltipContent>
@@ -594,29 +594,29 @@ function ReceitasContent() {
                     </div>
 
                     {/* Amount */}
-                    <div className="shrink-0 min-w-[120px] text-right">
-                      <span className="text-lg font-bold tabular-nums font-numbers text-success">
+                    <div className="shrink-0 min-w-[80px] sm:min-w-[120px] text-right">
+                      <span className="text-sm sm:text-lg font-bold tabular-nums font-numbers text-success">
                         +{formatCurrency(parseFloat(income.amount))}
                       </span>
                     </div>
 
                     {/* Actions — fixed width */}
-                    <div className="flex items-center justify-end gap-1 shrink-0 pl-3 border-l w-[124px]">
-                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
-                        <CircleCheck className="w-7 h-7" />
+                    <div className="flex items-center justify-end gap-1 shrink-0 pl-2 sm:pl-3 border-l w-auto sm:w-[124px]">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
+                        <CircleCheck className="w-5 h-5 sm:w-7 sm:h-7" />
                       </Button>
                       <Tooltip>
                         <TooltipTrigger>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-muted" onClick={() => { setEditIncome(income); setDialogOpen(true); }}>
-                            <Pencil className="w-7 h-7" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => { setEditIncome(income); setDialogOpen(true); }}>
+                            <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>Editar</TooltipContent>
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(income.id)}>
-                            <Trash2 className="w-7 h-7" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(income.id)}>
+                            <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>Excluir</TooltipContent>

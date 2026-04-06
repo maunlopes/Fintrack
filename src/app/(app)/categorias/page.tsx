@@ -106,7 +106,7 @@ function CategoryForm({
           <FormItem>
             <FormLabel>Ícone</FormLabel>
             <FormControl>
-              <div className="grid grid-cols-6 sm:grid-cols-8 gap-1.5 max-h-40 overflow-y-auto rounded-lg border border-input p-2">
+              <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 max-h-40 overflow-y-auto rounded-lg border border-input p-2">
                 {Object.entries(CATEGORY_ICONS).map(([key, Icon]) => (
                   <Button
                     key={key}
@@ -299,16 +299,16 @@ export default function CategoriasPage() {
                       <div className="flex items-center gap-1 shrink-0 pl-3 border-l">
                         <Tooltip>
                           <TooltipTrigger>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-muted" onClick={() => { setEditCat(cat); setDialogOpen(true); }}>
-                              <Pencil className="w-7 h-7" />
+                            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => { setEditCat(cat); setDialogOpen(true); }}>
+                              <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>Editar</TooltipContent>
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => openDelete(cat.id)}>
-                              <Trash2 className="w-7 h-7" />
+                            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => openDelete(cat.id)}>
+                              <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>Excluir</TooltipContent>

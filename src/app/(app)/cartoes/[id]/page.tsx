@@ -704,20 +704,20 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
           { label: "Cartões", href: "/cartoes" },
           { label: card.name },
         ]} />
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
               {card.name}
-              {card.brand && getCardBrandIcon(card.brand, "w-10 h-6 ml-2")}
+              {card.brand && getCardBrandIcon(card.brand, "w-8 h-5 sm:w-10 sm:h-6 ml-1")}
             </h1>
           </div>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="sm:ml-auto flex items-center gap-2">
             {/* Month navigator */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setNavDate(subMonths(navDate, 1))}>
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <span className="text-sm font-semibold min-w-[100px] text-center capitalize">
+              <span className="text-sm font-semibold min-w-[80px] sm:min-w-[100px] text-center capitalize">
                 {format(navDate, "MMM yyyy", { locale: ptBR })}
               </span>
               <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setNavDate(addMonths(navDate, 1))}>
