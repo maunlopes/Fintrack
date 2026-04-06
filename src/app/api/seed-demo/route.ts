@@ -21,6 +21,9 @@ function isPast(date: Date): boolean {
 // ── route ─────────────────────────────────────────────────────────────────────
 
 export async function POST() {
+  if (process.env.NODE_ENV === "production")
+    return new Response(JSON.stringify({ error: "Not available in production" }), { status: 403 });
+
   const session = await auth();
   if (!session?.user?.id) {
     return new Response(JSON.stringify({ error: "Não autorizado" }), { status: 401 });
@@ -125,7 +128,7 @@ export async function POST() {
     { mo: 2,  day: 5,  amount: 500,   from: nubank.id,   to: bradesco.id, desc: "Poupança mensal" },
   ];
   for (const t of transferDefs) {
-    await prisma.transfer.create({ data: { fromAccountId: t.from, toAccountId: t.to, amount: t.amount, date: d(t.mo, t.day), description: t.desc } });
+    await prisma.transfer.create({ data: { userId, fromAccountId: t.from, toAccountId: t.to, amount: t.amount, date: d(t.mo, t.day), description: t.desc } });
   }
 
   // ── 7. Incomes — 12 months ────────────────────────────────────────────────

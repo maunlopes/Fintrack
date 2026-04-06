@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { format, addMonths, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Plus, CreditCard, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
+import { Plus, CreditCard, ChevronLeft, ChevronRight, Search, X, Trash2, Pencil } from "lucide-react";
 import { PageTransition } from "@/components/shared/page-transition";
 import { Breadcrumb } from "@/components/shared/breadcrumb";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -17,6 +17,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { CATEGORY_ICONS } from "@/lib/category-icons";
 import { radialGradient } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -25,6 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cardTransactionSchema, CardTransactionInput } from "@/lib/validations/credit-card";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CurrencyInput } from "@/components/shared/currency-input";
 import { getCardBrandIcon, getBankIcon } from "@/components/ui/brand-icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -125,29 +127,30 @@ function TransactionForm({ cardId, categories, onSuccess }: {
             <FormMessage />
           </FormItem>
         )} />
-        <FormField control={form.control} name="totalAmount" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Valor total (R$)</FormLabel>
-            <FormControl><Input type="number" step="0.01" min="0" {...field} /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-        <FormField control={form.control} name="purchaseDate" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Data da compra</FormLabel>
-            <FormControl>
-              <Input
-                type="date"
-                {...field}
-                value={field.value instanceof Date
-                  ? field.value.toISOString().split("T")[0]
-                  : String(field.value)}
-                onChange={(e) => field.onChange(new Date(e.target.value))}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
+        <div className="grid grid-cols-2 gap-4">
+          <FormField control={form.control} name="totalAmount" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Valor total</FormLabel>
+              <FormControl>
+                <CurrencyInput value={field.value} onChange={field.onChange} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="purchaseDate" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Data da compra</FormLabel>
+              <FormControl>
+                <Input
+                  type="date"
+                  value={field.value instanceof Date && !isNaN(field.value.getTime()) ? field.value.toISOString().split("T")[0] : ""}
+                  onChange={(e) => { if (e.target.value) { const [y,m,d] = e.target.value.split("-").map(Number); field.onChange(new Date(y, m-1, d, 12)); } else { field.onChange(new Date()); } }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+        </div>
         <FormField control={form.control} name="categoryId" render={({ field }) => (
           <FormItem>
             <FormLabel>Categoria</FormLabel>
@@ -204,7 +207,7 @@ function fmt(month: number, year: number) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, cardId, closingDay, dueDay, cardColor, cardBankName, onRefresh, onNewTransaction }: {
+function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, cardId, closingDay, dueDay, cardColor, cardBankName, categories, onRefresh, onNewTransaction }: {
   invoices: Invoice[];
   limit: number;
   totalCommitted: number;
@@ -216,11 +219,46 @@ function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, c
   dueDay: number;
   cardColor: string;
   cardBankName: string;
+  categories: Category[];
   onRefresh: () => void;
   onNewTransaction: () => void;
 }) {
   const [txSearch, setTxSearch] = useState("");
   const [txCategoryFilter, setTxCategoryFilter] = useState("ALL");
+  const [deleteTxId, setDeleteTxId] = useState<string | null>(null);
+  const [editTx, setEditTx] = useState<InvoiceTx | null>(null);
+  const [editDesc, setEditDesc] = useState("");
+  const [editAmt, setEditAmt] = useState(0);
+  const [editDate, setEditDate] = useState("");
+  const [editCatId, setEditCatId] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+
+  function openEditTx(tx: InvoiceTx) {
+    setEditTx(tx);
+    setEditDesc(tx.description);
+    setEditAmt(tx.amount);
+    setEditDate(tx.purchaseDate.split("T")[0]);
+    setEditCatId(tx.category.id);
+  }
+
+  async function handleSaveEditTx(data: { description: string; totalAmount: number; purchaseDate: string; categoryId: string; notes?: string }) {
+    if (!editTx) return;
+    const res = await fetch(`/api/cartoes/${cardId}/transacoes`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ txId: editTx.id, ...data }),
+    });
+    if (res.ok) { toast.success("Transação atualizada"); setEditTx(null); onRefresh(); }
+    else { const e = await res.json(); toast.error(e.error || "Erro ao atualizar"); }
+  }
+
+  async function handleDeleteTx() {
+    if (!deleteTxId) return;
+    const res = await fetch(`/api/cartoes/${cardId}/transacoes?txId=${deleteTxId}`, { method: "DELETE" });
+    if (res.ok) { toast.success("Transação removida"); onRefresh(); }
+    else { const e = await res.json(); toast.error(e.error || "Erro ao remover"); }
+    setDeleteTxId(null);
+  }
 
   // On first render: jump to nearest invoice month
   useEffect(() => {
@@ -542,9 +580,31 @@ function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, c
                             </div>
 
                             {/* Amount */}
-                            <span className="text-lg font-bold tabular-nums font-numbers shrink-0">
+                            <span className="text-sm sm:text-lg font-bold tabular-nums font-numbers shrink-0">
                               {formatCurrency(tx.amount)}
                             </span>
+
+                            {/* Actions — only if invoice not paid */}
+                            {!isPaid && (
+                              <div className="flex items-center gap-1 shrink-0 pl-2 sm:pl-3 border-l">
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => openEditTx(tx)}>
+                                      <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Editar</TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteTxId(tx.id)}>
+                                      <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Excluir</TooltipContent>
+                                </Tooltip>
+                              </div>
+                            )}
                           </CardContent>
                         </Card>
                       </motion.div>
@@ -630,6 +690,63 @@ function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, c
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Edit transaction dialog */}
+      <Dialog open={!!editTx} onOpenChange={(o) => !o && setEditTx(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar transação</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Descrição</label>
+              <Input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Valor</label>
+                <CurrencyInput value={editAmt} onChange={setEditAmt} />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Data</label>
+                <Input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Categoria</label>
+              <Select onValueChange={(v) => setEditCatId(v ?? editCatId)} value={editCatId}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button className="w-full" disabled={editSaving || !editDesc.trim()} onClick={async () => {
+              setEditSaving(true);
+              await handleSaveEditTx({ description: editDesc, totalAmount: editAmt, purchaseDate: editDate, categoryId: editCatId });
+              setEditSaving(false);
+            }}>
+              {editSaving ? "Salvando..." : "Salvar"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete transaction dialog */}
+      <AlertDialog open={!!deleteTxId} onOpenChange={(o) => !o && setDeleteTxId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir transação?</AlertDialogTitle>
+            <AlertDialogDescription>Esta ação não pode ser desfeita. Se for parcelada, todas as parcelas serão removidas.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteTx} className="bg-destructive text-white">Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -756,6 +873,7 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
           dueDay={card.dueDay}
           cardColor={card.color || "#075056"}
           cardBankName={card.bankAccount?.name || card.name}
+          categories={categories}
           onRefresh={fetchData}
           onNewTransaction={() => setDialogOpen(true)}
         />

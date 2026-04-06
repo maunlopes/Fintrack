@@ -147,26 +147,37 @@ export async function GET(req: Request) {
     });
   }
 
-  // === Forecast months ===
+  // === Future months — check for existing data first, then forecast ===
   const forecastCount = 12 - historicalCount;
   if (forecastCount > 0) {
-    const forecastStartDate = new Date(year, historicalCount, 1);
-    const forecastMonths = await buildForecast(userId, forecastStartDate, forecastCount);
+    // First, query actual data for future months (recurring children, installments already created)
+    for (let m = historicalCount; m < 12; m++) {
+      const start = new Date(year, m, 1);
+      const end = new Date(year, m + 1, 0, 23, 59, 59);
 
-    for (const fm of forecastMonths) {
+      const [incomeAgg, expenseAgg] = await Promise.all([
+        prisma.income.aggregate({
+          where: { userId, receiveDate: { gte: start, lte: end } },
+          _sum: { amount: true },
+        }),
+        prisma.expense.aggregate({
+          where: { userId, dueDate: { gte: start, lte: end } },
+          _sum: { amount: true },
+        }),
+      ]);
+
+      const income = toNum(incomeAgg._sum.amount);
+      const expenses = toNum(expenseAgg._sum.amount);
+
       monthsData.push({
-        monthNumber: fm.monthNumber,
-        monthName: fm.monthName,
-        year: fm.year,
-        income: fm.income,
-        expenses: fm.expenses,
-        balance: fm.balance,
+        monthNumber: m + 1,
+        monthName: monthNames[m],
+        year,
+        income,
+        expenses,
+        balance: income - expenses,
         isHistorical: false,
         isForecast: true,
-        fixedExpenses: fm.fixedExpenses,
-        variableExpensesAvg: fm.variableExpensesAvg,
-        oneTimeExpensesAvg: fm.oneTimeExpensesAvg,
-        cardInstallments: fm.cardInstallments,
       });
     }
   }

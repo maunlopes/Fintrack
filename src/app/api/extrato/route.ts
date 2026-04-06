@@ -34,7 +34,7 @@ export async function GET(req: Request) {
 
   // Fetch Expenses
   const expenses = await prisma.expense.findMany({
-    where: { userId, dueDate: { gte: start, lte: end }, parentExpenseId: null },
+    where: { userId, dueDate: { gte: start, lte: end } },
     include: { category: true, bankAccount: { select: { id: true, nickname: true } } },
   });
 

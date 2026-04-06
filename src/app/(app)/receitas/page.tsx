@@ -31,9 +31,10 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { incomeSchema, IncomeInput } from "@/lib/validations/income";
 import { formatDate, formatCurrency } from "@/lib/format";
-import { radialGradient } from "@/lib/utils";
+import { cn, radialGradient } from "@/lib/utils";
 import { CATEGORY_ICONS } from "@/lib/category-icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ConfirmReceiveDialog } from "@/components/receitas/confirm-receive-dialog";
 
 const freqLabels: Record<RecurrenceFrequency, string> = {
   WEEKLY: "Semanal",
@@ -42,7 +43,7 @@ const freqLabels: Record<RecurrenceFrequency, string> = {
 };
 
 interface Category { id: string; name: string; type: string; color?: string; icon?: string; }
-interface BankAccount { id: string; nickname: string; }
+interface BankAccount { id: string; nickname: string; balance?: string; }
 interface Income {
   id: string;
   description: string;
@@ -51,6 +52,7 @@ interface Income {
   status: "PENDING" | "PAID" | "OVERDUE";
   isRecurring: boolean;
   recurrenceFrequency: RecurrenceFrequency | null;
+  parentIncomeId?: string | null;
   category: Category;
   bankAccount: BankAccount;
 }
@@ -125,7 +127,7 @@ function IncomeForm({
                 <Input
                   type="date"
                   value={field.value instanceof Date ? field.value.toISOString().split("T")[0] : String(field.value)}
-                  onChange={(e) => field.onChange(new Date(e.target.value))}
+                  onChange={(e) => { if (e.target.value) { const [y,m,d] = e.target.value.split("-").map(Number); field.onChange(new Date(y, m-1, d, 12)); } else { field.onChange(new Date()); } }}
                 />
               </FormControl>
               <FormMessage />
@@ -195,7 +197,7 @@ function IncomeForm({
                   <Input
                     type="date"
                     value={field.value instanceof Date ? field.value.toISOString().split("T")[0] : field.value || ""}
-                    onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                    onChange={(e) => { if (e.target.value) { const [y,m,d] = e.target.value.split("-").map(Number); field.onChange(new Date(y, m-1, d, 12)); } else { field.onChange(undefined); } }}
                   />
                 </FormControl>
                 <p className="text-xs text-muted-foreground">Deixe vazio para repetir indefinidamente</p>
@@ -230,6 +232,8 @@ function ReceitasContent() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editIncome, setEditIncome] = useState<Income | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [confirmReceiveOpen, setConfirmReceiveOpen] = useState(false);
+  const [confirmReceiveIncome, setConfirmReceiveIncome] = useState<Income | null>(null);
   const [filter, setFilter] = useState<"ALL" | "PAID" | "PENDING">("ALL");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
@@ -269,11 +273,41 @@ function ReceitasContent() {
     }
   }, []);
 
+  function openConfirmReceive(income: Income) {
+    setConfirmReceiveIncome(income);
+    setConfirmReceiveOpen(true);
+  }
+
+  async function handleConfirmReceive(id: string, data: { amount: number; bankAccountId: string; receiveDate: string }) {
+    const res = await fetch(`/api/receitas/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "PAID", ...data }),
+    });
+    if (res.ok) { toast.success("Receita confirmada!"); fetchData(); }
+    else toast.error("Erro ao confirmar recebimento");
+  }
+
+  async function handleRevertReceive(id: string) {
+    const res = await fetch(`/api/receitas/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "PENDING" }),
+    });
+    if (res.ok) { toast.success("Recebimento revertido"); fetchData(); }
+    else toast.error("Erro ao reverter");
+  }
+
+  const [deleteAll, setDeleteAll] = useState(false);
+
   async function handleDelete() {
     if (!deleteId) return;
-    const res = await fetch(`/api/receitas/${deleteId}`, { method: "DELETE" });
-    if (res.ok) { toast.success("Receita removida"); fetchData(); }
+    const query = deleteAll ? "?deleteAll=true" : "";
+    const res = await fetch(`/api/receitas/${deleteId}${query}`, { method: "DELETE" });
+    if (res.ok) { toast.success(deleteAll ? "Todas as ocorrências removidas" : "Receita removida"); fetchData(); }
+    else toast.error("Erro ao remover");
     setDeleteId(null);
+    setDeleteAll(false);
   }
 
   const totalIncome = incomes.filter((i) => i.status === "PAID").reduce((s, i) => s + parseFloat(i.amount), 0);
@@ -516,9 +550,14 @@ function ReceitasContent() {
                 </CardContent>
                 <CardFooter className="flex items-center justify-end border-t pt-4">
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
-                      <CircleCheck className="w-5 h-5 sm:w-7 sm:h-7" />
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Button variant="ghost" size="icon" className={cn("h-8 w-8 sm:h-9 sm:w-9 rounded-lg", income.status === "PAID" ? "text-warning hover:text-warning hover:bg-warning/10" : "text-success hover:text-success hover:bg-success/10")} onClick={() => income.status === "PAID" ? handleRevertReceive(income.id) : openConfirmReceive(income)}>
+                          {income.status === "PAID" ? <RotateCcw className="w-5 h-5 sm:w-7 sm:h-7" /> : <CircleCheck className="w-5 h-5 sm:w-7 sm:h-7" />}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>{income.status === "PAID" ? "Reverter recebimento" : "Confirmar recebimento"}</TooltipContent>
+                    </Tooltip>
                     <Tooltip>
                       <TooltipTrigger>
                         <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => { setEditIncome(income); setDialogOpen(true); }}>
@@ -602,9 +641,14 @@ function ReceitasContent() {
 
                     {/* Actions — fixed width */}
                     <div className="flex items-center justify-end gap-1 shrink-0 pl-2 sm:pl-3 border-l w-auto sm:w-[124px]">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
-                        <CircleCheck className="w-5 h-5 sm:w-7 sm:h-7" />
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Button variant="ghost" size="icon" className={cn("h-8 w-8 sm:h-9 sm:w-9 rounded-lg", income.status === "PAID" ? "text-warning hover:text-warning hover:bg-warning/10" : "text-success hover:text-success hover:bg-success/10")} onClick={() => income.status === "PAID" ? handleRevertReceive(income.id) : openConfirmReceive(income)}>
+                            {income.status === "PAID" ? <RotateCcw className="w-5 h-5 sm:w-7 sm:h-7" /> : <CircleCheck className="w-5 h-5 sm:w-7 sm:h-7" />}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>{income.status === "PAID" ? "Reverter recebimento" : "Confirmar recebimento"}</TooltipContent>
+                      </Tooltip>
                       <Tooltip>
                         <TooltipTrigger>
                           <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => { setEditIncome(income); setDialogOpen(true); }}>
@@ -654,12 +698,32 @@ function ReceitasContent() {
             <AlertDialogTitle>Remover receita?</AlertDialogTitle>
             <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
           </AlertDialogHeader>
+          {(() => {
+            const del = deleteId ? incomes.find((i) => i.id === deleteId) : null;
+            return del?.isRecurring ? (
+              <div className="flex items-center justify-between py-3 px-1">
+                <label htmlFor="delete-all-income" className="text-sm text-muted-foreground">
+                  Remover <strong className="text-foreground">todas as ocorrências</strong>?
+                </label>
+                <Switch id="delete-all-income" checked={deleteAll} onCheckedChange={setDeleteAll} />
+              </div>
+            ) : null;
+          })()}
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-white">Remover</AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-white">
+              {deleteAll ? "Remover todas" : "Remover esta"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <ConfirmReceiveDialog
+        income={confirmReceiveIncome}
+        bankAccounts={bankAccounts}
+        open={confirmReceiveOpen}
+        onOpenChange={setConfirmReceiveOpen}
+        onConfirm={handleConfirmReceive}
+      />
     </PageTransition>
   );
 }

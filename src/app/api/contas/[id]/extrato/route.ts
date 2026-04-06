@@ -44,7 +44,7 @@ export async function GET(req: Request, { params }: Params) {
 
   // Fetch Expenses specifically for this bank account
   const expenses = await prisma.expense.findMany({
-    where: { userId, bankAccountId, dueDate: { gte: start, lte: end }, parentExpenseId: null },
+    where: { userId, bankAccountId, dueDate: { gte: start, lte: end } },
     include: { category: true, bankAccount: { select: { id: true, nickname: true } } },
   });
 
@@ -59,6 +59,17 @@ export async function GET(req: Request, { params }: Params) {
       investment: { select: { name: true, type: true } },
       bankAccount: { select: { id: true, nickname: true } }
     }
+  });
+
+  // Fetch Transfers involving this account
+  const transfersOut = await prisma.transfer.findMany({
+    where: { fromAccountId: bankAccountId, date: { gte: start, lte: end } },
+    include: { toAccount: { select: { id: true, nickname: true } } },
+  });
+
+  const transfersIn = await prisma.transfer.findMany({
+    where: { toAccountId: bankAccountId, date: { gte: start, lte: end } },
+    include: { fromAccount: { select: { id: true, nickname: true } } },
   });
 
   // Merge them into a generic "Transaction" type
@@ -84,6 +95,28 @@ export async function GET(req: Request, { params }: Params) {
       status: e.status,
       category: e.category,
       bankAccount: e.bankAccount,
+    })),
+    ...transfersOut.map((t: any) => ({
+      id: `tfr_out_${t.id}`,
+      originalId: t.id,
+      type: "EXPENSE" as const,
+      description: `Transferência para ${t.toAccount.nickname}`,
+      amount: parseFloat(t.amount.toString()),
+      date: t.date.toISOString(),
+      status: "PAID" as const,
+      category: { name: "Transferência", color: "#6366F1", icon: "arrow-left-right" },
+      bankAccount: { id: t.toAccount.id, nickname: t.toAccount.nickname },
+    })),
+    ...transfersIn.map((t: any) => ({
+      id: `tfr_in_${t.id}`,
+      originalId: t.id,
+      type: "INCOME" as const,
+      description: `Transferência de ${t.fromAccount.nickname}`,
+      amount: parseFloat(t.amount.toString()),
+      date: t.date.toISOString(),
+      status: "PAID" as const,
+      category: { name: "Transferência", color: "#6366F1", icon: "arrow-left-right" },
+      bankAccount: { id: t.fromAccount.id, nickname: t.fromAccount.nickname },
     })),
     ...investmentTxs.map((inv: any) => {
       // Deposit is money OUT of the bank account

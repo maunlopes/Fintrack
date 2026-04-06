@@ -99,13 +99,13 @@ export function Sidebar({ isOpen = true, onClose, collapsed = false }: SidebarPr
         <Link href="/dashboard" title="PQGASTEI?" className={cn("flex items-center cursor-pointer", !collapsed && "flex-1")}>
           {collapsed ? (
             <>
-              <img src="/logos/logo-light-mobile.svg" alt="PG?" className="h-6 dark:hidden" />
-              <img src="/logos/logo-dark-mobile.svg" alt="PG?" className="h-6 hidden dark:block" />
+              <img src="/logos/logo-light-mobile.svg" alt="PG?" className="h-[30px] dark:hidden" />
+              <img src="/logos/logo-dark-mobile.svg" alt="PG?" className="h-[30px] hidden dark:block" />
             </>
           ) : (
             <>
-              <img src="/logos/logo-light.svg" alt="PQGASTEI?" className="max-h-6 dark:hidden" />
-              <img src="/logos/logo-dark.svg" alt="PQGASTEI?" className="max-h-6 hidden dark:block" />
+              <img src="/logos/logo-light.svg" alt="PQGASTEI?" className="h-[30px] dark:hidden" />
+              <img src="/logos/logo-dark.svg" alt="PQGASTEI?" className="h-[30px] hidden dark:block" />
             </>
           )}
         </Link>

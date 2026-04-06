@@ -58,6 +58,25 @@ export async function PUT(req: Request, { params }: Params) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
   const { bankAccountId, ...data } = parsed.data;
+
+  // Update all occurrences if requested
+  const { searchParams } = new URL(req.url);
+  if (searchParams.get("updateAll") === "true") {
+    const parentId = expense.parentExpenseId || id;
+    // Update parent + all children with shared fields (amount, description, category, bankAccount)
+    await prisma.expense.updateMany({
+      where: { OR: [{ id: parentId }, { parentExpenseId: parentId }] },
+      data: {
+        description: data.description,
+        amount: data.amount,
+        categoryId: data.categoryId,
+        bankAccountId: bankAccountId || null,
+        notes: data.notes,
+      },
+    });
+    return NextResponse.json({ success: true, updatedAll: true });
+  }
+
   const updated = await prisma.expense.update({
     where: { id },
     data: { ...data, bankAccountId: bankAccountId || null },

@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { expenseSchema } from "@/lib/validations/expense";
 import { addMonths } from "date-fns";
-import { getInvoicesAsExpenses } from "@/lib/invoice";
+import { getCardTransactionsAsExpenses } from "@/lib/invoice";
 
 export async function GET(req: Request) {
   const session = await auth();
@@ -13,11 +13,13 @@ export async function GET(req: Request) {
   const month = searchParams.get("month");
   const year = searchParams.get("year");
 
-  const where: Record<string, unknown> = { userId: session.user.id, parentExpenseId: null };
+  const where: Record<string, unknown> = { userId: session.user.id };
   if (month && year) {
     const start = new Date(parseInt(year), parseInt(month) - 1, 1);
     const end = new Date(parseInt(year), parseInt(month), 0, 23, 59, 59);
     where.dueDate = { gte: start, lte: end };
+  } else {
+    where.parentExpenseId = null;
   }
 
   const expenses = await prisma.expense.findMany({
@@ -28,9 +30,9 @@ export async function GET(req: Request) {
 
   let invoices: any[] = [];
   if (month && year) {
-    invoices = await getInvoicesAsExpenses(session.user.id, parseInt(month), parseInt(year));
+    invoices = await getCardTransactionsAsExpenses(session.user.id, parseInt(month), parseInt(year));
   } else {
-    invoices = await getInvoicesAsExpenses(session.user.id);
+    invoices = await getCardTransactionsAsExpenses(session.user.id);
   }
 
   // Map invoices to fit the "Expense" shape expected by the frontend
@@ -89,6 +91,39 @@ export async function POST(req: Request) {
       });
     }
     await prisma.expense.createMany({ data: installmentData });
+  }
+
+  // Create future monthly records for FIXED_RECURRING / VARIABLE_RECURRING
+  if ((data.type === "FIXED_RECURRING" || data.type === "VARIABLE_RECURRING") && data.recurrenceEnd) {
+    const startDate = data.dueDate;
+    const endDate = new Date(data.recurrenceEnd);
+    const childData = [];
+    let current = addMonths(startDate, 1);
+    let index = 2;
+
+    while (current <= endDate) {
+      childData.push({
+        userId: session.user.id,
+        description: data.description,
+        amount: data.amount,
+        dueDate: current,
+        categoryId: data.categoryId,
+        type: data.type,
+        isRecurring: true,
+        recurrenceStart: data.recurrenceStart,
+        recurrenceEnd: data.recurrenceEnd,
+        status: "PENDING" as const,
+        bankAccountId: bankAccountId || null,
+        parentExpenseId: parent.id,
+        notes: data.notes,
+      });
+      current = addMonths(startDate, index);
+      index++;
+    }
+
+    if (childData.length > 0) {
+      await prisma.expense.createMany({ data: childData });
+    }
   }
 
   return NextResponse.json(parent, { status: 201 });

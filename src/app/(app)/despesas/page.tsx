@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { motion } from "framer-motion";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { MonthSelector } from "@/components/shared/month-selector";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -55,11 +55,13 @@ interface Expense {
   dueDate: string;
   type: ExpenseType;
   status: "PENDING" | "PAID" | "OVERDUE";
+  isRecurring?: boolean;
+  parentExpenseId?: string | null;
   category: Category;
   bankAccount?: BankAccount | null;
   totalInstallments?: number | null;
   currentInstallment?: number | null;
-  // Invoice-specific fields (from getInvoicesAsExpenses)
+  // Invoice-specific fields
   cardId?: string;
   cardName?: string;
 }
@@ -93,13 +95,17 @@ function AccountExpenseForm({
 
   const type = form.watch("type");
 
+  const [updateAll, setUpdateAll] = useState(false);
+  const isEditingRecurring = !!defaultValues?.id && (defaultValues?.type === "FIXED_RECURRING" || defaultValues?.type === "VARIABLE_RECURRING" || defaultValues?.type === "INSTALLMENT");
+
   async function onSubmit(data: ExpenseInput) {
     // Auto-set isRecurring for recurring types
     if (data.type === "FIXED_RECURRING" || data.type === "VARIABLE_RECURRING") {
       data.isRecurring = true;
     }
 
-    const url = defaultValues?.id ? `/api/despesas/${defaultValues.id}` : "/api/despesas";
+    const baseUrl = defaultValues?.id ? `/api/despesas/${defaultValues.id}` : "/api/despesas";
+    const url = defaultValues?.id && updateAll ? `${baseUrl}?updateAll=true` : baseUrl;
     const method = defaultValues?.id ? "PUT" : "POST";
     const res = await fetch(url, {
       method,
@@ -137,8 +143,8 @@ function AccountExpenseForm({
               <FormControl>
                 <Input
                   type="date"
-                  value={field.value instanceof Date ? field.value.toISOString().split("T")[0] : String(field.value)}
-                  onChange={(e) => field.onChange(new Date(e.target.value))}
+                  value={field.value instanceof Date && !isNaN(field.value.getTime()) ? field.value.toISOString().split("T")[0] : ""}
+                  onChange={(e) => { if (e.target.value) { const [y,m,d] = e.target.value.split("-").map(Number); field.onChange(new Date(y, m-1, d, 12)); } else { field.onChange(new Date()); } }}
                 />
               </FormControl>
               <FormMessage />
@@ -189,14 +195,17 @@ function AccountExpenseForm({
         {(type === "FIXED_RECURRING" || type === "VARIABLE_RECURRING") && (
           <FormField control={form.control} name="recurrenceEnd" render={({ field }) => (
             <FormItem>
-              <FormLabel>Fim da recorrência (opcional)</FormLabel>
+              <FormLabel>Repete até</FormLabel>
               <FormControl>
                 <Input
                   type="date"
-                  value={field.value instanceof Date ? field.value.toISOString().split("T")[0] : field.value || ""}
-                  onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                  value={field.value instanceof Date && !isNaN(field.value.getTime()) ? field.value.toISOString().split("T")[0] : String(field.value || "")}
+                  onChange={(e) => { if (e.target.value) { const [y,m,d] = e.target.value.split("-").map(Number); field.onChange(new Date(y, m-1, d, 12)); } else { field.onChange(undefined); } }}
                 />
               </FormControl>
+              <p className="text-xs text-muted-foreground">
+                Um registro será criado para cada mês entre a data da despesa e esta data. Cada um pode ter o valor editado individualmente.
+              </p>
               <FormMessage />
             </FormItem>
           )} />
@@ -227,9 +236,17 @@ function AccountExpenseForm({
             <FormMessage />
           </FormItem>
         )} />
+        {isEditingRecurring && (
+          <div className="flex items-center justify-between py-2">
+            <label htmlFor="update-all" className="text-sm text-muted-foreground">
+              Aplicar alteração a <strong className="text-foreground">todas as ocorrências</strong>
+            </label>
+            <Switch id="update-all" checked={updateAll} onCheckedChange={setUpdateAll} />
+          </div>
+        )}
         <motion.div whileTap={{ scale: 0.97 }}>
           <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? "Salvando..." : "Salvar"}
+            {form.formState.isSubmitting ? (updateAll ? "Salvando todas..." : "Salvando...") : (updateAll ? "Salvar em todas" : "Salvar")}
           </Button>
         </motion.div>
       </form>
@@ -315,8 +332,10 @@ function CardTransactionForm({
         <div className="grid grid-cols-2 gap-4">
           <FormField control={form.control} name="totalAmount" render={({ field }) => (
             <FormItem>
-              <FormLabel>Valor total (R$)</FormLabel>
-              <FormControl><Input type="number" step="0.01" min="0" {...field} /></FormControl>
+              <FormLabel>Valor total</FormLabel>
+              <FormControl>
+                <CurrencyInput value={field.value} onChange={field.onChange} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )} />
@@ -326,8 +345,8 @@ function CardTransactionForm({
               <FormControl>
                 <Input
                   type="date"
-                  value={field.value instanceof Date ? field.value.toISOString().split("T")[0] : String(field.value)}
-                  onChange={(e) => field.onChange(new Date(e.target.value))}
+                  value={field.value instanceof Date && !isNaN(field.value.getTime()) ? field.value.toISOString().split("T")[0] : ""}
+                  onChange={(e) => { if (e.target.value) { const [y,m,d] = e.target.value.split("-").map(Number); field.onChange(new Date(y, m-1, d, 12)); } else { field.onChange(new Date()); } }}
                 />
               </FormControl>
               <FormMessage />
@@ -386,6 +405,7 @@ function CardTransactionForm({
 
 function DespesasContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
@@ -442,21 +462,46 @@ function DespesasContent() {
   }, []);
 
   const [restoreBalance, setRestoreBalance] = useState(true);
+  const [deleteAll, setDeleteAll] = useState(false);
   const [revertId, setRevertId] = useState<string | null>(null);
 
   const deleteExpense = deleteId ? expenses.find((e) => e.id === deleteId) : null;
   const deleteIsPaid = deleteExpense?.status === "PAID" && !!deleteExpense?.bankAccount;
+  const deleteIsRecurring = deleteExpense?.isRecurring && (deleteExpense?.type === "FIXED_RECURRING" || deleteExpense?.type === "VARIABLE_RECURRING");
+  const deleteIsInstallment = deleteExpense?.type === "INSTALLMENT";
+
+  async function handleDeleteCardTx(expenseId: string, cardId: string) {
+    const res = await fetch(`/api/cartoes/${cardId}/transacoes?txId=${expenseId}`, { method: "DELETE" });
+    if (res.ok) { toast.success("Transação do cartão removida"); fetchData(); }
+    else { const e = await res.json(); toast.error(e.error || "Erro ao remover"); }
+  }
 
   async function handleDelete() {
     if (!deleteId) return;
+    const deleteExpenseObj = expenses.find((e) => e.id === deleteId);
+    if (deleteExpenseObj?.cardId) {
+      await handleDeleteCardTx(deleteId, deleteExpenseObj.cardId);
+      setDeleteId(null);
+      setRestoreBalance(true);
+      setDeleteAll(false);
+      return;
+    }
+
+    // If "delete all" and this is a child, delete via parent
+    let targetId = deleteId;
+    if (deleteAll && deleteExpenseObj?.parentExpenseId) {
+      targetId = deleteExpenseObj.parentExpenseId;
+    }
+
     const query = deleteIsPaid && restoreBalance ? "?restoreBalance=true" : "";
-    const res = await fetch(`/api/despesas/${deleteId}${query}`, { method: "DELETE" });
+    const res = await fetch(`/api/despesas/${targetId}${query}`, { method: "DELETE" });
     if (res.ok) {
-      toast.success(deleteIsPaid && restoreBalance ? "Despesa removida e saldo restaurado" : "Despesa removida");
+      toast.success(deleteAll ? "Todas as ocorrências removidas" : "Despesa removida");
       fetchData();
     } else toast.error("Erro ao remover despesa");
     setDeleteId(null);
     setRestoreBalance(true);
+    setDeleteAll(false);
   }
 
   function handlePay(id: string) {
@@ -863,12 +908,22 @@ function DespesasContent() {
                         </>
                       ) : (
                         <>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
-                            <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
-                            <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
-                          </Button>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => router.push(`/cartoes/${expense.cardId}`)}>
+                                <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Editar na fatura</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(expense.id)}>
+                                <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Excluir</TooltipContent>
+                          </Tooltip>
                         </>
                       )}
                     </div>
@@ -981,12 +1036,22 @@ function DespesasContent() {
                         </>
                       ) : (
                         <>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
-                            <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
-                            <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
-                          </Button>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => router.push(`/cartoes/${expense.cardId}`)}>
+                                <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Editar na fatura</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(expense.id)}>
+                                <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Excluir</TooltipContent>
+                          </Tooltip>
                         </>
                       )}
                     </div>
@@ -1045,12 +1110,25 @@ function DespesasContent() {
       </Dialog>
 
       {/* Delete dialog */}
-      <AlertDialog open={!!deleteId} onOpenChange={(o) => { if (!o) { setDeleteId(null); setRestoreBalance(true); } }}>
+      <AlertDialog open={!!deleteId} onOpenChange={(o) => { if (!o) { setDeleteId(null); setRestoreBalance(true); setDeleteAll(false); } }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remover despesa?</AlertDialogTitle>
-            <AlertDialogDescription>Esta ação não pode ser desfeita. Parcelas futuras também serão removidas.</AlertDialogDescription>
+            <AlertDialogDescription>
+              {deleteIsInstallment
+                ? "Esta ação não pode ser desfeita. Todas as parcelas serão removidas."
+                : "Esta ação não pode ser desfeita."
+              }
+            </AlertDialogDescription>
           </AlertDialogHeader>
+          {(deleteIsRecurring || deleteIsInstallment) && (
+            <div className="flex items-center justify-between py-3 px-1">
+              <label htmlFor="delete-all" className="text-sm text-muted-foreground">
+                Remover <strong className="text-foreground">todas as ocorrências</strong> desta recorrência?
+              </label>
+              <Switch id="delete-all" checked={deleteAll} onCheckedChange={setDeleteAll} />
+            </div>
+          )}
           {deleteIsPaid && (
             <div className="flex items-center justify-between py-3 px-1">
               <label htmlFor="restore-balance" className="text-sm text-muted-foreground">
@@ -1061,7 +1139,9 @@ function DespesasContent() {
           )}
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-white">Remover</AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-white">
+              {deleteAll ? "Remover todas" : "Remover esta"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

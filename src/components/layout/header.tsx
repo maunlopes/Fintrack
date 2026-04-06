@@ -71,10 +71,10 @@ export function Header({ session }: HeaderProps) {
         FinBot
       </Button>
 
-      <Button variant="outline" size="sm" className="hidden sm:flex gap-1.5 text-xs" onClick={() => window.location.href = "/open-finance"}>
+      {/* <Button variant="outline" size="sm" className="hidden sm:flex gap-1.5 text-xs" onClick={() => window.location.href = "/open-finance"}>
         <Link2 className="w-4 h-4" />
         Conectar contas
-      </Button>
+      </Button> */}
 
       <ThemeToggle />
 

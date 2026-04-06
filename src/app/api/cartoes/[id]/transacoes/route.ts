@@ -73,3 +73,52 @@ export async function POST(req: Request, { params }: Params) {
 
   return NextResponse.json(parent, { status: 201 });
 }
+
+export async function PUT(req: Request, { params }: Params) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const { id } = await params;
+
+  const body = await req.json();
+  const { txId, ...data } = body;
+  if (!txId) return NextResponse.json({ error: "txId obrigatório" }, { status: 400 });
+
+  const tx = await prisma.cardTransaction.findFirst({
+    where: { id: txId, creditCardId: id, creditCard: { userId: session.user.id } },
+  });
+  if (!tx) return NextResponse.json({ error: "Transação não encontrada" }, { status: 404 });
+
+  const updated = await prisma.cardTransaction.update({
+    where: { id: txId },
+    data: {
+      description: data.description,
+      totalAmount: data.totalAmount,
+      purchaseDate: data.purchaseDate ? new Date(data.purchaseDate) : undefined,
+      categoryId: data.categoryId,
+      notes: data.notes,
+    },
+  });
+
+  return NextResponse.json(updated);
+}
+
+export async function DELETE(req: Request, { params }: Params) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const { id } = await params;
+
+  const { searchParams } = new URL(req.url);
+  const txId = searchParams.get("txId");
+  if (!txId) return NextResponse.json({ error: "txId obrigatório" }, { status: 400 });
+
+  const tx = await prisma.cardTransaction.findFirst({
+    where: { id: txId, creditCardId: id, creditCard: { userId: session.user.id } },
+  });
+  if (!tx) return NextResponse.json({ error: "Transação não encontrada" }, { status: 404 });
+
+  // Delete children (installments) + parent
+  await prisma.cardTransaction.deleteMany({ where: { parentTransactionId: tx.parentTransactionId || txId } });
+  await prisma.cardTransaction.delete({ where: { id: tx.parentTransactionId || txId } });
+
+  return NextResponse.json({ success: true });
+}

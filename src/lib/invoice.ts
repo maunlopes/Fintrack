@@ -41,7 +41,7 @@ export interface InvoiceExpense {
   amount: number;
   date: string; // The due date
   status: "PENDING" | "PAID" | "OVERDUE";
-  category: { id: string; name: string; color: string };
+  category: { id: string; name: string; color: string; icon?: string };
   bankAccount: { id: string; nickname: string } | null;
   cardId: string;
   cardName: string;
@@ -109,7 +109,8 @@ export async function getInvoicesAsExpenses(userId: string, month?: number, year
           category: {
             id: "cat_fatura",
             name: "Fatura de Cartão",
-            color: card.color || "#8B5CF6"
+            color: card.color || "#8B5CF6",
+            icon: "credit-card",
           },
           bankAccount: card.bankAccount
             ? { id: card.bankAccount.id, nickname: card.bankAccount.nickname }
@@ -125,4 +126,80 @@ export async function getInvoicesAsExpenses(userId: string, month?: number, year
     ...inv,
     amount: parseFloat(inv.amount.toFixed(2))
   }));
+}
+
+/**
+ * Returns individual card transactions as expense-like objects (one per purchase),
+ * instead of grouping into monthly invoices.
+ */
+export async function getCardTransactionsAsExpenses(userId: string, month?: number, year?: number): Promise<InvoiceExpense[]> {
+  const [cards, payments] = await Promise.all([
+    prisma.creditCard.findMany({
+      where: { userId },
+      include: {
+        bankAccount: true,
+        transactions: { include: { category: true } },
+      },
+    }),
+    prisma.invoicePayment.findMany({ where: { userId } }),
+  ]);
+
+  const paymentIndex = new Map<string, boolean>();
+  for (const p of payments) {
+    paymentIndex.set(`${p.creditCardId}|${p.month}|${p.year}`, true);
+  }
+
+  const expenses: InvoiceExpense[] = [];
+
+  for (const card of cards) {
+    if (!card.transactions?.length) continue;
+
+    for (const tx of card.transactions) {
+      const purchaseDate = startOfDay(new Date(tx.purchaseDate));
+      const purchaseMonth = purchaseDate.getMonth() + 1;
+      const purchaseYear = purchaseDate.getFullYear();
+
+      // Filter by purchase date month (when the expense was made)
+      if (month && year && (purchaseMonth !== month || purchaseYear !== year)) continue;
+
+      const dueDate = getInvoiceDate(tx.purchaseDate, card.closingDay, card.dueDay);
+      const invoiceMonth = dueDate.getMonth() + 1;
+      const invoiceYear = dueDate.getFullYear();
+
+      const amount = tx.isInstallment && tx.installmentAmount
+        ? parseFloat(tx.installmentAmount.toString())
+        : parseFloat(tx.totalAmount.toString());
+
+      const now = startOfDay(new Date());
+      const isPaid = paymentIndex.has(`${card.id}|${invoiceMonth}|${invoiceYear}`);
+      const isOverdue = !isPaid && dueDate < now;
+
+      const installmentLabel = tx.isInstallment && tx.currentInstallment && tx.totalInstallments
+        ? ` (${tx.currentInstallment}/${tx.totalInstallments}x)`
+        : "";
+
+      expenses.push({
+        id: tx.id,
+        originalId: tx.id,
+        type: "EXPENSE",
+        description: `${tx.description}${installmentLabel}`,
+        amount: parseFloat(amount.toFixed(2)),
+        date: purchaseDate.toISOString(),
+        status: isPaid ? "PAID" : isOverdue ? "OVERDUE" : "PENDING",
+        category: {
+          id: tx.category.id,
+          name: tx.category.name,
+          color: tx.category.color,
+          icon: tx.category.icon,
+        },
+        bankAccount: card.bankAccount
+          ? { id: card.bankAccount.id, nickname: card.bankAccount.nickname }
+          : null,
+        cardId: card.id,
+        cardName: card.name,
+      });
+    }
+  }
+
+  return expenses;
 }

@@ -23,7 +23,7 @@ const sheetItems = [
   { href: "/orcamentos",   label: "Orçamentos",     icon: Target     },
   { href: "/extrato",      label: "Extrato",        icon: Receipt    },
   { href: "/categorias",   label: "Categorias",     icon: Tag        },
-  { href: "/open-finance",  label: "Conectar contas", icon: LinkSimple },
+  // { href: "/open-finance",  label: "Conectar contas", icon: LinkSimple },
   { href: "/config",       label: "Configurações",  icon: Gear       },
 ];
 

@@ -58,11 +58,11 @@ export async function buildForecast(
       select: { amount: true, recurrenceFrequency: true, recurrenceEnd: true },
     }),
     prisma.expense.findMany({
-      where: { userId, isRecurring: true, type: "FIXED_RECURRING" },
+      where: { userId, isRecurring: true, type: "FIXED_RECURRING", parentExpenseId: null },
       select: { amount: true, recurrenceEnd: true },
     }),
     prisma.expense.findMany({
-      where: { userId, type: "VARIABLE_RECURRING" },
+      where: { userId, type: "VARIABLE_RECURRING", parentExpenseId: null },
       orderBy: { dueDate: "desc" },
       take: 3,
       select: { amount: true },

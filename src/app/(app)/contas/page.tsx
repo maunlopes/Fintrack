@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Plus, Landmark, Wallet, PiggyBank, TrendingUp, Pencil, Trash2, Search, X } from "lucide-react";
+import { Plus, Landmark, Wallet, PiggyBank, TrendingUp, Pencil, Trash2, Search, X, ArrowLeftRight } from "lucide-react";
 import { BankAccountType } from "@prisma/client";
 import { PageTransition } from "@/components/shared/page-transition";
 import { AnimatedCard, cardVariants, cardItemVariants } from "@/components/shared/animated-card";
@@ -230,6 +230,42 @@ export default function ContasPage() {
 
   const uniqueBanks = Array.from(new Set(accounts.map((a) => a.name))).sort();
 
+  // Transfer state
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferFrom, setTransferFrom] = useState("");
+  const [transferTo, setTransferTo] = useState("");
+  const [transferAmount, setTransferAmount] = useState(0);
+  const [transferDate, setTransferDate] = useState(new Date().toISOString().split("T")[0]);
+  const [transferDesc, setTransferDesc] = useState("");
+  const [transferSaving, setTransferSaving] = useState(false);
+
+  async function handleTransfer() {
+    if (!transferFrom || !transferTo || transferAmount <= 0) return;
+    if (transferFrom === transferTo) { toast.error("Contas devem ser diferentes"); return; }
+    setTransferSaving(true);
+    const res = await fetch("/api/transferencias", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fromAccountId: transferFrom,
+        toAccountId: transferTo,
+        amount: transferAmount,
+        date: new Date(transferDate),
+        description: transferDesc || undefined,
+      }),
+    });
+    setTransferSaving(false);
+    if (res.ok) {
+      toast.success("Transferência realizada!");
+      setTransferOpen(false);
+      setTransferFrom(""); setTransferTo(""); setTransferAmount(0); setTransferDesc("");
+      fetchAccounts();
+    } else {
+      const e = await res.json();
+      toast.error(e.error || "Erro ao transferir");
+    }
+  }
+
   async function handleDelete() {
     if (!deleteId) return;
     const res = await fetch(`/api/contas/${deleteId}`, { method: "DELETE" });
@@ -251,11 +287,14 @@ export default function ContasPage() {
             Saldo total: <MoneyValue value={totalBalance} animate={false} className="text-sm" />
           </p>
         </div>
-        <motion.div whileTap={{ scale: 0.97 }}>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setTransferOpen(true)}>
+            <ArrowLeftRight className="w-4 h-4 mr-2" /> Transferir
+          </Button>
           <Button onClick={() => { setEditAccount(null); setDialogOpen(true); }}>
             <Plus className="w-4 h-4 mr-2" /> Nova Conta
           </Button>
-        </motion.div>
+        </div>
       </div>
 
       {/* Filters */}
@@ -417,6 +456,56 @@ export default function ContasPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Transfer dialog */}
+      <Dialog open={transferOpen} onOpenChange={setTransferOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Transferência entre contas</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Conta de origem</label>
+              <Select onValueChange={(v) => setTransferFrom(v ?? "")} value={transferFrom}>
+                <SelectTrigger><SelectValue>{accounts.find((a) => a.id === transferFrom)?.nickname || "Selecione..."}</SelectValue></SelectTrigger>
+                <SelectContent>
+                  {accounts.filter((a) => a.id !== transferTo).map((a) => (
+                    <SelectItem key={a.id} value={a.id}>{a.nickname} · {formatCurrency(parseFloat(a.balance))}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Conta de destino</label>
+              <Select onValueChange={(v) => setTransferTo(v ?? "")} value={transferTo}>
+                <SelectTrigger><SelectValue>{accounts.find((a) => a.id === transferTo)?.nickname || "Selecione..."}</SelectValue></SelectTrigger>
+                <SelectContent>
+                  {accounts.filter((a) => a.id !== transferFrom).map((a) => (
+                    <SelectItem key={a.id} value={a.id}>{a.nickname}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Valor</label>
+                <CurrencyInput value={transferAmount} onChange={setTransferAmount} />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Data</label>
+                <Input type="date" value={transferDate} onChange={(e) => setTransferDate(e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Descrição (opcional)</label>
+              <Input placeholder="Ex: Reserva de emergência" value={transferDesc} onChange={(e) => setTransferDesc(e.target.value)} />
+            </div>
+            <Button className="w-full" disabled={transferSaving || !transferFrom || !transferTo || transferAmount <= 0} onClick={handleTransfer}>
+              {transferSaving ? "Transferindo..." : "Confirmar transferência"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </PageTransition>
   );
 }

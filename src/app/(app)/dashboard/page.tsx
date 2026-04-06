@@ -266,14 +266,18 @@ function DashboardContent() {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const isOverdue = dueDate < today && tx.status !== "PAID";
     const isToday = dueDate.toDateString() === today.toDateString();
+    const isInvoice = !!tx.cardId;
 
     return (
-      <div className="flex items-center gap-3 py-2.5 border-b border-border/50 last:border-0">
+      <div
+        className={cn("flex items-center gap-3 py-2.5 border-b border-border/50 last:border-0", isInvoice && "cursor-pointer hover:bg-muted/50 rounded-lg -mx-2 px-2")}
+        onClick={isInvoice ? () => router.push(`/cartoes/${tx.cardId}`) : undefined}
+      >
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold text-white shrink-0"
-          style={{ backgroundColor: tx.category?.color || "var(--primary)" }}
+          style={{ backgroundColor: isInvoice ? "#6366F1" : (tx.category?.color || "var(--primary)") }}
         >
-          {getCategoryInitials(tx.category?.name || "D")}
+          {isInvoice ? "💳" : getCategoryInitials(tx.category?.name || "D")}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{tx.description}</p>
@@ -313,31 +317,53 @@ function DashboardContent() {
       <motion.div variants={itemVariants}>
             <motion.div variants={tabVariants} initial="hidden" animate="show" className="space-y-6 pt-2">
 
-              {/* Alertas contextuais — despesas vencendo hoje/amanhã */}
+              {/* Alertas contextuais — despesas e faturas vencendo hoje/amanhã */}
               {(() => {
                 const today = new Date(); today.setHours(0, 0, 0, 0);
                 const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
                 const urgent = (upcomingExpenses || []).filter((e: any) => {
                   const d = new Date(e.dueDate); d.setHours(0, 0, 0, 0);
-                  return e.status === "PENDING" && (d.getTime() === today.getTime() || d.getTime() === tomorrow.getTime());
+                  return (e.status === "PENDING" || e.status === "OVERDUE") && (d.getTime() === today.getTime() || d.getTime() === tomorrow.getTime());
                 });
                 if (urgent.length === 0) return null;
-                const total = urgent.reduce((s: number, e: any) => s + Number(e.amount), 0);
-                const todayCount = urgent.filter((e: any) => { const d = new Date(e.dueDate); d.setHours(0,0,0,0); return d.getTime() === today.getTime(); }).length;
+
+                const urgentExpenses = urgent.filter((e: any) => !e.cardId);
+                const urgentInvoices = urgent.filter((e: any) => !!e.cardId);
+
                 return (
-                  <motion.div variants={itemVariants} className="flex items-center gap-3 p-3.5 bg-warning/10 border border-warning/30 rounded-xl text-sm">
-                    <Warning weight="fill" className="w-4 h-4 text-warning shrink-0" />
-                    <span className="flex-1">
-                      <span className="font-semibold">{urgent.length} despesa{urgent.length > 1 ? "s" : ""}</span>
-                      {todayCount > 0 ? ` vence${todayCount > 1 ? "m" : ""} hoje` : " vence amanhã"}
-                      {urgent.length > 1 && todayCount > 0 && todayCount < urgent.length ? ` e ${urgent.length - todayCount} amanhã` : ""}
-                      {" · "}
-                      <span className="font-semibold text-warning">{formatCurrency(total)}</span>
-                    </span>
-                    <Button variant="ghost" size="sm" className="text-xs h-7 px-2 text-warning hover:text-warning" onClick={() => router.push("/despesas")}>
-                      Ver →
-                    </Button>
-                  </motion.div>
+                  <div className="space-y-2">
+                    {urgentExpenses.length > 0 && (
+                      <motion.div variants={itemVariants} className="flex items-center gap-3 p-3.5 bg-warning/10 border border-warning/30 rounded-xl text-sm">
+                        <Warning weight="fill" className="w-4 h-4 text-warning shrink-0" />
+                        <span className="flex-1">
+                          <span className="font-semibold">{urgentExpenses.length} despesa{urgentExpenses.length > 1 ? "s" : ""}</span>
+                          {" vence"}{urgentExpenses.length > 1 ? "m" : ""} em breve
+                          {" · "}
+                          <span className="font-semibold text-warning">{formatCurrency(urgentExpenses.reduce((s: number, e: any) => s + Number(e.amount), 0))}</span>
+                        </span>
+                        <Button variant="ghost" size="sm" className="text-xs h-7 px-2 text-warning hover:text-warning" onClick={() => router.push("/despesas")}>
+                          Ver →
+                        </Button>
+                      </motion.div>
+                    )}
+                    {urgentInvoices.length > 0 && (
+                      <motion.div variants={itemVariants} className="flex items-center gap-3 p-3.5 bg-destructive/10 border border-destructive/30 rounded-xl text-sm">
+                        <Warning weight="fill" className="w-4 h-4 text-destructive shrink-0" />
+                        <span className="flex-1">
+                          <span className="font-semibold">{urgentInvoices.length} fatura{urgentInvoices.length > 1 ? "s" : ""} de cartão</span>
+                          {" vence"}{urgentInvoices.length > 1 ? "m" : ""} em breve
+                          {" · "}
+                          <span className="font-semibold text-destructive">{formatCurrency(urgentInvoices.reduce((s: number, e: any) => s + Number(e.amount), 0))}</span>
+                        </span>
+                        <Button variant="ghost" size="sm" className="text-xs h-7 px-2 text-destructive hover:text-destructive" onClick={() => {
+                          const firstInvoice = urgentInvoices[0] as any;
+                          router.push(`/cartoes/${firstInvoice.cardId}`);
+                        }}>
+                          Pagar fatura →
+                        </Button>
+                      </motion.div>
+                    )}
+                  </div>
                 );
               })()}
 

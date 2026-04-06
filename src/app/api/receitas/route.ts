@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { incomeSchema } from "@/lib/validations/income";
+import { addMonths } from "date-fns";
 
 export async function GET(req: Request) {
   const session = await auth();
@@ -38,9 +39,47 @@ export async function POST(req: Request) {
   const parsed = incomeSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const income = await prisma.income.create({
-    data: { ...parsed.data, userId: session.user.id },
-  });
+  const data = parsed.data;
 
-  return NextResponse.json(income, { status: 201 });
+  try {
+    const income = await prisma.income.create({
+      data: { ...data, userId: session.user.id },
+    });
+
+    // Generate monthly records for recurring incomes with end date
+    if (data.isRecurring && data.recurrenceEnd) {
+      const startDate = data.receiveDate;
+      const endDate = new Date(data.recurrenceEnd);
+      const childData = [];
+      let current = addMonths(startDate, 1);
+
+      while (current <= endDate) {
+        childData.push({
+          userId: session.user.id,
+          description: data.description,
+          amount: data.amount,
+          receiveDate: current,
+          categoryId: data.categoryId,
+          bankAccountId: data.bankAccountId,
+          isRecurring: true,
+          recurrenceFrequency: data.recurrenceFrequency ?? null,
+          recurrenceStart: data.recurrenceStart ?? null,
+          recurrenceEnd: data.recurrenceEnd ?? null,
+          status: "PENDING" as const,
+          notes: data.notes ?? null,
+          parentIncomeId: income.id,
+        });
+        current = addMonths(current, 1);
+      }
+
+      for (const child of childData) {
+        await prisma.income.create({ data: child as any });
+      }
+    }
+
+    return NextResponse.json(income, { status: 201 });
+  } catch (error: any) {
+    console.error("[RECEITAS_POST_ERROR]", error);
+    return NextResponse.json({ error: error.message || "Erro interno" }, { status: 500 });
+  }
 }
