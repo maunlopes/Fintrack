@@ -40,7 +40,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 const typeLabels: Record<ExpenseType, string> = {
   FIXED_RECURRING: "Fixa Recorrente",
   VARIABLE_RECURRING: "Variável Recorrente",
-  ONE_TIME: "Pontual",
+  ONE_TIME: "Única",
   INSTALLMENT: "Parcelada",
 };
 
@@ -112,7 +112,7 @@ function AccountExpenseForm({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!res.ok) { toast.error("Erro ao salvar despesa"); return; }
+    if (!res.ok) { toast.error("Não conseguimos salvar a despesa. Verifique os dados e tente novamente."); return; }
     toast.success(defaultValues?.id ? "Despesa atualizada!" : "Despesa cadastrada!");
     onSuccess();
   }
@@ -122,15 +122,15 @@ function AccountExpenseForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField control={form.control} name="description" render={({ field }) => (
           <FormItem>
-            <FormLabel>Descrição</FormLabel>
+            <FormLabel required>Descrição</FormLabel>
             <FormControl><Input placeholder="Nome da despesa" {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField control={form.control} name="amount" render={({ field }) => (
             <FormItem>
-              <FormLabel>Valor</FormLabel>
+              <FormLabel required>Valor</FormLabel>
               <FormControl>
                 <CurrencyInput value={field.value} onChange={field.onChange} />
               </FormControl>
@@ -139,7 +139,7 @@ function AccountExpenseForm({
           )} />
           <FormField control={form.control} name="dueDate" render={({ field }) => (
             <FormItem>
-              <FormLabel>Vencimento</FormLabel>
+              <FormLabel required>Vencimento</FormLabel>
               <FormControl>
                 <Input
                   type="date"
@@ -153,7 +153,7 @@ function AccountExpenseForm({
         </div>
         <FormField control={form.control} name="categoryId" render={({ field }) => (
           <FormItem>
-            <FormLabel>Categoria</FormLabel>
+            <FormLabel required>Categoria</FormLabel>
             <FormControl>
               <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger><SelectValue>{categories.find((c) => c.id === field.value)?.name || "Selecione..."}</SelectValue></SelectTrigger>
@@ -169,7 +169,7 @@ function AccountExpenseForm({
         )} />
         <FormField control={form.control} name="type" render={({ field }) => (
           <FormItem>
-            <FormLabel>Tipo</FormLabel>
+            <FormLabel required>Tipo de despesa</FormLabel>
             <FormControl>
               <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger><SelectValue>{field.value ? typeLabels[field.value as ExpenseType] : "Selecione..."}</SelectValue></SelectTrigger>
@@ -232,7 +232,7 @@ function AccountExpenseForm({
         <FormField control={form.control} name="notes" render={({ field }) => (
           <FormItem>
             <FormLabel>Observações (opcional)</FormLabel>
-            <FormControl><Textarea placeholder="..." {...field} /></FormControl>
+            <FormControl><Textarea placeholder="Ex: Parcela do seguro..." {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
@@ -288,8 +288,8 @@ function CardTransactionForm({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!res.ok) { toast.error("Erro ao lançar transação"); return; }
-    toast.success("Compra no cartão lançada!");
+    if (!res.ok) { toast.error("Não conseguimos registrar a compra. Verifique os dados."); return; }
+    toast.success("Compra registrada!");
     onSuccess();
   }
 
@@ -324,15 +324,15 @@ function CardTransactionForm({
       <Form {...form}>
         <FormField control={form.control} name="description" render={({ field }) => (
           <FormItem>
-            <FormLabel>Descrição</FormLabel>
+            <FormLabel required>Descrição</FormLabel>
             <FormControl><Input placeholder="Nome da compra" {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField control={form.control} name="totalAmount" render={({ field }) => (
             <FormItem>
-              <FormLabel>Valor total</FormLabel>
+              <FormLabel required>Valor total</FormLabel>
               <FormControl>
                 <CurrencyInput value={field.value} onChange={field.onChange} />
               </FormControl>
@@ -341,7 +341,7 @@ function CardTransactionForm({
           )} />
           <FormField control={form.control} name="purchaseDate" render={({ field }) => (
             <FormItem>
-              <FormLabel>Data da compra</FormLabel>
+              <FormLabel required>Data da compra</FormLabel>
               <FormControl>
                 <Input
                   type="date"
@@ -355,7 +355,7 @@ function CardTransactionForm({
         </div>
         <FormField control={form.control} name="categoryId" render={({ field }) => (
           <FormItem>
-            <FormLabel>Categoria</FormLabel>
+            <FormLabel required>Categoria</FormLabel>
             <FormControl>
               <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger><SelectValue>{categories.find((c) => c.id === field.value)?.name || "Selecione..."}</SelectValue></SelectTrigger>
@@ -387,7 +387,7 @@ function CardTransactionForm({
         <FormField control={form.control} name="notes" render={({ field }) => (
           <FormItem>
             <FormLabel>Observações (opcional)</FormLabel>
-            <FormControl><Textarea placeholder="..." {...field} /></FormControl>
+            <FormControl><Textarea placeholder="Ex: Parcela do seguro..." {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
@@ -816,7 +816,7 @@ function DespesasContent() {
         <div className="relative flex-1 min-w-[160px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar despesa..."
+            placeholder="Buscar por descrição..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -841,7 +841,7 @@ function DespesasContent() {
         <EmptyState
           illustration="transactions"
           title="Nenhuma despesa encontrada"
-          description={activeFiltersCount > 0 ? "Tente limpar os filtros." : "Cadastre suas despesas para acompanhar seus gastos."}
+          description={activeFiltersCount > 0 ? "Tente limpar os filtros." : "Registre seus gastos para acompanhar seu orçamento."}
           actionLabel="Nova Despesa"
           onAction={() => setDialogOpen(true)}
         />
@@ -881,7 +881,7 @@ function DespesasContent() {
                     <div className="flex items-center gap-1">
                       <Tooltip>
                         <TooltipTrigger>
-                          <Button variant="ghost" size="icon" className={cn("h-8 w-8 sm:h-9 sm:w-9 rounded-lg", expense.status === "PAID" ? "text-warning hover:text-warning hover:bg-warning/10" : "text-success hover:text-success hover:bg-success/10")} onClick={() => isInvoice ? (expense.status === "PAID" ? handleRevertInvoice(expense) : handlePayInvoice(expense)) : handlePay(expense.id)}>
+                          <Button variant="ghost" size="icon" aria-label={expense.status === "PAID" ? "Reverter pagamento" : "Confirmar pagamento"} className={cn("h-10 w-10 rounded-lg", expense.status === "PAID" ? "text-warning hover:text-warning hover:bg-warning/10" : "text-success hover:text-success hover:bg-success/10")} onClick={() => isInvoice ? (expense.status === "PAID" ? handleRevertInvoice(expense) : handlePayInvoice(expense)) : handlePay(expense.id)}>
                             {expense.status === "PAID" ? <RotateCcw className="w-5 h-5 sm:w-7 sm:h-7" /> : <CircleCheck className="w-5 h-5 sm:w-7 sm:h-7" />}
                           </Button>
                         </TooltipTrigger>
@@ -891,7 +891,7 @@ function DespesasContent() {
                         <>
                           <Tooltip>
                             <TooltipTrigger>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => { setEditExpense(expense); setDialogOpen(true); }}>
+                              <Button variant="ghost" size="icon" aria-label="Editar" className="h-10 w-10 rounded-lg hover:bg-muted" onClick={() => { setEditExpense(expense); setDialogOpen(true); }}>
                                 <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                               </Button>
                             </TooltipTrigger>
@@ -899,7 +899,7 @@ function DespesasContent() {
                           </Tooltip>
                           <Tooltip>
                             <TooltipTrigger>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(expense.id)}>
+                              <Button variant="ghost" size="icon" aria-label="Excluir" className="h-10 w-10 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(expense.id)}>
                                 <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                               </Button>
                             </TooltipTrigger>
@@ -910,7 +910,7 @@ function DespesasContent() {
                         <>
                           <Tooltip>
                             <TooltipTrigger>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => router.push(`/cartoes/${expense.cardId}`)}>
+                              <Button variant="ghost" size="icon" aria-label="Editar na fatura" className="h-10 w-10 rounded-lg hover:bg-muted" onClick={() => router.push(`/cartoes/${expense.cardId}`)}>
                                 <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                               </Button>
                             </TooltipTrigger>
@@ -918,7 +918,7 @@ function DespesasContent() {
                           </Tooltip>
                           <Tooltip>
                             <TooltipTrigger>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(expense.id)}>
+                              <Button variant="ghost" size="icon" aria-label="Excluir" className="h-10 w-10 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(expense.id)}>
                                 <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                               </Button>
                             </TooltipTrigger>
@@ -1009,7 +1009,7 @@ function DespesasContent() {
                     <div className="flex items-center justify-end gap-1 shrink-0 pl-2 sm:pl-3 border-l w-auto sm:w-[124px]">
                       <Tooltip>
                         <TooltipTrigger>
-                          <Button variant="ghost" size="icon" className={cn("h-8 w-8 sm:h-9 sm:w-9 rounded-lg", expense.status === "PAID" ? "text-warning hover:text-warning hover:bg-warning/10" : "text-success hover:text-success hover:bg-success/10")} onClick={() => isInvoice ? (expense.status === "PAID" ? handleRevertInvoice(expense) : handlePayInvoice(expense)) : handlePay(expense.id)}>
+                          <Button variant="ghost" size="icon" aria-label={expense.status === "PAID" ? "Reverter pagamento" : "Confirmar pagamento"} className={cn("h-10 w-10 rounded-lg", expense.status === "PAID" ? "text-warning hover:text-warning hover:bg-warning/10" : "text-success hover:text-success hover:bg-success/10")} onClick={() => isInvoice ? (expense.status === "PAID" ? handleRevertInvoice(expense) : handlePayInvoice(expense)) : handlePay(expense.id)}>
                             {expense.status === "PAID" ? <RotateCcw className="w-5 h-5 sm:w-7 sm:h-7" /> : <CircleCheck className="w-5 h-5 sm:w-7 sm:h-7" />}
                           </Button>
                         </TooltipTrigger>
@@ -1019,7 +1019,7 @@ function DespesasContent() {
                         <>
                           <Tooltip>
                             <TooltipTrigger>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => { setEditExpense(expense); setDialogOpen(true); }}>
+                              <Button variant="ghost" size="icon" aria-label="Editar" className="h-10 w-10 rounded-lg hover:bg-muted" onClick={() => { setEditExpense(expense); setDialogOpen(true); }}>
                                 <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                               </Button>
                             </TooltipTrigger>
@@ -1027,7 +1027,7 @@ function DespesasContent() {
                           </Tooltip>
                           <Tooltip>
                             <TooltipTrigger>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(expense.id)}>
+                              <Button variant="ghost" size="icon" aria-label="Excluir" className="h-10 w-10 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(expense.id)}>
                                 <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                               </Button>
                             </TooltipTrigger>
@@ -1038,7 +1038,7 @@ function DespesasContent() {
                         <>
                           <Tooltip>
                             <TooltipTrigger>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => router.push(`/cartoes/${expense.cardId}`)}>
+                              <Button variant="ghost" size="icon" aria-label="Editar na fatura" className="h-10 w-10 rounded-lg hover:bg-muted" onClick={() => router.push(`/cartoes/${expense.cardId}`)}>
                                 <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                               </Button>
                             </TooltipTrigger>
@@ -1046,7 +1046,7 @@ function DespesasContent() {
                           </Tooltip>
                           <Tooltip>
                             <TooltipTrigger>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(expense.id)}>
+                              <Button variant="ghost" size="icon" aria-label="Excluir" className="h-10 w-10 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(expense.id)}>
                                 <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                               </Button>
                             </TooltipTrigger>
@@ -1068,7 +1068,7 @@ function DespesasContent() {
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
             <DialogHeader>
-              <DialogTitle>{editExpense ? "Editar Despesa" : "Nova Despesa"}</DialogTitle>
+              <DialogTitle>{editExpense ? "Editar despesa" : "Nova despesa"}</DialogTitle>
             </DialogHeader>
 
             {/* Mode toggle — only for new expense */}

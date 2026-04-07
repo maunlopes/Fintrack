@@ -117,7 +117,7 @@ function CardForm({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!res.ok) { toast.error("Erro ao salvar cartão"); return; }
+    if (!res.ok) { toast.error("Não conseguimos salvar o cartão. Verifique os dados."); return; }
     toast.success(defaultValues?.id ? "Cartão atualizado!" : "Cartão adicionado!");
     onSuccess();
   }
@@ -127,15 +127,15 @@ function CardForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField control={form.control} name="name" render={({ field }) => (
           <FormItem>
-            <FormLabel>Nome/Apelido</FormLabel>
+            <FormLabel required>Nome/Apelido</FormLabel>
             <FormControl><Input placeholder="Nubank Gold" {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField control={form.control} name="brand" render={({ field }) => (
             <FormItem>
-              <FormLabel>Bandeira</FormLabel>
+              <FormLabel required>Bandeira</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <SelectTrigger><SelectValue>{field.value ? brandLabels[field.value as CardBrand] : "Selecione..."}</SelectValue></SelectTrigger>
@@ -164,24 +164,24 @@ function CardForm({
         </div>
         <FormField control={form.control} name="creditLimit" render={({ field }) => (
           <FormItem>
-            <FormLabel>Limite</FormLabel>
+            <FormLabel required>Limite</FormLabel>
             <FormControl>
               <CurrencyInput value={field.value} onChange={field.onChange} />
             </FormControl>
             <FormMessage />
           </FormItem>
         )} />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField control={form.control} name="closingDay" render={({ field }) => (
             <FormItem>
-              <FormLabel>Dia fechamento</FormLabel>
+              <FormLabel required>Dia de fechamento</FormLabel>
               <FormControl><Input type="number" min={1} max={31} {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />
           <FormField control={form.control} name="dueDay" render={({ field }) => (
             <FormItem>
-              <FormLabel>Dia vencimento</FormLabel>
+              <FormLabel required>Dia de vencimento</FormLabel>
               <FormControl><Input type="number" min={1} max={31} {...field} /></FormControl>
               <FormMessage />
             </FormItem>
@@ -190,7 +190,7 @@ function CardForm({
         {bankAccounts.length > 0 && (
           <FormField control={form.control} name="bankAccountId" render={({ field }) => (
             <FormItem>
-              <FormLabel>Conta vinculada (opcional)</FormLabel>
+              <FormLabel>Conta para pagamento (opcional)</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value || ""}>
                   <SelectTrigger><SelectValue>{bankAccounts.find((a) => a.id === field.value)?.nickname || "Selecione..."}</SelectValue></SelectTrigger>
@@ -361,7 +361,7 @@ export default function CartoesPage() {
           <div className="relative flex-1 sm:max-w-[240px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar cartão..."
+              placeholder="Buscar por nome..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 pr-8"
@@ -383,7 +383,7 @@ export default function CartoesPage() {
         <EmptyState
           illustration="cards"
           title="Nenhum cartão cadastrado"
-          description="Adicione seus cartões de crédito para controlar seus gastos."
+          description="Adicione seus cartões para controlar faturas e compras."
           actionLabel="Adicionar Cartão"
           onAction={() => setDialogOpen(true)}
         />
@@ -462,7 +462,7 @@ export default function CartoesPage() {
                     <div className="flex items-center gap-1">
                       <Tooltip>
                         <TooltipTrigger>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => { setEditCard(card); setDialogOpen(true); }}>
+                          <Button variant="ghost" size="icon" aria-label="Editar" className="h-10 w-10 rounded-lg hover:bg-muted" onClick={() => { setEditCard(card); setDialogOpen(true); }}>
                             <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                           </Button>
                         </TooltipTrigger>
@@ -470,7 +470,7 @@ export default function CartoesPage() {
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(card.id)}>
+                          <Button variant="ghost" size="icon" aria-label="Excluir" className="h-10 w-10 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(card.id)}>
                             <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                           </Button>
                         </TooltipTrigger>
@@ -489,7 +489,7 @@ export default function CartoesPage() {
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
             <DialogHeader>
-              <DialogTitle>{editCard ? "Editar Cartão" : "Novo Cartão de Crédito"}</DialogTitle>
+              <DialogTitle>{editCard ? "Editar cartão" : "Novo cartão"}</DialogTitle>
             </DialogHeader>
             <div className="mt-4">
               <CardForm
@@ -506,7 +506,7 @@ export default function CartoesPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remover cartão?</AlertDialogTitle>
-            <AlertDialogDescription>Todas as transações associadas também serão afetadas.</AlertDialogDescription>
+            <AlertDialogDescription>Todas as compras deste cartão serão removidas permanentemente.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>

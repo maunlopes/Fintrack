@@ -9,9 +9,19 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const isPublic = nextUrl.pathname.startsWith("/auth");
+      const path = nextUrl.pathname;
+      const isPublic =
+        path.startsWith("/auth") ||
+        path.startsWith("/api/auth") ||
+        path.startsWith("/logos") ||
+        path.startsWith("/docs") ||
+        path.startsWith("/api/notifications/active") ||
+        path.startsWith("/api/onboarding/steps") ||
+        path.startsWith("/api/ajuda/screenshots") ||
+        path.startsWith("/_next") ||
+        path === "/favicon.ico";
 
-      if (isLoggedIn && isPublic) {
+      if (isLoggedIn && path.startsWith("/auth")) {
         return Response.redirect(new URL("/dashboard", nextUrl));
       }
       if (!isLoggedIn && !isPublic) {
@@ -20,11 +30,14 @@ export const authConfig = {
       return true;
     },
     async jwt({ token, user }) {
-      if (user) token.id = user.id;
+      if (user) {
+        token.id = user.id;
+      }
       return token;
     },
     async session({ session, token }) {
       if (token.id) session.user.id = token.id as string;
+      if (token.role) session.user.role = token.role as string;
       return session;
     },
   },

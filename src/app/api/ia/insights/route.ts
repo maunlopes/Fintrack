@@ -71,7 +71,7 @@ Regras obrigatórias:
   } catch (err) {
     console.error("[insights] error:", err);
     return new Response(
-      JSON.stringify({ insights: [], generatedAt: new Date().toISOString(), error: String(err) }),
+      JSON.stringify({ insights: [], generatedAt: new Date().toISOString(), error: "Erro ao gerar insights" }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   }

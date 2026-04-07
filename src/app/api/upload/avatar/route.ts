@@ -4,7 +4,7 @@ import { put } from "@vercel/blob";
 export const runtime = "nodejs";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-const MAX_SIZE = 4 * 1024 * 1024; // 4 MB
+const MAX_SIZE = 2 * 1024 * 1024; // 2 MB
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -24,16 +24,20 @@ export async function POST(req: Request) {
   }
 
   if (file.size > MAX_SIZE) {
-    return new Response(JSON.stringify({ error: "Arquivo muito grande. Máximo 4 MB." }), { status: 400 });
+    return new Response(JSON.stringify({ error: "Arquivo muito grande. Máximo 2 MB." }), { status: 400 });
   }
 
   const ext = file.name.split(".").pop() ?? "jpg";
   const filename = `avatars/${session.user.id}-${Date.now()}.${ext}`;
 
-  const blob = await put(filename, file, {
-    access: "public",
-    contentType: file.type,
-  });
+  try {
+    const blob = await put(filename, file, {
+      access: "public",
+    });
 
-  return new Response(JSON.stringify({ url: blob.url }), { status: 200 });
+    return new Response(JSON.stringify({ url: blob.url }), { status: 200 });
+  } catch (err) {
+    console.error("[AVATAR_UPLOAD_ERROR]", err);
+    return new Response(JSON.stringify({ error: "Erro ao fazer upload. Verifique a configuração do Blob Storage." }), { status: 500 });
+  }
 }

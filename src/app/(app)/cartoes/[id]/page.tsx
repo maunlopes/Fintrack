@@ -112,8 +112,8 @@ function TransactionForm({ cardId, categories, onSuccess }: {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!res.ok) { toast.error("Erro ao lançar transação"); return; }
-    toast.success("Transação lançada!");
+    if (!res.ok) { toast.error("Não conseguimos registrar a compra. Verifique os dados."); return; }
+    toast.success("Compra registrada!");
     onSuccess();
   }
 
@@ -122,15 +122,15 @@ function TransactionForm({ cardId, categories, onSuccess }: {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField control={form.control} name="description" render={({ field }) => (
           <FormItem>
-            <FormLabel>Descrição</FormLabel>
+            <FormLabel required>Descrição</FormLabel>
             <FormControl><Input placeholder="Nome da compra" {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField control={form.control} name="totalAmount" render={({ field }) => (
             <FormItem>
-              <FormLabel>Valor total</FormLabel>
+              <FormLabel required>Valor total</FormLabel>
               <FormControl>
                 <CurrencyInput value={field.value} onChange={field.onChange} />
               </FormControl>
@@ -139,7 +139,7 @@ function TransactionForm({ cardId, categories, onSuccess }: {
           )} />
           <FormField control={form.control} name="purchaseDate" render={({ field }) => (
             <FormItem>
-              <FormLabel>Data da compra</FormLabel>
+              <FormLabel required>Data da compra</FormLabel>
               <FormControl>
                 <Input
                   type="date"
@@ -153,7 +153,7 @@ function TransactionForm({ cardId, categories, onSuccess }: {
         </div>
         <FormField control={form.control} name="categoryId" render={({ field }) => (
           <FormItem>
-            <FormLabel>Categoria</FormLabel>
+            <FormLabel required>Categoria</FormLabel>
             <FormControl>
               <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger><SelectValue>{categories.find((c) => c.id === field.value)?.name || "Selecione..."}</SelectValue></SelectTrigger>
@@ -169,7 +169,7 @@ function TransactionForm({ cardId, categories, onSuccess }: {
         )} />
         <FormField control={form.control} name="isInstallment" render={({ field }) => (
           <FormItem className="flex items-center gap-3">
-            <FormLabel className="mt-0">Parcelado?</FormLabel>
+            <FormLabel className="mt-0">Parcelar compra?</FormLabel>
             <FormControl>
               <Switch checked={field.value} onCheckedChange={field.onChange} />
             </FormControl>
@@ -178,7 +178,7 @@ function TransactionForm({ cardId, categories, onSuccess }: {
         {isInstallment && (
           <FormField control={form.control} name="totalInstallments" render={({ field }) => (
             <FormItem>
-              <FormLabel>Nº de parcelas</FormLabel>
+              <FormLabel>Número de parcelas</FormLabel>
               <FormControl><Input type="number" min={2} max={48} {...field} /></FormControl>
               <FormMessage />
             </FormItem>
@@ -248,14 +248,14 @@ function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, c
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ txId: editTx.id, ...data }),
     });
-    if (res.ok) { toast.success("Transação atualizada"); setEditTx(null); onRefresh(); }
+    if (res.ok) { toast.success("Compra atualizada!"); setEditTx(null); onRefresh(); }
     else { const e = await res.json(); toast.error(e.error || "Erro ao atualizar"); }
   }
 
   async function handleDeleteTx() {
     if (!deleteTxId) return;
     const res = await fetch(`/api/cartoes/${cardId}/transacoes?txId=${deleteTxId}`, { method: "DELETE" });
-    if (res.ok) { toast.success("Transação removida"); onRefresh(); }
+    if (res.ok) { toast.success("Compra removida!"); onRefresh(); }
     else { const e = await res.json(); toast.error(e.error || "Erro ao remover"); }
     setDeleteTxId(null);
   }
@@ -535,7 +535,7 @@ function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, c
                   <div className="relative flex-1 sm:max-w-[240px]">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
-                      placeholder="Buscar lançamento..."
+                      placeholder="Buscar por descrição..."
                       value={txSearch}
                       onChange={(e) => setTxSearch(e.target.value)}
                       className="pl-9 pr-8"
@@ -589,7 +589,7 @@ function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, c
                               <div className="flex items-center gap-1 shrink-0 pl-2 sm:pl-3 border-l">
                                 <Tooltip>
                                   <TooltipTrigger>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => openEditTx(tx)}>
+                                    <Button variant="ghost" size="icon" aria-label="Editar" className="h-10 w-10 rounded-lg hover:bg-muted" onClick={() => openEditTx(tx)}>
                                       <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                                     </Button>
                                   </TooltipTrigger>
@@ -597,7 +597,7 @@ function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, c
                                 </Tooltip>
                                 <Tooltip>
                                   <TooltipTrigger>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteTxId(tx.id)}>
+                                    <Button variant="ghost" size="icon" aria-label="Excluir" className="h-10 w-10 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteTxId(tx.id)}>
                                       <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                                     </Button>
                                   </TooltipTrigger>
@@ -695,14 +695,14 @@ function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, c
       <Dialog open={!!editTx} onOpenChange={(o) => !o && setEditTx(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar transação</DialogTitle>
+            <DialogTitle>Editar compra</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div>
               <label className="text-sm font-medium mb-1 block">Descrição</label>
               <Input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium mb-1 block">Valor</label>
                 <CurrencyInput value={editAmt} onChange={setEditAmt} />
@@ -738,8 +738,8 @@ function FaturasView({ invoices, limit, totalCommitted, navDate, onNav, today, c
       <AlertDialog open={!!deleteTxId} onOpenChange={(o) => !o && setDeleteTxId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir transação?</AlertDialogTitle>
-            <AlertDialogDescription>Esta ação não pode ser desfeita. Se for parcelada, todas as parcelas serão removidas.</AlertDialogDescription>
+            <AlertDialogTitle>Remover compra?</AlertDialogTitle>
+            <AlertDialogDescription>Esta ação não pode ser desfeita. Se a compra for parcelada, todas as parcelas também serão removidas.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
@@ -854,7 +854,7 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
         <AnimatedCard>
           <EmptyState
             illustration="transactions"
-            title="Nenhuma fatura ainda"
+            title="Nenhuma compra neste período."
             description="Lance uma compra para ver a fatura do cartão."
             actionLabel="Nova transação"
             onAction={() => setDialogOpen(true)}
@@ -883,7 +883,7 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
             <DialogHeader>
-              <DialogTitle>Nova Transação</DialogTitle>
+              <DialogTitle>Nova compra</DialogTitle>
             </DialogHeader>
             <div className="mt-4">
               <TransactionForm

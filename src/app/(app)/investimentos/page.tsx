@@ -115,7 +115,7 @@ export default function InvestimentosPage() {
       form.reset();
       fetchInvestments();
     } catch {
-      toast.error("Erro ao criar investimento");
+      toast.error("Não conseguimos salvar o investimento.");
     }
   }
 
@@ -227,7 +227,7 @@ export default function InvestimentosPage() {
             <div className="relative flex-1 min-w-[160px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar investimento..."
+                placeholder="Buscar por nome ou instituição..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -244,7 +244,7 @@ export default function InvestimentosPage() {
         ) : investments.length === 0 ? (
           <EmptyState
             title="Nenhum investimento"
-            description="Cadastre seus investimentos para acompanhar sua carteira."
+            description="Registre seus investimentos para acompanhar a rentabilidade."
             illustration="investments"
           />
         ) : filtered.length === 0 ? (
@@ -318,27 +318,27 @@ export default function InvestimentosPage() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Criar Investimento</DialogTitle>
+              <DialogTitle>Novo investimento</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField control={form.control} name="name" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome (ex: Tesouro Selic)</FormLabel>
+                    <FormLabel required>Nome (ex: Tesouro Selic)</FormLabel>
                     <FormControl><Input placeholder="Qual o investimento?" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="institution" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Instituição / Corretora</FormLabel>
+                    <FormLabel required>Instituição / Corretora</FormLabel>
                     <FormControl><Input placeholder="Ex: XP, NuInvest" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="type" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tipo</FormLabel>
+                    <FormLabel required>Tipo</FormLabel>
                     <FormControl>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <SelectTrigger>
@@ -360,7 +360,7 @@ export default function InvestimentosPage() {
                 )} />
                 <FormField control={form.control} name="balance" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Saldo Atual</FormLabel>
+                    <FormLabel required>Saldo Atual</FormLabel>
                     <FormControl><CurrencyInput value={field.value} onChange={field.onChange} /></FormControl>
                     <FormMessage />
                   </FormItem>

@@ -43,7 +43,6 @@ interface NavItem {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  tourId?: string;
 }
 
 interface NavGroup {
@@ -60,7 +59,7 @@ const navGroups: NavGroup[] = [
   {
     groupLabel: "Transações",
     items: [
-      { href: "/despesas",   label: "Despesas",   icon: ph(TrendDown), tourId: "nav-despesas" },
+      { href: "/despesas",   label: "Despesas",   icon: ph(TrendDown) },
       { href: "/receitas",   label: "Receitas",   icon: ph(TrendUp) },
       { href: "/extrato",    label: "Extrato",    icon: ph(ListNumbers) },
       { href: "/cartoes",    label: "Cartões",    icon: ph(CreditCard) },
@@ -71,7 +70,7 @@ const navGroups: NavGroup[] = [
     groupLabel: "Patrimônio",
     items: [
       { href: "/investimentos", label: "Investimentos", icon: ph(ChartBar) },
-      { href: "/contas",        label: "Contas",        icon: ph(Bank), tourId: "nav-contas" },
+      { href: "/contas",        label: "Contas",        icon: ph(Bank) },
       { href: "/resumo-anual",  label: "Resumo Anual",  icon: ph(CalendarCheck) },
     ],
   },
@@ -130,7 +129,7 @@ export function Sidebar({ isOpen = true, onClose, collapsed = false }: SidebarPr
       <Separator className="bg-sidebar-border" />
 
       {/* Nav Items */}
-      <div data-tour="sidebar-nav" className={cn("flex-1 py-4 overflow-y-auto", collapsed ? "px-1.5" : "px-2")}>
+      <div className={cn("flex-1 py-4 overflow-y-auto", collapsed ? "px-1.5" : "px-2")}>
         {navGroups.map((group, gIdx) => {
           let itemIndex = navGroups.slice(0, gIdx).reduce((s, g) => s + g.items.length, 0);
           return (
@@ -138,10 +137,16 @@ export function Sidebar({ isOpen = true, onClose, collapsed = false }: SidebarPr
               {gIdx > 0 && (
                 <>
                   <Separator className="bg-sidebar-border my-2" />
-                  {!collapsed && group.groupLabel && (
-                    <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40 select-none">
-                      {group.groupLabel}
-                    </p>
+                  {group.groupLabel && (
+                    collapsed ? (
+                      <p className="text-center text-[9px] font-semibold uppercase tracking-widest text-sidebar-foreground/30 select-none mb-0.5" title={group.groupLabel}>
+                        ···
+                      </p>
+                    ) : (
+                      <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40 select-none">
+                        {group.groupLabel}
+                      </p>
+                    )
                   )}
                 </>
               )}
@@ -173,8 +178,7 @@ export function Sidebar({ isOpen = true, onClose, collapsed = false }: SidebarPr
                               href={item.href}
                               title={item.label}
                               onClick={onClose}
-                              {...(item.tourId ? { "data-tour": item.tourId } : {})}
-                              className={linkClass}
+                                                            className={linkClass}
                             >
                               <Icon className="w-5 h-5 flex-shrink-0" />
                             </Link>
@@ -186,8 +190,7 @@ export function Sidebar({ isOpen = true, onClose, collapsed = false }: SidebarPr
                           href={item.href}
                           title={item.label}
                           onClick={onClose}
-                          {...(item.tourId ? { "data-tour": item.tourId } : {})}
-                          className={linkClass}
+                                                    className={linkClass}
                         >
                           <Icon className="w-5 h-5 flex-shrink-0" />
                           {item.label}

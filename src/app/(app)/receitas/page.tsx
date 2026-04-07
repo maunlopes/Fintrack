@@ -92,7 +92,7 @@ function IncomeForm({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!res.ok) { toast.error("Erro ao salvar receita"); return; }
+    if (!res.ok) { toast.error("Não conseguimos salvar a receita. Tente novamente."); return; }
     toast.success(defaultValues?.id ? "Receita atualizada!" : "Receita cadastrada!");
     onSuccess();
   }
@@ -102,15 +102,15 @@ function IncomeForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField control={form.control} name="description" render={({ field }) => (
           <FormItem>
-            <FormLabel>Descrição</FormLabel>
+            <FormLabel required>Descrição</FormLabel>
             <FormControl><Input placeholder="Ex: Salário, Freelance..." {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField control={form.control} name="amount" render={({ field }) => (
             <FormItem>
-              <FormLabel>Valor</FormLabel>
+              <FormLabel required>Valor</FormLabel>
               <FormControl>
                 <CurrencyInput
                   value={field.value}
@@ -122,7 +122,7 @@ function IncomeForm({
           )} />
           <FormField control={form.control} name="receiveDate" render={({ field }) => (
             <FormItem>
-              <FormLabel>Data recebimento</FormLabel>
+              <FormLabel required>Data recebimento</FormLabel>
               <FormControl>
                 <Input
                   type="date"
@@ -136,7 +136,7 @@ function IncomeForm({
         </div>
         <FormField control={form.control} name="categoryId" render={({ field }) => (
           <FormItem>
-            <FormLabel>Categoria</FormLabel>
+            <FormLabel required>Categoria</FormLabel>
             <FormControl>
               <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger><SelectValue>{categories.find((c) => c.id === field.value)?.name || "Selecione..."}</SelectValue></SelectTrigger>
@@ -152,7 +152,7 @@ function IncomeForm({
         )} />
         <FormField control={form.control} name="bankAccountId" render={({ field }) => (
           <FormItem>
-            <FormLabel>Conta destino</FormLabel>
+            <FormLabel required>Conta destino</FormLabel>
             <FormControl>
               <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger><SelectValue>{bankAccounts.find((a) => a.id === field.value)?.nickname || "Selecione..."}</SelectValue></SelectTrigger>
@@ -209,7 +209,7 @@ function IncomeForm({
         <FormField control={form.control} name="notes" render={({ field }) => (
           <FormItem>
             <FormLabel>Observações (opcional)</FormLabel>
-            <FormControl><Textarea placeholder="..." {...field} /></FormControl>
+            <FormControl><Textarea placeholder="Ex: Pagamento do cliente X..." {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
@@ -284,8 +284,8 @@ function ReceitasContent() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: "PAID", ...data }),
     });
-    if (res.ok) { toast.success("Receita confirmada!"); fetchData(); }
-    else toast.error("Erro ao confirmar recebimento");
+    if (res.ok) { toast.success("Recebimento confirmado!"); fetchData(); }
+    else toast.error("Não conseguimos confirmar o recebimento. Tente novamente.");
   }
 
   async function handleRevertReceive(id: string) {
@@ -294,8 +294,8 @@ function ReceitasContent() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: "PENDING" }),
     });
-    if (res.ok) { toast.success("Recebimento revertido"); fetchData(); }
-    else toast.error("Erro ao reverter");
+    if (res.ok) { toast.success("Recebimento desfeito!"); fetchData(); }
+    else toast.error("Não conseguimos desfazer o recebimento. Tente novamente.");
   }
 
   const [deleteAll, setDeleteAll] = useState(false);
@@ -305,7 +305,7 @@ function ReceitasContent() {
     const query = deleteAll ? "?deleteAll=true" : "";
     const res = await fetch(`/api/receitas/${deleteId}${query}`, { method: "DELETE" });
     if (res.ok) { toast.success(deleteAll ? "Todas as ocorrências removidas" : "Receita removida"); fetchData(); }
-    else toast.error("Erro ao remover");
+    else toast.error("Não conseguimos remover a receita.");
     setDeleteId(null);
     setDeleteAll(false);
   }
@@ -491,7 +491,7 @@ function ReceitasContent() {
         <div className="relative flex-1 min-w-[160px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar receita..."
+            placeholder="Buscar por descrição..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -552,7 +552,7 @@ function ReceitasContent() {
                   <div className="flex items-center gap-1">
                     <Tooltip>
                       <TooltipTrigger>
-                        <Button variant="ghost" size="icon" className={cn("h-8 w-8 sm:h-9 sm:w-9 rounded-lg", income.status === "PAID" ? "text-warning hover:text-warning hover:bg-warning/10" : "text-success hover:text-success hover:bg-success/10")} onClick={() => income.status === "PAID" ? handleRevertReceive(income.id) : openConfirmReceive(income)}>
+                        <Button variant="ghost" size="icon" aria-label={income.status === "PAID" ? "Reverter recebimento" : "Confirmar recebimento"} className={cn("h-10 w-10 rounded-lg", income.status === "PAID" ? "text-warning hover:text-warning hover:bg-warning/10" : "text-success hover:text-success hover:bg-success/10")} onClick={() => income.status === "PAID" ? handleRevertReceive(income.id) : openConfirmReceive(income)}>
                           {income.status === "PAID" ? <RotateCcw className="w-5 h-5 sm:w-7 sm:h-7" /> : <CircleCheck className="w-5 h-5 sm:w-7 sm:h-7" />}
                         </Button>
                       </TooltipTrigger>
@@ -560,7 +560,7 @@ function ReceitasContent() {
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => { setEditIncome(income); setDialogOpen(true); }}>
+                        <Button variant="ghost" size="icon" aria-label="Editar" className="h-10 w-10 rounded-lg hover:bg-muted" onClick={() => { setEditIncome(income); setDialogOpen(true); }}>
                           <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                         </Button>
                       </TooltipTrigger>
@@ -568,7 +568,7 @@ function ReceitasContent() {
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(income.id)}>
+                        <Button variant="ghost" size="icon" aria-label="Excluir" className="h-10 w-10 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(income.id)}>
                           <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                         </Button>
                       </TooltipTrigger>
@@ -643,7 +643,7 @@ function ReceitasContent() {
                     <div className="flex items-center justify-end gap-1 shrink-0 pl-2 sm:pl-3 border-l w-auto sm:w-[124px]">
                       <Tooltip>
                         <TooltipTrigger>
-                          <Button variant="ghost" size="icon" className={cn("h-8 w-8 sm:h-9 sm:w-9 rounded-lg", income.status === "PAID" ? "text-warning hover:text-warning hover:bg-warning/10" : "text-success hover:text-success hover:bg-success/10")} onClick={() => income.status === "PAID" ? handleRevertReceive(income.id) : openConfirmReceive(income)}>
+                          <Button variant="ghost" size="icon" aria-label={income.status === "PAID" ? "Reverter recebimento" : "Confirmar recebimento"} className={cn("h-10 w-10 rounded-lg", income.status === "PAID" ? "text-warning hover:text-warning hover:bg-warning/10" : "text-success hover:text-success hover:bg-success/10")} onClick={() => income.status === "PAID" ? handleRevertReceive(income.id) : openConfirmReceive(income)}>
                             {income.status === "PAID" ? <RotateCcw className="w-5 h-5 sm:w-7 sm:h-7" /> : <CircleCheck className="w-5 h-5 sm:w-7 sm:h-7" />}
                           </Button>
                         </TooltipTrigger>
@@ -651,7 +651,7 @@ function ReceitasContent() {
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => { setEditIncome(income); setDialogOpen(true); }}>
+                          <Button variant="ghost" size="icon" aria-label="Editar" className="h-10 w-10 rounded-lg hover:bg-muted" onClick={() => { setEditIncome(income); setDialogOpen(true); }}>
                             <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                           </Button>
                         </TooltipTrigger>
@@ -659,7 +659,7 @@ function ReceitasContent() {
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(income.id)}>
+                          <Button variant="ghost" size="icon" aria-label="Excluir" className="h-10 w-10 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(income.id)}>
                             <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                           </Button>
                         </TooltipTrigger>
@@ -678,7 +678,7 @@ function ReceitasContent() {
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
             <DialogHeader>
-              <DialogTitle>{editIncome ? "Editar Receita" : "Nova Receita"}</DialogTitle>
+              <DialogTitle>{editIncome ? "Editar receita" : "Nova receita"}</DialogTitle>
             </DialogHeader>
             <div className="mt-4">
               <IncomeForm

@@ -313,6 +313,6 @@ export async function GET(req: Request) {
     });
   } catch (error: any) {
     console.error("[DASHBOARD_GET_ERROR]", error);
-    return NextResponse.json({ error: error.message || "Erro interno ao gerar dashboard" }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno ao gerar dashboard" }, { status: 500 });
   }
 }

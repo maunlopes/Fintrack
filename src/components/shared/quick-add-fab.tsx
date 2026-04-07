@@ -8,16 +8,16 @@ import { Button } from "@/components/ui/button";
 
 const actions = [
   {
-    label: "Nova Receita",
-    icon: ArrowUpRight,
-    className: "bg-success hover:bg-success/90 text-white",
-    href: "/receitas?new=true",
-  },
-  {
     label: "Nova Despesa",
     icon: ArrowDownRight,
     className: "bg-destructive hover:bg-destructive/90 text-white",
     href: "/despesas?new=true",
+  },
+  {
+    label: "Nova Receita",
+    icon: ArrowUpRight,
+    className: "bg-success hover:bg-success/90 text-white",
+    href: "/receitas?new=true",
   },
 ];
 
@@ -34,23 +34,23 @@ export function QuickAddFAB() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 bg-black/20 z-40"
             onClick={() => setOpen(false)}
           />
         )}
       </AnimatePresence>
 
-      <div className="fixed bottom-20 right-4 z-50 lg:bottom-6 flex flex-col-reverse items-end gap-2.5">
-        {/* Action buttons */}
+      <div className="fixed bottom-20 right-4 z-50 lg:bottom-6 flex flex-col items-end gap-2.5">
+        {/* Action buttons — appear ABOVE the FAB */}
         <AnimatePresence>
           {open &&
             actions.map((action, i) => (
               <motion.div
                 key={action.label}
-                initial={{ opacity: 0, scale: 0.6, y: 8 }}
+                initial={{ opacity: 0, scale: 0.6, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.6, y: 8 }}
-                transition={{ duration: 0.18, delay: i * 0.06 }}
+                exit={{ opacity: 0, scale: 0.6, y: 20 }}
+                transition={{ duration: 0.2, delay: (actions.length - 1 - i) * 0.06 }}
               >
                 <Button
                   className={`rounded-full pl-3 pr-4 py-2.5 h-auto text-sm font-semibold shadow-lg ${action.className}`}
@@ -59,7 +59,7 @@ export function QuickAddFAB() {
                     router.push(action.href);
                   }}
                 >
-                  <action.icon className="w-4 h-4" />
+                  <action.icon className="w-4 h-4 mr-1.5" />
                   {action.label}
                 </Button>
               </motion.div>
@@ -77,12 +77,12 @@ export function QuickAddFAB() {
             size="icon"
             aria-label="Lançar transação"
           >
-          <motion.div
-            animate={{ rotate: open ? 45 : 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-          >
-            <Plus className="w-6 h-6" />
-          </motion.div>
+            <motion.div
+              animate={{ rotate: open ? 45 : 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+            >
+              <Plus className="w-6 h-6" />
+            </motion.div>
           </Button>
         </motion.div>
       </div>

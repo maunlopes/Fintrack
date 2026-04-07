@@ -202,10 +202,10 @@ function OrcamentosContent() {
         {filtered.length === 0 ? (
           <EmptyState
             illustration="budget"
-            title="Nenhuma categoria aqui"
+            title="Nenhum orçamento definido"
             description={
               filter === "with"
-                ? 'Você ainda não definiu nenhum orçamento. Clique em "Definir limite" em qualquer categoria.'
+                ? "Nenhum orçamento definido. Defina um limite para começar!"
                 : filter === "alert"
                 ? "Nenhuma categoria em alerta. Bom trabalho!"
                 : "Nenhuma categoria de despesa encontrada."
@@ -378,7 +378,7 @@ function CategoryBudgetRow({
             <div className="flex items-center justify-end gap-1 shrink-0 pl-2 sm:pl-3 border-l w-auto sm:w-[84px]">
               <Tooltip>
                 <TooltipTrigger>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={onEdit}>
+                  <Button variant="ghost" size="icon" aria-label={hasBudget ? "Editar limite" : "Definir limite"} className="h-10 w-10 rounded-lg hover:bg-muted" onClick={onEdit}>
                     <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                   </Button>
                 </TooltipTrigger>
@@ -387,14 +387,14 @@ function CategoryBudgetRow({
               {hasBudget ? (
                 <Tooltip>
                   <TooltipTrigger>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={onDelete}>
+                    <Button variant="ghost" size="icon" aria-label="Remover limite" className="h-10 w-10 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={onDelete}>
                       <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>Remover limite</TooltipContent>
                 </Tooltip>
               ) : (
-                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
                   <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                 </Button>
               )}
@@ -502,7 +502,7 @@ function CategoryBudgetCard({
             <div className="flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={onEdit}>
+                  <Button variant="ghost" size="icon" aria-label={hasBudget ? "Editar limite" : "Definir limite"} className="h-10 w-10 rounded-lg hover:bg-muted" onClick={onEdit}>
                     <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                   </Button>
                 </TooltipTrigger>
@@ -511,14 +511,14 @@ function CategoryBudgetCard({
               {hasBudget ? (
                 <Tooltip>
                   <TooltipTrigger>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={onDelete}>
+                    <Button variant="ghost" size="icon" aria-label="Remover limite" className="h-10 w-10 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={onDelete}>
                       <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>Remover limite</TooltipContent>
                 </Tooltip>
               ) : (
-                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-lg text-muted-foreground/30 pointer-events-none" disabled>
                   <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                 </Button>
               )}

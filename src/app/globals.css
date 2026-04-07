@@ -401,54 +401,6 @@
   }
 }
 
-/* =============================================
-   DRIVER.JS TOUR — THEME ADAPTATION
-   ============================================= */
-
-:root {
-  --driver-popover-bg-color: hsl(var(--card));
-  --driver-popover-text-color: hsl(var(--foreground));
-  --driver-popover-border-radius: 12px;
-  --driver-popover-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.06);
-  --driver-popover-close-button-color: hsl(var(--muted-foreground));
-  --driver-popover-close-button-active-color: hsl(var(--foreground));
-  --driver-popover-prev-btn-color: hsl(var(--foreground));
-  --driver-popover-prev-btn-bg: hsl(var(--secondary));
-  --driver-popover-prev-btn-border: hsl(var(--border));
-  --driver-popover-next-btn-color: hsl(var(--primary-foreground));
-  --driver-popover-next-btn-bg: hsl(var(--primary));
-  --driver-popover-next-btn-border: hsl(var(--primary));
-  --driver-popover-progress-color: hsl(var(--muted-foreground));
-}
-
-.pqgastei-tour .driver-popover-title {
-  font-size: 15px;
-  font-weight: 700;
-  margin-bottom: 6px;
-}
-
-.pqgastei-tour .driver-popover-description {
-  font-size: 13.5px;
-  color: hsl(var(--muted-foreground));
-  line-height: 1.55;
-}
-
-.pqgastei-tour .driver-popover-next-btn,
-.pqgastei-tour .driver-popover-prev-btn {
-  border-radius: 8px;
-  font-size: 13px;
-  padding: 6px 14px;
-}
-
-.pqgastei-tour .driver-popover-progress-text {
-  font-size: 12px;
-  font-weight: 500;
-  opacity: 0.6;
-}
-
-.pqgastei-tour .driver-popover-close-btn {
-  transition: color 0.15s;
-}
 
 /* =============================================
    UTILITIES

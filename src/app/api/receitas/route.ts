@@ -80,6 +80,6 @@ export async function POST(req: Request) {
     return NextResponse.json(income, { status: 201 });
   } catch (error: any) {
     console.error("[RECEITAS_POST_ERROR]", error);
-    return NextResponse.json({ error: error.message || "Erro interno" }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 }

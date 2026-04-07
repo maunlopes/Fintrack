@@ -77,7 +77,7 @@ function AccountForm({
     });
 
     if (!res.ok) {
-      toast.error("Erro ao salvar conta");
+      toast.error("Não conseguimos salvar a conta. Verifique os dados.");
       return;
     }
 
@@ -93,7 +93,7 @@ function AccountForm({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Banco</FormLabel>
+              <FormLabel required>Banco</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <SelectTrigger>
@@ -127,7 +127,7 @@ function AccountForm({
           name="nickname"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Apelido</FormLabel>
+              <FormLabel required>Apelido</FormLabel>
               <FormControl>
                 <Input placeholder="Ex: Conta Salário" {...field} />
               </FormControl>
@@ -140,7 +140,7 @@ function AccountForm({
           name="type"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tipo</FormLabel>
+              <FormLabel required>Tipo</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <SelectTrigger><SelectValue>{field.value ? typeLabels[field.value as BankAccountType] : "Selecione..."}</SelectValue></SelectTrigger>
@@ -160,7 +160,7 @@ function AccountForm({
           name="balance"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Saldo atual</FormLabel>
+              <FormLabel required>Saldo atual</FormLabel>
               <FormControl>
                 <CurrencyInput value={field.value} onChange={field.onChange} />
               </FormControl>
@@ -270,10 +270,10 @@ export default function ContasPage() {
     if (!deleteId) return;
     const res = await fetch(`/api/contas/${deleteId}`, { method: "DELETE" });
     if (res.ok) {
-      toast.success("Conta removida");
+      toast.success("Conta removida!");
       fetchAccounts();
     } else {
-      toast.error("Erro ao remover conta");
+      toast.error("Não conseguimos remover a conta.");
     }
     setDeleteId(null);
   }
@@ -353,7 +353,7 @@ export default function ContasPage() {
         <EmptyState
           illustration="accounts"
           title="Nenhuma conta cadastrada"
-          description="Adicione uma conta bancária para começar a controlar seu saldo."
+          description="Adicione suas contas bancárias para começar a organizar."
           actionLabel="Adicionar Conta"
           onAction={() => setDialogOpen(true)}
         />
@@ -398,7 +398,7 @@ export default function ContasPage() {
                     <div className="flex items-center gap-1">
                       <Tooltip>
                         <TooltipTrigger>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => { setEditAccount(account); setDialogOpen(true); }}>
+                          <Button variant="ghost" size="icon" aria-label="Editar" className="h-10 w-10 rounded-lg hover:bg-muted" onClick={() => { setEditAccount(account); setDialogOpen(true); }}>
                             <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                           </Button>
                         </TooltipTrigger>
@@ -406,7 +406,7 @@ export default function ContasPage() {
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(account.id)}>
+                          <Button variant="ghost" size="icon" aria-label="Excluir" className="h-10 w-10 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(account.id)}>
                             <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                           </Button>
                         </TooltipTrigger>
@@ -428,7 +428,7 @@ export default function ContasPage() {
             animate={{ opacity: 1, scale: 1 }}
           >
             <DialogHeader>
-              <DialogTitle>{editAccount ? "Editar Conta" : "Nova Conta Bancária"}</DialogTitle>
+              <DialogTitle>{editAccount ? "Editar conta" : "Nova conta"}</DialogTitle>
             </DialogHeader>
             <div className="mt-4">
               <AccountForm
@@ -445,7 +445,7 @@ export default function ContasPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Remover conta?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação não pode ser desfeita. A conta será desativada.
+              Ao remover esta conta, o histórico de movimentações vinculado será perdido.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -486,7 +486,7 @@ export default function ContasPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium mb-1 block">Valor</label>
                 <CurrencyInput value={transferAmount} onChange={setTransferAmount} />
@@ -498,7 +498,7 @@ export default function ContasPage() {
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Descrição (opcional)</label>
-              <Input placeholder="Ex: Reserva de emergência" value={transferDesc} onChange={(e) => setTransferDesc(e.target.value)} />
+              <Input placeholder="Ex: Poupança para férias" value={transferDesc} onChange={(e) => setTransferDesc(e.target.value)} />
             </div>
             <Button className="w-full" disabled={transferSaving || !transferFrom || !transferTo || transferAmount <= 0} onClick={handleTransfer}>
               {transferSaving ? "Transferindo..." : "Confirmar transferência"}

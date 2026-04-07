@@ -44,7 +44,7 @@ export async function PUT(req: Request, { params }: Ctx) {
 
       // 2. Reverse old effect on bank account
       if (tx.bankAccountId) {
-        const ba = await p.bankAccount.findUnique({ where: { id: tx.bankAccountId } });
+        const ba = await p.bankAccount.findUnique({ where: { id: tx.bankAccountId, userId } });
         if (ba) {
           let baBalance = Number(ba.balance);
           if (tx.type === "DEPOSIT") baBalance += Number(tx.amount);
@@ -124,7 +124,7 @@ export async function DELETE(req: Request, { params }: Ctx) {
 
       // 2. Reverse effect on bank account
       if (tx.bankAccountId) {
-        const ba = await p.bankAccount.findUnique({ where: { id: tx.bankAccountId } });
+        const ba = await p.bankAccount.findUnique({ where: { id: tx.bankAccountId, userId } });
         if (ba) {
           let baBalance = Number(ba.balance);
           if (tx.type === "DEPOSIT") baBalance += Number(tx.amount);

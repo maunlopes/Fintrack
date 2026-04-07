@@ -7,11 +7,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Landmark, Eye, EyeOff, MailCheck } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
+import { Eye, EyeOff, MailCheck, CheckCircle2, Loader2, KeyRound } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Form,
   FormControl,
@@ -22,7 +24,44 @@ import {
 } from "@/components/ui/form";
 import { loginSchema, registerSchema, LoginInput, RegisterInput } from "@/lib/validations/auth";
 
-function LoginForm() {
+// ---------------------------------------------------------------------------
+// Password strength indicator
+// ---------------------------------------------------------------------------
+function PasswordCriteria({ password }: { password: string }) {
+  const criteria = [
+    { label: "Mínimo 8 caracteres", met: password.length >= 8 },
+    { label: "Uma letra maiúscula", met: /[A-Z]/.test(password) },
+    { label: "Um número", met: /[0-9]/.test(password) },
+    { label: "Um caractere especial", met: /[^A-Za-z0-9]/.test(password) },
+  ];
+  const metCount = criteria.filter((c) => c.met).length;
+  const strength = metCount <= 1 ? 0 : metCount <= 3 ? 1 : 2;
+  const colors = ["bg-destructive", "bg-yellow-500", "bg-success"];
+  const widths = ["w-1/4", "w-2/3", "w-full"];
+
+  if (!password) return null;
+
+  return (
+    <div className="space-y-2 mt-2">
+      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+        <div className={`h-full rounded-full transition-all duration-300 ${colors[strength]} ${widths[strength]}`} />
+      </div>
+      <ul className="space-y-0.5">
+        {criteria.map((c) => (
+          <li key={c.label} className={`text-xs flex items-center gap-1.5 ${c.met ? "text-success" : "text-muted-foreground"}`}>
+            <CheckCircle2 className={`w-3 h-3 ${c.met ? "opacity-100" : "opacity-30"}`} />
+            {c.label}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Login Form
+// ---------------------------------------------------------------------------
+function LoginForm({ onForgotPassword }: { onForgotPassword: () => void }) {
   const router = useRouter();
   const [showPwd, setShowPwd] = useState(false);
   const form = useForm<LoginInput, any, LoginInput>({
@@ -38,7 +77,7 @@ function LoginForm() {
     });
 
     if (res?.error) {
-      toast.error("E-mail ou senha inválidos");
+      toast.error("E-mail ou senha incorretos. Verifique se seu e-mail foi confirmado.");
     } else {
       router.push("/dashboard");
       router.refresh();
@@ -66,7 +105,16 @@ function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Senha</FormLabel>
+              <div className="flex items-center justify-between">
+                <FormLabel>Senha</FormLabel>
+                <button
+                  type="button"
+                  onClick={onForgotPassword}
+                  className="text-xs text-primary hover:underline underline-offset-2"
+                >
+                  Esqueceu a senha?
+                </button>
+              </div>
               <FormControl>
                 <div className="relative">
                   <Input
@@ -129,12 +177,17 @@ function LoginForm() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Register Form
+// ---------------------------------------------------------------------------
 function RegisterForm({ onSuccess }: { onSuccess: (email: string) => void }) {
   const [showPwd, setShowPwd] = useState(false);
   const form = useForm<RegisterInput, any, RegisterInput>({
     resolver: zodResolver(registerSchema) as any,
     defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
   });
+
+  const passwordValue = form.watch("password");
 
   async function onSubmit(data: RegisterInput) {
     const res = await fetch("/api/auth/register", {
@@ -145,7 +198,11 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string) => void }) {
 
     if (!res.ok) {
       const err = await res.json();
-      toast.error(err.error || "Erro ao criar conta");
+      if (typeof err.error === "string" && err.error.includes("já cadastrado")) {
+        form.setError("email", { message: "Este e-mail já está cadastrado. Faça login." });
+      } else {
+        toast.error(typeof err.error === "string" ? err.error : "Erro ao criar conta");
+      }
       return;
     }
 
@@ -205,6 +262,7 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string) => void }) {
                   </Button>
                 </div>
               </FormControl>
+              <PasswordCriteria password={passwordValue || ""} />
               <FormMessage />
             </FormItem>
           )}
@@ -236,7 +294,136 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string) => void }) {
   );
 }
 
-function VerifyEmailCard({ email }: { email?: string }) {
+// ---------------------------------------------------------------------------
+// Forgot Password Form
+// ---------------------------------------------------------------------------
+function ForgotPasswordForm({ onBack }: { onBack: () => void }) {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+
+    await fetch("/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+
+    setSent(true);
+    setLoading(false);
+  }
+
+  if (sent) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="text-center space-y-4 py-4"
+      >
+        <div className="flex justify-center">
+          <div className="bg-primary/10 rounded-full p-4">
+            <MailCheck className="w-10 h-10 text-primary" />
+          </div>
+        </div>
+        <div>
+          <h3 className="font-semibold text-lg">Verifique seu e-mail</h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Se o e-mail <span className="font-medium text-foreground">{email}</span> estiver cadastrado, você receberá um link para redefinir sua senha.
+          </p>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          O link expira em 1 hora. Verifique também a pasta de spam.
+        </p>
+        <button
+          className="mt-4 w-full text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
+          onClick={onBack}
+        >
+          Voltar ao login
+        </button>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="space-y-4"
+    >
+      <div className="text-center space-y-1">
+        <div className="flex justify-center mb-3">
+          <div className="bg-primary/10 rounded-full p-3">
+            <KeyRound className="w-8 h-8 text-primary" />
+          </div>
+        </div>
+        <h3 className="font-semibold text-lg">Esqueceu a senha?</h3>
+        <p className="text-sm text-muted-foreground">
+          Informe seu e-mail e enviaremos um link para redefinir sua senha.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="forgot-email">E-mail</Label>
+          <Input
+            id="forgot-email"
+            type="email"
+            placeholder="seu@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <Button type="submit" className="w-full" disabled={loading || !email}>
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Enviando...
+            </>
+          ) : (
+            "Enviar link de recuperação"
+          )}
+        </Button>
+      </form>
+
+      <button
+        className="w-full text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
+        onClick={onBack}
+      >
+        Voltar ao login
+      </button>
+    </motion.div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Verify Email Card
+// ---------------------------------------------------------------------------
+function VerifyEmailCard({ email, onBack }: { email?: string; onBack: () => void }) {
+  const [resending, setResending] = useState(false);
+
+  async function handleResend() {
+    if (!email) return;
+    setResending(true);
+
+    const res = await fetch("/api/auth/resend-verification", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+
+    if (res.ok) {
+      toast.success("E-mail reenviado!");
+    } else {
+      const data = await res.json();
+      toast.error(data.error || "Erro ao reenviar");
+    }
+    setResending(false);
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -258,23 +445,58 @@ function VerifyEmailCard({ email }: { email?: string }) {
       <p className="text-xs text-muted-foreground">
         O link expira em 24 horas. Verifique também a pasta de spam.
       </p>
+
+      {email && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleResend}
+          disabled={resending}
+          className="mx-auto"
+        >
+          {resending ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+              Reenviando...
+            </>
+          ) : (
+            "Reenviar e-mail"
+          )}
+        </Button>
+      )}
+
+      <button
+        className="mt-2 w-full text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
+        onClick={onBack}
+      >
+        Voltar ao login
+      </button>
     </motion.div>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Main Page
+// ---------------------------------------------------------------------------
 function AuthPageInner() {
   const [tab, setTab] = useState("login");
   const [verifyEmail, setVerifyEmail] = useState<string | null>(null);
+  const [showForgot, setShowForgot] = useState(false);
   const searchParams = useSearchParams();
 
   useEffect(() => {
     if (searchParams.get("verified") === "1") {
       toast.success("E-mail confirmado! Faça login.");
     }
+    if (searchParams.get("reset") === "1") {
+      toast.success("Senha redefinida! Faça login com a nova senha.");
+    }
     const error = searchParams.get("error");
     if (error === "expired-token") toast.error("Link expirado. Crie a conta novamente.");
     if (error === "invalid-token") toast.error("Link inválido.");
   }, [searchParams]);
+
+  const showTabs = !verifyEmail && !showForgot;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -284,14 +506,14 @@ function AuthPageInner() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <div className="flex flex-col items-center mb-5">
-          <img src="/logos/logo-light.svg" alt="PQGASTEI?" className="h-10 dark:hidden mb-2" />
-          <img src="/logos/logo-dark.svg" alt="PQGASTEI?" className="h-10 hidden dark:block mb-2" />
+        <div className="flex flex-col items-center mb-6">
+          <Image src="/logos/logo-light.svg" alt="PQGASTEI?" width={213} height={56} className="dark:hidden mb-3 h-14 w-auto" priority />
+          <Image src="/logos/logo-dark.svg" alt="PQGASTEI?" width={213} height={56} className="hidden dark:block mb-3 h-14 w-auto" priority />
           <p className="text-muted-foreground text-sm">Gestão financeira pessoal</p>
         </div>
 
         <Card>
-          {!verifyEmail && (
+          {showTabs && (
             <CardHeader className="pb-4">
               <Tabs value={tab} onValueChange={setTab}>
                 <TabsList className="grid w-full grid-cols-2">
@@ -301,17 +523,18 @@ function AuthPageInner() {
               </Tabs>
             </CardHeader>
           )}
-          <CardContent className={verifyEmail ? "pt-6" : undefined}>
+          <CardContent className={!showTabs ? "pt-6" : undefined}>
             <AnimatePresence mode="wait">
               {verifyEmail ? (
                 <motion.div key="verify">
-                  <VerifyEmailCard email={verifyEmail} />
-                  <button
-                    className="mt-4 w-full text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
-                    onClick={() => { setVerifyEmail(null); setTab("login"); }}
-                  >
-                    Voltar para o login
-                  </button>
+                  <VerifyEmailCard
+                    email={verifyEmail}
+                    onBack={() => { setVerifyEmail(null); setTab("login"); }}
+                  />
+                </motion.div>
+              ) : showForgot ? (
+                <motion.div key="forgot">
+                  <ForgotPasswordForm onBack={() => setShowForgot(false)} />
                 </motion.div>
               ) : tab === "login" ? (
                 <motion.div
@@ -321,7 +544,7 @@ function AuthPageInner() {
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <LoginForm />
+                  <LoginForm onForgotPassword={() => setShowForgot(true)} />
                 </motion.div>
               ) : (
                 <motion.div

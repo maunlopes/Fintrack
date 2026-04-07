@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Bell, Link2, Sparkles } from "lucide-react";
+import { Bell, Link2, Shield, Sparkles } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { Session } from "next-auth";
 import { Button } from "@/components/ui/button";
@@ -88,7 +88,7 @@ export function Header({ session }: HeaderProps) {
           </Button>
         } />
         <TooltipContent>
-          {alertCount > 0 ? `${alertCount} alerta${alertCount > 1 ? "s" : ""} de orçamento` : "Notificações"}
+          {alertCount > 0 ? `Você tem ${alertCount} alerta${alertCount > 1 ? "s" : ""} de orçamento` : "Nenhum alerta"}
         </TooltipContent>
       </Tooltip>
 
@@ -115,6 +115,12 @@ export function Header({ session }: HeaderProps) {
           <DropdownMenuItem onClick={() => window.location.href = "/config"}>
             Configurações
           </DropdownMenuItem>
+          {(session?.user as { role?: string } | undefined)?.role === "ADMIN" && (
+            <DropdownMenuItem onClick={() => window.location.href = "/admin"}>
+              <Shield className="w-3.5 h-3.5 mr-1.5" />
+              Painel Admin
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className="text-destructive"

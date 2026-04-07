@@ -9,6 +9,7 @@ import { Header } from "./header";
 import { BottomNav } from "./bottom-nav";
 import { QuickAddFAB } from "@/components/shared/quick-add-fab";
 import { ChatWidget } from "@/components/ia/chat-widget";
+import { SystemBanner } from "@/components/shared/system-banner";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -44,8 +45,9 @@ export function AppShell({ children, session }: AppShellProps) {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <SystemBanner />
         <Header session={session} />
-        <main className="flex-1 overflow-y-auto pb-[calc(4rem+env(safe-area-inset-bottom,0px))] lg:pb-0">
+        <main className="flex-1 overflow-y-auto pb-[calc(7rem+env(safe-area-inset-bottom,0px))] lg:pb-0">
           {children}
         </main>
         <QuickAddFAB />

@@ -321,7 +321,7 @@ function ExtratoContent() {
       ) : filteredTransactions.length === 0 ? (
         <EmptyState
           illustration="no-results"
-          title="Sem movimentações"
+          title="Nenhuma movimentação neste período"
           description="Nenhuma transação encontrada para este filtro no mês selecionado."
         />
       ) : (

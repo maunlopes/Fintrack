@@ -82,14 +82,14 @@ function CategoryForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField control={form.control} name="name" render={({ field }) => (
           <FormItem>
-            <FormLabel>Nome</FormLabel>
+            <FormLabel required>Nome</FormLabel>
             <FormControl><Input placeholder="Nome da categoria" {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
         <FormField control={form.control} name="type" render={({ field }) => (
           <FormItem>
-            <FormLabel>Tipo</FormLabel>
+            <FormLabel required>Tipo</FormLabel>
             <FormControl>
               <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger><SelectValue>{field.value === "EXPENSE" ? "Despesa" : field.value === "INCOME" ? "Receita" : "Selecione..."}</SelectValue></SelectTrigger>
@@ -266,7 +266,7 @@ export default function CategoriasPage() {
           <EmptyState
             illustration="empty"
             title="Nenhuma categoria"
-            description="Crie categorias para organizar suas finanças."
+            description="Crie categorias para organizar suas transações."
             actionLabel="Nova Categoria"
             onAction={() => setDialogOpen(true)}
           />
@@ -299,7 +299,7 @@ export default function CategoriasPage() {
                       <div className="flex items-center gap-1 shrink-0 pl-3 border-l">
                         <Tooltip>
                           <TooltipTrigger>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted" onClick={() => { setEditCat(cat); setDialogOpen(true); }}>
+                            <Button variant="ghost" size="icon" aria-label="Editar" className="h-10 w-10 rounded-lg hover:bg-muted" onClick={() => { setEditCat(cat); setDialogOpen(true); }}>
                               <Pencil className="w-5 h-5 sm:w-7 sm:h-7" />
                             </Button>
                           </TooltipTrigger>
@@ -307,7 +307,7 @@ export default function CategoriasPage() {
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => openDelete(cat.id)}>
+                            <Button variant="ghost" size="icon" aria-label="Excluir" className="h-10 w-10 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => openDelete(cat.id)}>
                               <Trash2 className="w-5 h-5 sm:w-7 sm:h-7" />
                             </Button>
                           </TooltipTrigger>
@@ -371,23 +371,13 @@ export default function CategoriasPage() {
               </AlertDialogTitle>
               <AlertDialogDescription className="space-y-3">
                 <span className="block">
-                  Esta categoria está vinculada a{" "}
-                  <span className="font-semibold text-foreground">{linkedInfo?.total} registro{linkedInfo?.total !== 1 ? "s" : ""}</span>:
+                  Esta categoria possui{" "}
+                  <span className="font-semibold text-foreground">{linkedInfo?.total} registro{linkedInfo?.total !== 1 ? "s" : ""}</span>{" "}
+                  vinculado{linkedInfo?.total !== 1 ? "s" : ""}.
                 </span>
-                <ul className="space-y-1 pl-4 list-disc text-foreground">
-                  {(linkedInfo?.expenses ?? 0) > 0 && (
-                    <li>{linkedInfo!.expenses} despesa{linkedInfo!.expenses !== 1 ? "s" : ""}</li>
-                  )}
-                  {(linkedInfo?.incomes ?? 0) > 0 && (
-                    <li>{linkedInfo!.incomes} receita{linkedInfo!.incomes !== 1 ? "s" : ""}</li>
-                  )}
-                  {(linkedInfo?.cardTransactions ?? 0) > 0 && (
-                    <li>{linkedInfo!.cardTransactions} transação{linkedInfo!.cardTransactions !== 1 ? "ões" : ""} de cartão</li>
-                  )}
-                </ul>
                 <span className="block">
-                  Se continuar, esses registros serão movidos para{" "}
-                  <span className="font-semibold text-foreground">"Sem Categoria"</span> automaticamente.
+                  Ao remover, esses registros serão movidos para{" "}
+                  <span className="font-semibold text-foreground">"Sem Categoria"</span>.
                 </span>
               </AlertDialogDescription>
             </AlertDialogHeader>

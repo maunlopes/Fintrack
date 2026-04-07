@@ -16,7 +16,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { LogOut, User, Settings, PlayCircle, KeyRound, Eye, EyeOff, Loader2, DatabaseZap, TriangleAlert, Camera } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { resetTour } from "@/lib/tour";
+import { resetOnboarding } from "@/lib/onboarding";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { profileSchema, passwordSchema, type ProfileInput, type PasswordInput } from "@/lib/validations/user";
 import { cn } from "@/lib/utils";
@@ -100,6 +100,15 @@ export default function ConfigPage() {
   async function onAvatarFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Imagem muito grande. Máximo 2 MB.");
+      return;
+    }
+    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) {
+      toast.error("Formato inválido. Use JPG, PNG, WebP ou GIF.");
+      return;
+    }
 
     // Immediate preview
     const objectUrl = URL.createObjectURL(file);
@@ -327,9 +336,23 @@ export default function ConfigPage() {
             <p className="font-semibold text-sm">Tour de apresentação</p>
             <p className="text-xs text-muted-foreground">Reveja o guia de boas-vindas do sistema</p>
           </div>
-          <Button variant="outline" size="sm" className="h-8" onClick={() => { resetTour(); router.push("/dashboard"); }}>
+          <Button variant="outline" size="sm" className="h-8" onClick={() => { resetOnboarding(); router.push("/dashboard"); }}>
             <PlayCircle className="w-3.5 h-3.5 mr-1.5" />
             Ver tour
+          </Button>
+        </div>
+        <Separator className="my-3" />
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-semibold text-sm">Setup inicial</p>
+            <p className="text-xs text-muted-foreground">Reexibir o assistente de configuração inicial</p>
+          </div>
+          <Button variant="outline" size="sm" className="h-8" onClick={async () => {
+            const res = await fetch("/api/setup", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ setupCompleted: false }) });
+            if (res.ok) { toast.success("Setup reiniciado!"); router.push("/dashboard"); }
+          }}>
+            <PlayCircle className="w-3.5 h-3.5 mr-1.5" />
+            Rever setup
           </Button>
         </div>
       </CardContent>

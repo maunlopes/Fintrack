@@ -83,7 +83,7 @@ const tabVariants = {
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={<div className="p-8 flex items-center justify-center animate-pulse">Carregando Dashboard...</div>}>
+    <Suspense fallback={<div className="p-8 flex items-center justify-center animate-pulse">Preparando seu dashboard...</div>}>
       <DashboardContent />
     </Suspense>
   );
@@ -146,7 +146,7 @@ function DashboardContent() {
       })
       .catch((err) => {
         console.error("Dashboard Fetch Error:", err);
-        setError(err.message || "Erro ao carregar dashboard");
+        setError(err.message || "Não conseguimos carregar o dashboard. Tente novamente.");
         setLoading(false);
       });
   }, [searchParams]);
@@ -181,7 +181,7 @@ function DashboardContent() {
   if (error) {
     return (
       <div className="p-8 flex flex-col items-center justify-center text-center gap-4">
-        <h2 className="text-xl font-bold tracking-tight text-destructive">Erro ao carregar dashboard</h2>
+        <h2 className="text-xl font-bold tracking-tight text-destructive">Não conseguimos carregar o dashboard. Tente novamente.</h2>
         <p className="text-muted-foreground text-sm font-mono bg-muted px-3 py-1.5 rounded">{error}</p>
         <Button variant="link" size="sm" onClick={() => window.location.reload()}>Tentar Novamente</Button>
       </div>
@@ -307,7 +307,7 @@ function DashboardContent() {
       {/* Header */}
       <motion.div variants={itemVariants} className="flex items-center justify-between gap-4">
         <h1 className="text-lg sm:text-2xl font-bold tracking-tight">{greeting}</h1>
-        <div data-tour="month-selector">
+        <div>
           <Suspense fallback={<div className="h-10 w-24 bg-muted animate-pulse rounded-md" />}>
             <MonthSelector />
           </Suspense>
@@ -368,7 +368,7 @@ function DashboardContent() {
               })()}
 
               {/* Balanço do Mês + KPI Cards */}
-              <div data-tour="dashboard-kpis" className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
                 {/* Resultado do Mês — Card Principal */}
                 <Card className={cn(
@@ -524,7 +524,7 @@ function DashboardContent() {
                 {/* Upcoming Expenses */}
                 <Card className="p-6 shadow-sm">
                   <CardHeader className="p-0 pb-3 flex flex-row items-center justify-between">
-                    <CardTitle className="text-muted-foreground font-semibold">Próximas despesas</CardTitle>
+                    <CardTitle className="text-muted-foreground font-semibold">Despesas a vencer</CardTitle>
                     <Button variant="ghost" size="sm" className="text-xs" onClick={() => router.push("/despesas")}>
                       Ver todas →
                     </Button>
@@ -539,8 +539,8 @@ function DashboardContent() {
                           <div className="h-40 flex items-center justify-center">
                             <EmptyState
                               illustration="transactions"
-                              title="Sem pendências"
-                              description="Nenhuma despesa pendente."
+                              title="Tudo em dia!"
+                              description="Nenhuma despesa pendente. Tudo em dia!"
                             />
                           </div>
                         );
@@ -550,11 +550,11 @@ function DashboardContent() {
                   </CardContent>
                 </Card>
 
-                {/* Tendência dos últimos meses */}
+                {/* Tendência dos últimos 12 meses */}
                 {historicalData?.length >= 2 && (
                   <Card className="p-6 shadow-sm flex flex-col">
                     <CardHeader className="p-0 pb-3 flex flex-row items-center justify-between">
-                      <CardTitle className="text-muted-foreground font-semibold">Tendência dos últimos meses</CardTitle>
+                      <CardTitle className="text-muted-foreground font-semibold">Tendência dos últimos 12 meses</CardTitle>
                       <Button variant="ghost" size="sm" className="text-xs" onClick={() => router.push("/resumo-anual")}>
                         Ver análise →
                       </Button>
