@@ -26,14 +26,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-9BD1Y1VBW7"
+          src="https://www.googletagmanager.com/gtag/js?id=G-S6CSFEX83T"
           strategy="afterInteractive"
         />
         <Script id="gtag-init" strategy="afterInteractive">{`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', 'G-9BD1Y1VBW7');
+          gtag('config', 'G-S6CSFEX83T');
+        `}</Script>
+        <Script id="clarity-init" strategy="afterInteractive">{`
+          (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+          })(window, document, "clarity", "script", "w822vvlm50");
         `}</Script>
       </head>
       <body className={`${GeistSans.variable} ${GeistMono.variable} ${spaceGrotesk.variable} antialiased`}>
